@@ -1,0 +1,75 @@
+import { create } from "zustand";
+
+import { api } from "@/lib/api";
+import { endpoints } from "@/lib/endpoints";
+import type { User } from "@/types";
+
+interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+interface RegisterPayload {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phone: string;
+  firstNameTH?: string;
+  lastNameTH?: string;
+  first_name_en?: string;
+  last_name_en?: string;
+}
+
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isBootstrapping: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  bootstrap: () => Promise<boolean>;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isBootstrapping: true,
+
+  login: async (payload) => {
+    const data = await api.post<Partial<User> & { userId?: string }>(
+      endpoints.auth.login(),
+      payload
+    );
+    const user: User = {
+      id: data?.id ?? data?.userId ?? "",
+      email: data?.email ?? payload.email,
+      phone: data?.phone,
+      firstNameTH: data?.firstNameTH ?? null,
+      lastNameTH: data?.lastNameTH ?? null,
+    };
+    set({ user, isAuthenticated: true, isBootstrapping: false });
+  },
+
+  register: async (payload) => {
+    await api.post(endpoints.auth.register(), payload);
+  },
+
+  logout: async () => {
+    try {
+      await api.post(endpoints.auth.logout());
+    } finally {
+      set({ user: null, isAuthenticated: false, isBootstrapping: false });
+    }
+  },
+
+  bootstrap: async () => {
+    try {
+      await api.get(endpoints.apartments.list());
+      set({ isAuthenticated: true, isBootstrapping: false });
+      return true;
+    } catch {
+      set({ isAuthenticated: false, isBootstrapping: false });
+      return false;
+    }
+  },
+}));
