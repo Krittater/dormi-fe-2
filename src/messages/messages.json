@@ -2662,5 +2662,65 @@
     "th": "ดูรายรับ-รายจ่าย",
     "en": "View income & expenses",
     "cn": "查看收支"
+  },
+  {
+    "code": "table-view",
+    "th": "มุมมองตาราง",
+    "en": "Table view",
+    "cn": "表格视图"
+  },
+  {
+    "code": "grid-view",
+    "th": "มุมมองตาราง grid",
+    "en": "Grid view",
+    "cn": "网格视图"
+  },
+  {
+    "code": "baht-per-month",
+    "th": "{amount} บ./เดือน",
+    "en": "{amount} THB/mo",
+    "cn": "{amount} 泰铢/月"
+  },
+  {
+    "code": "charge-electric",
+    "th": "คิดค่าไฟ",
+    "en": "Electricity billed",
+    "cn": "计电费"
+  },
+  {
+    "code": "charge-water",
+    "th": "คิดค่าน้ำ",
+    "en": "Water billed",
+    "cn": "计水费"
+  },
+  {
+    "code": "view-profile",
+    "th": "ดูโปรไฟล์",
+    "en": "View profile",
+    "cn": "查看资料"
+  },
+  {
+    "code": "all-floors",
+    "th": "ทุกชั้น",
+    "en": "All floors",
+    "cn": "所有楼层"
+  },
+  {
+    "code": "floor-with-number",
+    "th": "ชั้น {floor}",
+    "en": "Floor {floor}",
+    "cn": "{floor} 楼"
+  },
+  {
+    "code": "showing-rooms-count",
+    "th": "แสดง {count} ห้อง",
+    "en": "Showing {count} rooms",
+    "cn": "显示 {count} 间"
+  },
+  {
+    "code": "rooms-count-all",
+    "th": "ทั้งหมด",
+    "en": "Total",
+    "cn": "全部"
   }
 ]

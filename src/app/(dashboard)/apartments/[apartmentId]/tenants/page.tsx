@@ -98,10 +98,10 @@ export default function TenantsPage() {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      `${row.firstNameTH} ${row.lastNameTH}`.toLowerCase().includes(q) ||
-      row.email?.toLowerCase().includes(q) ||
-      row.phone?.includes(search) ||
-      row.roomName?.toLowerCase().includes(q)
+      `${row.user.firstNameTH} ${row.user.lastNameTH}`.toLowerCase().includes(q) ||
+      row.user.email?.toLowerCase().includes(q) ||
+      row.user.phone?.includes(search) ||
+      row.room.name?.toLowerCase().includes(q)
     );
   });
 
@@ -112,22 +112,22 @@ export default function TenantsPage() {
       cell: (row) => (
         <div>
           <p className="font-medium text-gray-900">
-            {row.firstNameTH} {row.lastNameTH}
+            {row.user.firstNameTH} {row.user.lastNameTH}
           </p>
-          <p className="text-xs text-gray-500">{row.email}</p>
+          <p className="text-xs text-gray-500">{row.user.email}</p>
         </div>
       ),
     },
     {
       key: "phone",
       header: t("phone-short"),
-      cell: (row) => row.phone || "-",
+      cell: (row) => row.user.phone || "-",
     },
     {
       key: "room",
       header: t("room"),
       cell: (row) =>
-        row.roomName ??
+        row.room.name ??
         rooms.find((r) => r.id === row.roomId)?.name ?? (
           <span className="text-gray-400">{t("not-specified")}</span>
         ),
@@ -199,7 +199,7 @@ export default function TenantsPage() {
         columns={columns}
         data={filtered}
         loading={loading}
-        getRowId={(row) => row.id}
+        getRowId={(row) => row.tenantId}
         emptyTitle={t("no-tenants")}
         emptyDescription={t("no-tenants-description")}
       />

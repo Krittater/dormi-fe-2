@@ -66,6 +66,7 @@ interface Props {
   apartmentId: string;
   tenant?: Tenant | null;
   rooms: RoomOption[];
+  defaultRoomId?: string;
   onSaved: () => void;
 }
 
@@ -75,6 +76,7 @@ export function TenantFormDialog({
   apartmentId,
   tenant,
   rooms,
+  defaultRoomId,
   onSaved,
 }: Props) {
   const t = useT();
@@ -103,7 +105,7 @@ export function TenantFormDialog({
       lastNameTH: tenant?.lastNameTH ?? "",
       email: tenant?.email ?? "",
       phone: tenant?.phone ?? "",
-      roomId: tenant?.roomId ?? NO_ROOM,
+      roomId: tenant?.roomId ?? defaultRoomId ?? NO_ROOM,
       monthlyRentOverride: "",
       depositAmount: tenant?.deposit != null ? String(tenant.deposit) : "",
       contractStartDate: tenant?.contractStartDate?.slice(0, 10) ?? "",

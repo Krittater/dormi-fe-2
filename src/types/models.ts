@@ -74,6 +74,13 @@ export interface RoomType {
   createdAt?: string;
 }
 
+export interface RoomTenantSummary {
+  tenantId: string;
+  userId?: string;
+  fullName: string;
+  phone?: string | null;
+}
+
 export interface Room {
   id: string;
   roomId?: string;
@@ -88,6 +95,7 @@ export interface Room {
   isCalWater?: boolean;
   isCalElectric?: boolean;
   price?: number;
+  currentTenant?: RoomTenantSummary | null;
   createdAt?: string;
 }
 
@@ -135,21 +143,20 @@ export interface MeterReading {
 }
 
 export interface Tenant {
-  id: string;
-  userId?: string;
+  tenantId: string;
   apartmentId: string;
-  roomId?: string | null;
-  roomName?: string | null;
-  firstNameTH: string;
-  lastNameTH: string;
-  email: string;
-  phone: string;
-  status?: string;
-  moveInDate?: string | null;
-  moveOutDate?: string | null;
-  contractStartDate?: string | null;
-  contractEndDate?: string | null;
-  deposit?: number | null;
+  roomId: string;
+  userId: string;
+  moveInDate: string;
+  moveOutDate: string | null;
+  monthlyRentOverride: number | null;
+  depositAmount: number | null;
+  contractStartDate: string;
+  contractEndDate: string | null;
+  isActive: boolean;
+  notes: string | null;
+  user: User;
+  room: Room;
 }
 
 export interface ChargeType {

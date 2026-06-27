@@ -28,6 +28,18 @@ export function formatDate(value: string | null | undefined): string {
   }).format(d);
 }
 
+export function formatPhone(value: string | null | undefined): string {
+  if (!value) return "-";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  if (digits.length === 9) {
+    return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`;
+  }
+  return value;
+}
+
 export function getInitials(name?: string | null): string {
   if (!name) return "U";
   const parts = name.trim().split(/\s+/);
