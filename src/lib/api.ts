@@ -1,3 +1,5 @@
+import { translate } from "@/i18n/runtime";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:7654";
 
@@ -58,7 +60,7 @@ async function request<T>(
 
   if (!res.ok || (payload && payload.success === false)) {
     const message =
-      payload?.message || `เกิดข้อผิดพลาด (${res.status})`;
+      payload?.message || translate("api-error-with-status", { status: res.status });
     throw new ApiError(message, payload?.code ?? res.status, payload?.data);
   }
 

@@ -3,9 +3,19 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useForm, type ControllerRenderProps } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+  Building2,
+  Check,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  LogIn,
+  Mail,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -20,315 +30,105 @@ import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth.store";
 import { useApartmentStore } from "@/stores/apartment.store";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
-const schema = z.object({
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  password: z.string().min(1, "กรุณากรอกรหัสผ่าน"),
-});
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    email: z.string().email(t("email-invalid")),
+    password: z.string().min(1, t("password-required")),
+  });
 
-type FormValues = z.infer<typeof schema>;
-
-// ─── Icons ─────────────────────────────────────────────────────────────────────
-const MailIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <rect width="20" height="16" x="2" y="4" rx="2" />
-    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
-const EyeOpenIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-
-const EyeClosedIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-    <line x1="2" x2="22" y1="2" y2="22" />
-  </svg>
-);
-
-const SpinnerIcon = () => (
-  <svg
-    className="animate-spin"
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    aria-hidden="true"
-  >
-    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-  </svg>
-);
-
-const LoginIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-    <polyline points="10 17 15 12 10 7" />
-    <line x1="15" x2="3" y1="12" y2="12" />
-  </svg>
-);
+type FormValues = { email: string; password: string };
 
 // ─── Brand Panel (Left) ────────────────────────────────────────────────────────
-const BrandPanel = () => (
-  <div className="hidden lg:flex w-1/2 flex-col justify-between bg-[#0C1E4A] px-10 py-12 overflow-hidden relative">
-    {/* Hex decorations */}
-    <svg
-      className="pointer-events-none absolute -right-14 -top-14 opacity-[0.06]"
-      width="220"
-      height="220"
-      viewBox="0 0 220 220"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M110 10 L200 60 L200 160 L110 210 L20 160 L20 60 Z"
-        stroke="#38BDF8"
-        strokeWidth="2"
-      />
-    </svg>
-    <svg
-      className="pointer-events-none absolute -bottom-16 -left-16 opacity-[0.06]"
-      width="240"
-      height="240"
-      viewBox="0 0 240 240"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M120 10 L220 70 L220 170 L120 230 L20 170 L20 70 Z"
-        stroke="#1D4ED8"
-        strokeWidth="2"
-      />
-    </svg>
+const HIGHLIGHT_CODES = [
+  "login-highlight-manage",
+  "login-highlight-invoice",
+  "login-highlight-reports",
+];
 
-    {/* Logo */}
-    <div className="flex items-center gap-3 relative z-10">
-      <svg
-        width="44"
-        height="44"
-        viewBox="0 0 44 44"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path
-          d="M22 3 L39 12.5 L39 31.5 L22 41 L5 31.5 L5 12.5 Z"
-          fill="none"
-          stroke="#1E3A8A"
-          strokeWidth="2.5"
-        />
-        <path
-          d="M22 3 L39 12.5 L39 31.5 L22 41 L5 31.5 L5 12.5 Z"
-          fill="none"
-          stroke="#38BDF8"
-          strokeWidth="1"
-          strokeDasharray="4 60"
-          strokeDashoffset="-8"
-        />
-        <text x="9" y="29" fontSize="17" fontWeight="700" fill="#C7D2FE">
-          P
-        </text>
-        <text x="22" y="29" fontSize="17" fontWeight="700" fill="#38BDF8">
-          F
-        </text>
-      </svg>
-      <div>
-        <p className="text-[18px] font-medium tracking-wide text-white">
-          PAY<span className="text-sky-400">FLOW</span>
-        </p>
-        <p className="mt-px text-[9px] tracking-[3px] text-[#334D7A]">
-          CERTIFICATE OF PAYMENT
-        </p>
-      </div>
-    </div>
+const BrandPanel = () => {
+  const t = useT();
+  return (
+    <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-primary to-primary-hover px-10 py-12 lg:flex">
+      {/* decorations */}
+      <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
+      <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 rounded-full bg-black/10" />
 
-    {/* Hero copy */}
-    <div className="relative z-10">
-      <p className="text-[11px] tracking-[2px] text-sky-400 mb-3 font-medium">
-        ENTERPRISE PLATFORM
-      </p>
-      <h2 className="text-[30px] font-medium text-white leading-snug mb-3">
-        Streamline your
-        <br />
-        payment flow
-      </h2>
-      <p className="text-[13px] text-slate-500 leading-relaxed max-w-[240px]">
-        ระบบจัดการใบรับรองการชำระเงินสำหรับองค์กร
-        <br />
-        ปลอดภัย รวดเร็ว และตรวจสอบได้ทุกขั้นตอน
-      </p>
-    </div>
-
-    {/* Stats + social proof */}
-    <div className="relative z-10">
-      <div className="flex gap-0 mb-6">
-        <div className="pr-6">
-          <p className="text-[20px] font-medium text-white">99.9%</p>
-          <p className="text-[11px] text-slate-500">Uptime</p>
+      {/* Logo */}
+      <div className="relative z-10 flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur-sm">
+          <Building2 className="h-6 w-6" />
         </div>
-        <div className="border-l border-[#1E3A6E] px-6">
-          <p className="text-[20px] font-medium text-white">256-bit</p>
-          <p className="text-[11px] text-slate-500">Encryption</p>
-        </div>
-        <div className="border-l border-[#1E3A6E] pl-6">
-          <p className="text-[20px] font-medium text-white">ISO 27001</p>
-          <p className="text-[11px] text-slate-500">Certified</p>
+        <div>
+          <p className="text-[18px] font-semibold tracking-wide text-white">
+            Dormi
+          </p>
+          <p className="mt-px text-[10px] tracking-[2px] text-white/60">
+            {t("dormitory-management")}
+          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {[
-          { bg: "bg-[#1E3A6E]", color: "text-slate-400" },
-          { bg: "bg-[#1E3A8A]", color: "text-blue-300" },
-          { bg: "bg-[#1D4ED8]", color: "text-blue-200" },
-        ].map((item, i) => (
-          <div
-            key={i}
-            className={`w-7 h-7 rounded-full ${item.bg} border-2 border-[#0C1E4A] flex items-center justify-center -ml-1 first:ml-0`}
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={item.color}
-              aria-hidden="true"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </div>
+      {/* Hero copy */}
+      <div className="relative z-10">
+        <p className="mb-3 text-[11px] font-medium tracking-[2px] text-white/70">
+          {t("all-in-one-dormitory-system")}
+        </p>
+        <h2 className="mb-3 text-[30px] font-semibold leading-snug text-white">
+          {t("login-hero-title")}
+        </h2>
+        <p className="max-w-[260px] text-[13px] leading-relaxed text-white/70">
+          {t("login-hero-subtitle")}
+        </p>
+      </div>
+
+      {/* Highlights */}
+      <ul className="relative z-10 space-y-3">
+        {HIGHLIGHT_CODES.map((code) => (
+          <li key={code} className="flex items-center gap-3">
+            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/15">
+              <Check className="h-3 w-3 text-white" />
+            </span>
+            <span className="text-[13px] text-white/80">{t(code)}</span>
+          </li>
         ))}
-        <div className="w-7 h-7 rounded-full bg-[#1E3A6E] border-2 border-[#0C1E4A] flex items-center justify-center -ml-1 text-[10px] text-slate-400 font-medium">
-          +2k
-        </div>
-        <span className="text-[11px] text-slate-500 ml-1">
-          users trust PayFlow
-        </span>
-      </div>
+      </ul>
     </div>
-  </div>
-);
-
-// ─── Trust Badge ───────────────────────────────────────────────────────────────
-const TrustBadge = () => (
-  <div className="mt-5 flex items-center gap-2">
-    <span className="block h-2 w-2 flex-shrink-0 rounded-full bg-green-400" />
-    <p className="text-[11px] text-slate-500 leading-relaxed">
-      การเชื่อมต่อเข้ารหัส TLS 1.3&nbsp;&nbsp;·&nbsp;&nbsp;ปลอดภัยตามมาตรฐาน
-      ISO 27001
-    </p>
-  </div>
-);
+  );
+};
 
 // ─── Password Input ────────────────────────────────────────────────────────────
-const PasswordInput = ({
+function PasswordField({
   field,
 }: {
-  field: ControllerRenderProps<FormValues, "password">;
-}) => {
+  field: React.ComponentProps<typeof Input>;
+}) {
+  const t = useT();
   const [show, setShow] = useState(false);
 
   return (
     <div className="relative flex items-center">
-      <span className="pointer-events-none absolute left-3.5 text-slate-400">
-        <LockIcon />
-      </span>
-      <input
+      <Lock className="pointer-events-none absolute left-3.5 h-4 w-4 text-gray-400" />
+      <Input
         {...field}
         type={show ? "text" : "password"}
         placeholder="••••••••"
         autoComplete="current-password"
-        className="
-          h-11 w-full rounded-[10px]
-          border border-slate-200 bg-slate-50
-          pl-10 pr-10 text-[13px] text-slate-900
-          placeholder:text-slate-400
-          outline-none transition-colors duration-150
-          hover:bg-white
-          focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100
-        "
+        className="h-11 pl-10 pr-10"
       />
       <button
         type="button"
-        aria-label={show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+        aria-label={show ? t("hide-password") : t("show-password")}
         onClick={() => setShow((v) => !v)}
-        className="absolute right-3.5 text-slate-400 transition-colors hover:text-slate-600"
+        className="absolute right-3.5 text-gray-400 transition-colors hover:text-gray-600"
       >
-        {show ? <EyeClosedIcon /> : <EyeOpenIcon />}
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
     </div>
   );
-};
+}
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function LoginPage() {
@@ -341,6 +141,7 @@ export default function LoginPage() {
 
 function LoginContent() {
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
   const fetchApartments = useApartmentStore((s) => s.fetchApartments);
@@ -348,7 +149,7 @@ function LoginContent() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(makeSchema(t)),
     defaultValues: { email: "", password: "" },
   });
 
@@ -357,7 +158,7 @@ function LoginContent() {
     try {
       await login(values);
       await fetchApartments().catch(() => undefined);
-      toast.success("เข้าสู่ระบบสำเร็จ");
+      toast.success(t("login-success"));
       const redirect = searchParams.get("redirect");
       router.replace(
         redirect && redirect.startsWith("/") ? redirect : "/dashboard",
@@ -374,61 +175,36 @@ function LoginContent() {
       <BrandPanel />
 
       {/* Form panel */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center bg-white px-6 py-10 sm:px-12 overflow-y-auto">
+      <div className="flex w-full flex-col items-center justify-center overflow-y-auto bg-white px-6 py-10 sm:px-12 lg:w-1/2">
         {/* Mobile logo */}
-        <div className="flex lg:hidden items-center gap-3 mb-8 self-start">
-          <svg
-            width="36"
-            height="36"
-            viewBox="0 0 44 44"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M22 3 L39 12.5 L39 31.5 L22 41 L5 31.5 L5 12.5 Z"
-              fill="none"
-              stroke="#1E3A8A"
-              strokeWidth="2.5"
-            />
-            <path
-              d="M22 3 L39 12.5 L39 31.5 L22 41 L5 31.5 L5 12.5 Z"
-              fill="none"
-              stroke="#38BDF8"
-              strokeWidth="1"
-              strokeDasharray="4 60"
-              strokeDashoffset="-8"
-            />
-            <text x="9" y="29" fontSize="15" fontWeight="700" fill="#1E40AF">
-              P
-            </text>
-            <text x="22" y="29" fontSize="15" fontWeight="700" fill="#2563EB">
-              F
-            </text>
-          </svg>
+        <div className="mb-8 flex items-center gap-3 self-start lg:hidden">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+            <Building2 className="h-6 w-6" />
+          </div>
           <div>
-            <p className="text-[16px] font-medium text-[#0C1E4A] tracking-wide">
-              PAY<span className="text-sky-500">FLOW</span>
+            <p className="text-[16px] font-semibold tracking-wide text-gray-900">
+              Dormi
             </p>
-            <p className="text-[9px] tracking-[2px] text-slate-400 mt-px">
-              CERTIFICATE OF PAYMENT
+            <p className="mt-px text-[9px] tracking-[2px] text-gray-400">
+              {t("dormitory-management")}
             </p>
           </div>
         </div>
 
         <div className="w-full max-w-sm">
           {/* Secure badge */}
-          <div className="inline-flex items-center gap-2 bg-blue-50 rounded-full px-3 py-1 mb-6">
-            <span className="block w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0" />
-            <span className="text-[11px] text-blue-700 font-medium">
-              Secure sign in
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary-tint px-3 py-1">
+            <span className="block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+            <span className="text-[11px] font-medium text-primary-hover">
+              {t("secure-login")}
             </span>
           </div>
 
-          <h1 className="text-[22px] font-medium text-slate-900 mb-1">
-            ยินดีต้อนรับกลับ
+          <h1 className="mb-1 text-[22px] font-semibold text-gray-900">
+            {t("welcome-back")}
           </h1>
-          <p className="text-[13px] text-slate-500 mb-7">
-            กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ
+          <p className="mb-7 text-[13px] text-gray-500">
+            {t("login-to-continue")}
           </p>
 
           <Form {...form}>
@@ -443,27 +219,17 @@ function LoginContent() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-[11px] font-medium tracking-wide text-slate-500">
-                      อีเมลหรือชื่อผู้ใช้
+                    <FormLabel className="block text-[12px] font-medium text-gray-700">
+                      {t("email")}
                     </FormLabel>
                     <FormControl>
                       <div className="relative flex items-center">
-                        <span className="pointer-events-none absolute left-3.5 text-slate-400">
-                          <MailIcon />
-                        </span>
+                        <Mail className="pointer-events-none absolute left-3.5 h-4 w-4 text-gray-400" />
                         <Input
                           type="email"
-                          placeholder="กรอกอีเมลหรือชื่อผู้ใช้"
+                          placeholder="you@example.com"
                           autoComplete="email"
-                          className="
-                            h-11 rounded-[10px]
-                            border-slate-200 bg-slate-50
-                            pl-10 text-[13px]
-                            placeholder:text-slate-400
-                            transition-colors duration-150
-                            hover:bg-white
-                            focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100
-                          "
+                          className="h-11 pl-10"
                           {...field}
                         />
                       </div>
@@ -479,11 +245,11 @@ function LoginContent() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="block text-[11px] font-medium tracking-wide text-slate-500">
-                      รหัสผ่าน
+                    <FormLabel className="block text-[12px] font-medium text-gray-700">
+                      {t("password")}
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput field={field} />
+                      <PasswordField field={field} />
                     </FormControl>
                     <FormMessage className="text-[12px]" />
                   </FormItem>
@@ -500,42 +266,24 @@ function LoginContent() {
                   className="flex cursor-pointer select-none items-center gap-2"
                 >
                   <div
-                    className={`
-                      flex h-4 w-4 flex-shrink-0 items-center justify-center
-                      rounded border transition-colors duration-150
-                      ${
-                        rememberMe
-                          ? "border-blue-600 bg-blue-600"
-                          : "border-slate-300 bg-white hover:border-blue-400"
-                      }
-                    `}
+                    className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border transition-colors duration-150 ${
+                      rememberMe
+                        ? "border-primary bg-primary"
+                        : "border-gray-300 bg-white hover:border-primary"
+                    }`}
                   >
-                    {rememberMe && (
-                      <svg
-                        width="10"
-                        height="10"
-                        viewBox="0 0 10 10"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M1.5 5L4 7.5L8.5 2.5"
-                          stroke="white"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
+                    {rememberMe && <Check className="h-3 w-3 text-white" />}
                   </div>
-                  <span className="text-[12px] text-slate-500">จดจำฉันไว้</span>
+                  <span className="text-[12px] text-gray-500">
+                    {t("remember-me")}
+                  </span>
                 </button>
 
                 <Link
                   href="/forgot-password"
-                  className="text-[12px] text-blue-600 underline transition-colors hover:text-blue-700"
+                  className="text-[12px] font-medium text-primary transition-colors hover:text-primary-hover"
                 >
-                  ลืมรหัสผ่าน?
+                  {t("forgot-password")}
                 </Link>
               </div>
 
@@ -543,33 +291,28 @@ function LoginContent() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="
-                  flex h-11 w-full items-center justify-center gap-2
-                  rounded-[10px] bg-blue-700 text-[14px] font-medium text-white
-                  transition-colors duration-150
-                  hover:bg-blue-800
-                  disabled:cursor-not-allowed disabled:opacity-50
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
-                "
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-[14px] font-medium text-primary-foreground shadow-sm transition-colors duration-150 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? <SpinnerIcon /> : <LoginIcon />}
-                {submitting ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LogIn className="h-4 w-4" />
+                )}
+                {submitting ? t("logging-in") : t("login")}
               </button>
             </form>
           </Form>
 
           {/* Register link */}
-          <p className="mt-5 text-center text-[12px] text-slate-500">
-            ยังไม่มีบัญชี?{" "}
+          <p className="mt-6 text-center text-[13px] text-gray-500">
+            {t("no-account-yet")}{" "}
             <Link
               href="/register"
-              className="font-medium text-blue-600 underline hover:text-blue-700 transition-colors"
+              className="font-medium text-primary hover:text-primary-hover"
             >
-              ลงทะเบียน
+              {t("register")}
             </Link>
           </p>
-
-          <TrustBadge />
         </div>
       </div>
     </div>

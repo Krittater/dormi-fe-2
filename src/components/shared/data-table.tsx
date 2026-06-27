@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useT } from "@/i18n";
 
 export interface Column<T> {
   key: string;
@@ -40,10 +41,11 @@ export function DataTable<T>({
   loading,
   getRowId,
   onRowClick,
-  emptyTitle = "ไม่มีข้อมูล",
+  emptyTitle,
   emptyDescription,
   skeletonRows = 5,
 }: DataTableProps<T>) {
+  const t = useT();
   if (loading) {
     return (
       <div className="space-y-2">
@@ -55,7 +57,12 @@ export function DataTable<T>({
   }
 
   if (!data.length) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+    return (
+      <EmptyState
+        title={emptyTitle ?? t("no-data")}
+        description={emptyDescription}
+      />
+    );
   }
 
   return (

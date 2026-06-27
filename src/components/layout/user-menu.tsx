@@ -16,21 +16,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiErrorMessage, getInitials } from "@/lib/format";
+import { useT } from "@/i18n";
 
 export function UserMenu() {
   const router = useRouter();
+  const t = useT();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
   const displayName =
     [user?.firstNameTH, user?.lastNameTH].filter(Boolean).join(" ") ||
     user?.email ||
-    "ผู้ใช้งาน";
+    t("user");
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success("ออกจากระบบแล้ว");
+      toast.success(t("logged-out"));
       router.replace("/login");
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -58,14 +60,14 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/dashboard")}>
           <UserIcon className="h-4 w-4" />
-          <span>หอพักของฉัน</span>
+          <span>{t("my-apartments")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleLogout}
           className="text-destructive focus:text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          <span>ออกจากระบบ</span>
+          <span>{t("logout")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

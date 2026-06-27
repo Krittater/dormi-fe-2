@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n";
 
 interface PaginationProps {
   page: number;
@@ -18,6 +19,7 @@ export function Pagination({
   onPageChange,
   className,
 }: PaginationProps) {
+  const t = useT();
   if (totalPages <= 1) return null;
 
   const pages = getPageRange(page, totalPages);
@@ -25,7 +27,7 @@ export function Pagination({
   return (
     <nav
       className={cn("flex items-center justify-center gap-1", className)}
-      aria-label="แบ่งหน้า"
+      aria-label={t("pagination")}
     >
       <Button
         variant="outline"
@@ -33,7 +35,7 @@ export function Pagination({
         className="h-8 w-8"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        aria-label="ก่อนหน้า"
+        aria-label={t("previous")}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -60,7 +62,7 @@ export function Pagination({
         className="h-8 w-8"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
-        aria-label="ถัดไป"
+        aria-label={t("next")}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

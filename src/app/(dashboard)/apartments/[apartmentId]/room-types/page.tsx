@@ -36,17 +36,22 @@ import { endpoints } from "@/lib/endpoints";
 import { toList, totalPagesOf } from "@/lib/list";
 import { formatCurrency, getApiErrorMessage } from "@/lib/format";
 import type { PaginationMeta, RoomType } from "@/types";
+import { useT, type TranslateFn } from "@/i18n";
 
-const schema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อประเภทห้อง"),
-  price: z.coerce.number({ message: "กรุณากรอกตัวเลข" }).positive("ราคาต้องมากกว่า 0"),
-  description: z.string().optional(),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    name: z.string().min(1, t("enter-room-type-name")),
+    price: z.coerce
+      .number({ message: t("enter-a-number") })
+      .positive(t("price-must-be-positive")),
+    description: z.string().optional(),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 const LIMIT = 10;
 
 export default function RoomTypesPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [items, setItems] = useState<RoomType[]>([]);
@@ -61,7 +66,7 @@ export default function RoomTypesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: { name: "", price: 0, description: "" },
   });
 
@@ -73,7 +78,9 @@ export default function RoomTypesPage() {
           buildQuery({ page, limit: LIMIT, keyword: keyword || undefined })
       );
       const { items, meta } = toList<RoomType>(res);
-      setItems(items);
+      setItems(
+        items.map((rt) => ({ ...rt, id: rt.id ?? rt.roomTypeId ?? "" }))
+      );
       setMeta(meta);
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -120,10 +127,10 @@ export default function RoomTypesPage() {
           endpoints.roomTypes.update(apartmentId, editing.id),
           values
         );
-        toast.success("แก้ไขประเภทห้องสำเร็จ");
+        toast.success(t("room-type-updated"));
       } else {
         await api.post(endpoints.roomTypes.create(apartmentId), values);
-        toast.success("เพิ่มประเภทห้องสำเร็จ");
+        toast.success(t("room-type-created"));
       }
       setFormOpen(false);
       load();
@@ -138,7 +145,7 @@ export default function RoomTypesPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.roomTypes.remove(apartmentId, deleting.id));
-      toast.success("ลบประเภทห้องสำเร็จ");
+      toast.success(t("room-type-deleted"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -150,17 +157,17 @@ export default function RoomTypesPage() {
   const columns: Column<RoomType>[] = [
     {
       key: "name",
-      header: "ชื่อประเภท",
+      header: t("type-name"),
       cell: (r) => <span className="font-medium text-gray-900">{r.name}</span>,
     },
     {
       key: "price",
-      header: "ราคา/เดือน",
+      header: t("price-per-month"),
       cell: (r) => formatCurrency(r.price),
     },
     {
       key: "description",
-      header: "คำอธิบาย",
+      header: t("description"),
       cell: (r) => (
         <span className="text-gray-500">{r.description || "-"}</span>
       ),
@@ -195,19 +202,19 @@ export default function RoomTypesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ประเภทห้อง"
-        description="กำหนดประเภทห้องและราคาเช่าต่อเดือน"
+        title={t("nav-room-types")}
+        description={t("room-types-page-description")}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            เพิ่มประเภทห้อง
+            {t("add-room-type")}
           </Button>
         }
       />
 
       <div className="max-w-sm">
         <Input
-          placeholder="ค้นหาประเภทห้อง..."
+          placeholder={t("search-room-type")}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
@@ -218,8 +225,8 @@ export default function RoomTypesPage() {
         data={items}
         loading={loading}
         getRowId={(r) => r.id}
-        emptyTitle="ยังไม่มีประเภทห้อง"
-        emptyDescription="เพิ่มประเภทห้องเพื่อใช้สร้างห้องพัก"
+        emptyTitle={t("no-room-types")}
+        emptyDescription={t("add-room-type-to-create-rooms")}
       />
 
       <Pagination
@@ -232,10 +239,10 @@ export default function RoomTypesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "แก้ไขประเภทห้อง" : "เพิ่มประเภทห้อง"}
+              {editing ? t("edit-room-type") : t("add-room-type")}
             </DialogTitle>
             <DialogDescription>
-              กำหนดชื่อและราคาเช่าต่อเดือนของประเภทห้อง
+              {t("room-type-form-description")}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -245,7 +252,7 @@ export default function RoomTypesPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อประเภท</FormLabel>
+                    <FormLabel>{t("type-name")}</FormLabel>
                     <FormControl>
                       <Input placeholder="Standard Room" {...field} />
                     </FormControl>
@@ -258,7 +265,7 @@ export default function RoomTypesPage() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ราคา/เดือน (บาท)</FormLabel>
+                    <FormLabel>{t("price-per-month-baht")}</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} step="0.01" {...field} />
                     </FormControl>
@@ -271,7 +278,7 @@ export default function RoomTypesPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>คำอธิบาย (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("description-optional")}</FormLabel>
                     <FormControl>
                       <Textarea rows={2} {...field} />
                     </FormControl>
@@ -286,11 +293,11 @@ export default function RoomTypesPage() {
                   onClick={() => setFormOpen(false)}
                   disabled={submitting}
                 >
-                  ยกเลิก
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  บันทึก
+                  {t("save")}
                 </Button>
               </DialogFooter>
             </form>
@@ -301,9 +308,9 @@ export default function RoomTypesPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบประเภทห้อง"
-        description={`ต้องการลบประเภท "${deleting?.name}" ใช่หรือไม่?`}
-        confirmLabel="ลบ"
+        title={t("delete-room-type")}
+        description={t("delete-confirm-description", { name: deleting?.name ?? "" })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

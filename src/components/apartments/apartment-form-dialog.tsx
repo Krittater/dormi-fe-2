@@ -30,44 +30,52 @@ import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 import type { Apartment } from "@/types";
 
-const dayField = z.coerce
-  .number({ message: "กรุณากรอกตัวเลข" })
-  .int()
-  .min(1, "ระหว่าง 1-31")
-  .max(31, "ระหว่าง 1-31");
-const rateField = z.coerce
-  .number({ message: "กรุณากรอกตัวเลข" })
-  .min(0, "ต้องไม่ติดลบ");
+const makeBaseSchema = (t: TranslateFn) => {
+  const dayField = z.coerce
+    .number({ message: t("enter-a-number") })
+    .int()
+    .min(1, t("between-1-and-31"))
+    .max(31, t("between-1-and-31"));
+  const rateField = z.coerce
+    .number({ message: t("enter-a-number") })
+    .min(0, t("must-not-be-negative"));
 
-const roomTypeSchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อประเภทห้อง"),
-  price: z.coerce.number({ message: "กรุณากรอกตัวเลข" }).positive("ราคาต้องมากกว่า 0"),
-  description: z.string().optional(),
-});
+  return z.object({
+    name: z.string().min(1, t("enter-apartment-name")),
+    province: z.string().min(1, t("enter-province")),
+    district: z.string().min(1, t("enter-district")),
+    subDistrict: z.string().min(1, t("enter-sub-district")),
+    postalCode: z.string().min(1, t("enter-postal-code")),
+    phone: z.string().optional(),
+    description: z.string().optional(),
+    invoiceCutOffDate: dayField,
+    invoiceDueDate: dayField,
+    electricityCutOffDate: dayField,
+    electricityRatePerUnit: rateField,
+    waterCutOffDate: dayField,
+    waterRatePerUnit: rateField,
+  });
+};
 
-const baseSchema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อหอพัก"),
-  province: z.string().min(1, "กรุณากรอกจังหวัด"),
-  district: z.string().min(1, "กรุณากรอกอำเภอ/เขต"),
-  subDistrict: z.string().min(1, "กรุณากรอกตำบล/แขวง"),
-  postalCode: z.string().min(1, "กรุณากรอกรหัสไปรษณีย์"),
-  phone: z.string().optional(),
-  description: z.string().optional(),
-  invoiceCutOffDate: dayField,
-  invoiceDueDate: dayField,
-  electricityCutOffDate: dayField,
-  electricityRatePerUnit: rateField,
-  waterCutOffDate: dayField,
-  waterRatePerUnit: rateField,
-});
+const makeCreateSchema = (t: TranslateFn) =>
+  makeBaseSchema(t).extend({
+    roomTypes: z
+      .array(
+        z.object({
+          name: z.string().min(1, t("enter-room-type-name")),
+          price: z.coerce
+            .number({ message: t("enter-a-number") })
+            .positive(t("price-must-be-positive")),
+          description: z.string().optional(),
+        }),
+      )
+      .min(1, t("at-least-one-room-type")),
+  });
 
-const createSchema = baseSchema.extend({
-  roomTypes: z.array(roomTypeSchema).min(1, "ต้องมีประเภทห้องอย่างน้อย 1 ประเภท"),
-});
-
-type CreateValues = z.infer<typeof createSchema>;
+type CreateValues = z.infer<ReturnType<typeof makeCreateSchema>>;
 
 interface Props {
   open: boolean;
@@ -82,11 +90,14 @@ export function ApartmentFormDialog({
   apartment,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = Boolean(apartment);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<CreateValues>({
-    resolver: zodFormResolver<CreateValues>(isEdit ? baseSchema : createSchema),
+    resolver: zodFormResolver<CreateValues>(
+      isEdit ? makeBaseSchema(t) : makeCreateSchema(t),
+    ),
     defaultValues: {
       name: "",
       province: "",
@@ -162,13 +173,13 @@ export function ApartmentFormDialog({
           endpoints.apartments.update(apartment.id),
           payload
         );
-        toast.success("แก้ไขหอพักสำเร็จ");
+        toast.success(t("apartment-updated"));
       } else {
         result = await api.post<Apartment>(
           endpoints.apartments.create(),
           values
         );
-        toast.success("สร้างหอพักสำเร็จ");
+        toast.success(t("apartment-created"));
       }
       onSaved(result ?? { ...(apartment ?? {}), ...values, id: apartment?.id ?? "" });
       onOpenChange(false);
@@ -183,10 +194,10 @@ export function ApartmentFormDialog({
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "แก้ไขหอพัก" : "เพิ่มหอพักใหม่"}</DialogTitle>
-          <DialogDescription>
-            กรอกข้อมูลหอพัก อัตราค่าน้ำ-ค่าไฟ และวันตัดรอบบิล
-          </DialogDescription>
+          <DialogTitle>
+            {isEdit ? t("edit-apartment") : t("add-new-apartment")}
+          </DialogTitle>
+          <DialogDescription>{t("apartment-form-description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -196,9 +207,9 @@ export function ApartmentFormDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>ชื่อหอพัก</FormLabel>
+                    <FormLabel>{t("apartment-name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="เช่น Dormi Residence" {...field} />
+                      <Input placeholder={t("apartment-name-placeholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +220,7 @@ export function ApartmentFormDialog({
                 name="province"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>จังหวัด</FormLabel>
+                    <FormLabel>{t("province")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -222,7 +233,7 @@ export function ApartmentFormDialog({
                 name="district"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>อำเภอ/เขต</FormLabel>
+                    <FormLabel>{t("district")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -235,7 +246,7 @@ export function ApartmentFormDialog({
                 name="subDistrict"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ตำบล/แขวง</FormLabel>
+                    <FormLabel>{t("sub-district")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -248,7 +259,7 @@ export function ApartmentFormDialog({
                 name="postalCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>รหัสไปรษณีย์</FormLabel>
+                    <FormLabel>{t("postal-code")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -261,7 +272,7 @@ export function ApartmentFormDialog({
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>เบอร์โทรศัพท์ (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("phone-optional")}</FormLabel>
                     <FormControl>
                       <Input placeholder="0812345678" {...field} />
                     </FormControl>
@@ -274,7 +285,7 @@ export function ApartmentFormDialog({
                 name="description"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>คำอธิบาย (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("description-optional")}</FormLabel>
                     <FormControl>
                       <Textarea rows={2} {...field} />
                     </FormControl>
@@ -287,7 +298,7 @@ export function ApartmentFormDialog({
             <Separator />
             <div>
               <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                อัตราค่าบริการและวันตัดรอบ
+                {t("rates-and-cutoff-dates")}
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <FormField
@@ -295,7 +306,7 @@ export function ApartmentFormDialog({
                   name="invoiceCutOffDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันตัดรอบบิล</FormLabel>
+                      <FormLabel>{t("invoice-cutoff-date")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={31} {...field} />
                       </FormControl>
@@ -308,7 +319,7 @@ export function ApartmentFormDialog({
                   name="invoiceDueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันครบกำหนดชำระ</FormLabel>
+                      <FormLabel>{t("invoice-due-date")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={31} {...field} />
                       </FormControl>
@@ -321,7 +332,7 @@ export function ApartmentFormDialog({
                   name="electricityCutOffDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันตัดมิเตอร์ไฟ</FormLabel>
+                      <FormLabel>{t("electricity-cutoff-date")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={31} {...field} />
                       </FormControl>
@@ -334,7 +345,7 @@ export function ApartmentFormDialog({
                   name="electricityRatePerUnit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ค่าไฟ/หน่วย (บาท)</FormLabel>
+                      <FormLabel>{t("electricity-rate-baht")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -347,7 +358,7 @@ export function ApartmentFormDialog({
                   name="waterCutOffDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันตัดมิเตอร์น้ำ</FormLabel>
+                      <FormLabel>{t("water-cutoff-date")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={31} {...field} />
                       </FormControl>
@@ -360,7 +371,7 @@ export function ApartmentFormDialog({
                   name="waterRatePerUnit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ค่าน้ำ/หน่วย (บาท)</FormLabel>
+                      <FormLabel>{t("water-rate-baht")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -377,7 +388,7 @@ export function ApartmentFormDialog({
                 <div>
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">
-                      ประเภทห้อง
+                      {t("nav-room-types")}
                     </h3>
                     <Button
                       type="button"
@@ -388,7 +399,7 @@ export function ApartmentFormDialog({
                       }
                     >
                       <Plus className="h-4 w-4" />
-                      เพิ่มประเภท
+                      {t("add-type")}
                     </Button>
                   </div>
                   {form.formState.errors.roomTypes?.root && (
@@ -408,7 +419,7 @@ export function ApartmentFormDialog({
                             name={`roomTypes.${index}.name`}
                             render={({ field }) => (
                               <FormItem className="sm:col-span-5">
-                                <FormLabel>ชื่อประเภท</FormLabel>
+                                <FormLabel>{t("type-name")}</FormLabel>
                                 <FormControl>
                                   <Input placeholder="Standard" {...field} />
                                 </FormControl>
@@ -421,7 +432,7 @@ export function ApartmentFormDialog({
                             name={`roomTypes.${index}.price`}
                             render={({ field }) => (
                               <FormItem className="sm:col-span-3">
-                                <FormLabel>ราคา/เดือน</FormLabel>
+                                <FormLabel>{t("price-per-month")}</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
@@ -439,7 +450,7 @@ export function ApartmentFormDialog({
                             name={`roomTypes.${index}.description`}
                             render={({ field }) => (
                               <FormItem className="sm:col-span-3">
-                                <FormLabel>คำอธิบาย</FormLabel>
+                                <FormLabel>{t("description")}</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
                                 </FormControl>
@@ -474,11 +485,11 @@ export function ApartmentFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isEdit ? "บันทึก" : "สร้างหอพัก"}
+                {isEdit ? t("save") : t("create-apartment")}
               </Button>
             </DialogFooter>
           </form>

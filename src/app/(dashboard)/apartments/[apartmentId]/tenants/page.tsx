@@ -23,6 +23,7 @@ import { api, buildQuery } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList, totalPagesOf } from "@/lib/list";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import type { PaginationMeta, Tenant } from "@/types";
 
 const LIMIT = 20;
@@ -33,6 +34,7 @@ interface RoomOption {
 }
 
 export default function TenantsPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [items, setItems] = useState<Tenant[]>([]);
@@ -92,48 +94,52 @@ export default function TenantsPage() {
     setFormOpen(true);
   };
 
-  const filtered = items.filter((t) => {
+  const filtered = items.filter((row) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      `${t.firstNameTH} ${t.lastNameTH}`.toLowerCase().includes(q) ||
-      t.email?.toLowerCase().includes(q) ||
-      t.phone?.includes(search) ||
-      t.roomName?.toLowerCase().includes(q)
+      `${row.firstNameTH} ${row.lastNameTH}`.toLowerCase().includes(q) ||
+      row.email?.toLowerCase().includes(q) ||
+      row.phone?.includes(search) ||
+      row.roomName?.toLowerCase().includes(q)
     );
   });
 
   const columns: Column<Tenant>[] = [
     {
       key: "name",
-      header: "ชื่อผู้เช่า",
-      cell: (t) => (
+      header: t("tenant-name"),
+      cell: (row) => (
         <div>
           <p className="font-medium text-gray-900">
-            {t.firstNameTH} {t.lastNameTH}
+            {row.firstNameTH} {row.lastNameTH}
           </p>
-          <p className="text-xs text-gray-500">{t.email}</p>
+          <p className="text-xs text-gray-500">{row.email}</p>
         </div>
       ),
     },
-    { key: "phone", header: "เบอร์โทร", cell: (t) => t.phone || "-" },
+    {
+      key: "phone",
+      header: t("phone-short"),
+      cell: (row) => row.phone || "-",
+    },
     {
       key: "room",
-      header: "ห้อง",
-      cell: (t) =>
-        t.roomName ??
-        rooms.find((r) => r.id === t.roomId)?.name ?? (
-          <span className="text-gray-400">ยังไม่ระบุ</span>
+      header: t("room"),
+      cell: (row) =>
+        row.roomName ??
+        rooms.find((r) => r.id === row.roomId)?.name ?? (
+          <span className="text-gray-400">{t("not-specified")}</span>
         ),
     },
     {
       key: "status",
-      header: "สถานะ",
-      cell: (t) =>
-        t.moveOutDate ? (
-          <Badge variant="outline">ย้ายออกแล้ว</Badge>
+      header: t("status"),
+      cell: (row) =>
+        row.moveOutDate ? (
+          <Badge variant="outline">{t("moved-out")}</Badge>
         ) : (
-          <Badge variant="success">กำลังพัก</Badge>
+          <Badge variant="success">{t("staying")}</Badge>
         ),
     },
     {
@@ -141,7 +147,7 @@ export default function TenantsPage() {
       header: "",
       className: "text-right",
       hideOnMobile: true,
-      cell: (t) => (
+      cell: (row) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -149,17 +155,17 @@ export default function TenantsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(t)}>
+            <DropdownMenuItem onClick={() => openEdit(row)}>
               <Pencil className="h-4 w-4" />
-              แก้ไข
+              {t("edit")}
             </DropdownMenuItem>
-            {!t.moveOutDate && (
+            {!row.moveOutDate && (
               <DropdownMenuItem
-                onClick={() => setMoveOut(t)}
+                onClick={() => setMoveOut(row)}
                 className="text-destructive focus:text-destructive"
               >
                 <LogOut className="h-4 w-4" />
-                ย้ายออก
+                {t("move-out")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -171,19 +177,19 @@ export default function TenantsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ผู้เช่า"
-        description="จัดการทะเบียนผู้เช่าและสัญญา"
+        title={t("nav-tenants")}
+        description={t("tenants-page-description")}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            เพิ่มผู้เช่า
+            {t("add-tenant")}
           </Button>
         }
       />
 
       <div className="max-w-sm">
         <Input
-          placeholder="ค้นหาชื่อ อีเมล เบอร์โทร หรือห้อง..."
+          placeholder={t("search-tenants-placeholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -193,9 +199,9 @@ export default function TenantsPage() {
         columns={columns}
         data={filtered}
         loading={loading}
-        getRowId={(t) => t.id}
-        emptyTitle="ยังไม่มีผู้เช่า"
-        emptyDescription="เพิ่มผู้เช่าเข้าสู่หอพักนี้"
+        getRowId={(row) => row.id}
+        emptyTitle={t("no-tenants")}
+        emptyDescription={t("no-tenants-description")}
       />
 
       <Pagination

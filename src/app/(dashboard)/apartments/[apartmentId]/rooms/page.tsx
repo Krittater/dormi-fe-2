@@ -31,13 +31,15 @@ import { api, buildQuery } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList, totalPagesOf } from "@/lib/list";
 import { getApiErrorMessage } from "@/lib/format";
-import { ROOM_STATUS_LABELS, RoomStatus } from "@/types";
+import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
 import type { PaginationMeta, Room, RoomType } from "@/types";
+import { useT } from "@/i18n";
 
 const LIMIT = 20;
 const ALL = "all";
 
 export default function RoomsPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [items, setItems] = useState<Room[]>([]);
@@ -70,7 +72,9 @@ export default function RoomsPage() {
           })
       );
       const norm = toList<Room>(res);
-      setItems(norm.items);
+      setItems(
+        norm.items.map((r) => ({ ...r, id: r.id ?? r.roomId ?? "" }))
+      );
       setMeta(norm.meta);
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -86,7 +90,14 @@ export default function RoomsPage() {
   useEffect(() => {
     api
       .get(endpoints.roomTypes.list(apartmentId) + buildQuery({ limit: 100 }))
-      .then((res) => setRoomTypes(toList<RoomType>(res).items))
+      .then((res) =>
+        setRoomTypes(
+          toList<RoomType>(res).items.map((rt) => ({
+            ...rt,
+            id: rt.id ?? rt.roomTypeId ?? "",
+          }))
+        )
+      )
       .catch(() => undefined);
   }, [apartmentId]);
 
@@ -107,7 +118,7 @@ export default function RoomsPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.rooms.remove(apartmentId, deleting.id));
-      toast.success("ลบห้องสำเร็จ");
+      toast.success(t("room-deleted"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -119,7 +130,7 @@ export default function RoomsPage() {
   const columns: Column<Room>[] = [
     {
       key: "name",
-      header: "ห้อง",
+      header: t("room"),
       cell: (r) => (
         <button
           onClick={(e) => {
@@ -134,22 +145,22 @@ export default function RoomsPage() {
     },
     {
       key: "roomType",
-      header: "ประเภท",
+      header: t("type"),
       cell: (r) =>
         r.roomType?.name ??
         roomTypes.find((t) => t.id === r.roomTypeId)?.name ??
         "-",
     },
-    { key: "floor", header: "ชั้น", cell: (r) => r.floor || "-" },
+    { key: "floor", header: t("floor"), cell: (r) => r.floor || "-" },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (r) => <StatusBadge kind="room" value={r.status} />,
     },
     {
       key: "active",
-      header: "ใช้งาน",
-      cell: (r) => (r.isActive ? "เปิด" : "ปิด"),
+      header: t("active"),
+      cell: (r) => (r.isActive ? t("on") : t("off")),
     },
     {
       key: "actions",
@@ -170,18 +181,18 @@ export default function RoomsPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => openDetail(r)}>
-              ดูรายละเอียด
+              {t("view-details")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openEdit(r)}>
               <Pencil className="h-4 w-4" />
-              แก้ไข
+              {t("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setDeleting(r)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
-              ลบ
+              {t("delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -192,25 +203,25 @@ export default function RoomsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ห้องพัก"
-        description="จัดการห้องพัก สถานะ และมิเตอร์"
+        title={t("nav-rooms")}
+        description={t("rooms-page-description")}
         actions={
           <Button onClick={openCreate} disabled={roomTypes.length === 0}>
             <Plus className="h-4 w-4" />
-            เพิ่มห้องพัก
+            {t("add-room")}
           </Button>
         }
       />
 
       {roomTypes.length === 0 && !loading && (
         <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">
-          กรุณาเพิ่มประเภทห้องก่อน จึงจะสามารถสร้างห้องพักได้
+          {t("add-room-type-first")}
         </p>
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="ค้นหาเลขห้อง..."
+          placeholder={t("search-room-number")}
           value={search}
           onChange={(e) => {
             setPage(1);
@@ -226,13 +237,13 @@ export default function RoomsPage() {
           }}
         >
           <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="สถานะ" />
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>ทุกสถานะ</SelectItem>
+            <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
             {Object.values(RoomStatus).map((s) => (
               <SelectItem key={s} value={s}>
-                {ROOM_STATUS_LABELS[s]}
+                {t(ROOM_STATUS_CODES[s])}
               </SelectItem>
             ))}
           </SelectContent>
@@ -245,12 +256,12 @@ export default function RoomsPage() {
           }}
         >
           <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder="การใช้งาน" />
+            <SelectValue placeholder={t("usage")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>ทั้งหมด</SelectItem>
-            <SelectItem value="active">เปิดใช้งาน</SelectItem>
-            <SelectItem value="inactive">ปิดใช้งาน</SelectItem>
+            <SelectItem value={ALL}>{t("all")}</SelectItem>
+            <SelectItem value="active">{t("enabled")}</SelectItem>
+            <SelectItem value="inactive">{t("disabled")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -261,8 +272,8 @@ export default function RoomsPage() {
         loading={loading}
         getRowId={(r) => r.id}
         onRowClick={openDetail}
-        emptyTitle="ยังไม่มีห้องพัก"
-        emptyDescription="เพิ่มห้องพักแรกของหอพักนี้"
+        emptyTitle={t("no-rooms")}
+        emptyDescription={t("add-first-room")}
       />
 
       <Pagination
@@ -290,9 +301,9 @@ export default function RoomsPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบห้องพัก"
-        description={`ต้องการลบห้อง "${deleting?.name}" ใช่หรือไม่?`}
-        confirmLabel="ลบ"
+        title={t("delete-room")}
+        description={t("delete-confirm-description", { name: deleting?.name ?? "" })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

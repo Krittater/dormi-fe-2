@@ -1,14 +1,15 @@
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import {
-  BILLING_PERIOD_STATUS_LABELS,
+  BILLING_PERIOD_STATUS_CODES,
   BillingPeriodStatus,
-  INVOICE_STATUS_LABELS,
+  INVOICE_STATUS_CODES,
   InvoiceStatus,
-  METER_READING_STATUS_LABELS,
+  METER_READING_STATUS_CODES,
   MeterReadingStatus,
-  ROOM_STATUS_LABELS,
+  ROOM_STATUS_CODES,
   RoomStatus,
 } from "@/types";
+import { useT } from "@/i18n";
 
 type Variant = NonNullable<BadgeProps["variant"]>;
 
@@ -47,25 +48,30 @@ type Props =
   | { kind: "reading"; value: string };
 
 export function StatusBadge({ kind, value }: Props) {
+  const t = useT();
   let variant: Variant = "secondary";
   let label = value;
 
   if (kind === "room") {
     const v = value as RoomStatus;
     variant = roomVariant[v] ?? "secondary";
-    label = ROOM_STATUS_LABELS[v] ?? value;
+    label = ROOM_STATUS_CODES[v] ? t(ROOM_STATUS_CODES[v]) : value;
   } else if (kind === "billing") {
     const v = value as BillingPeriodStatus;
     variant = billingVariant[v] ?? "secondary";
-    label = BILLING_PERIOD_STATUS_LABELS[v] ?? value;
+    label = BILLING_PERIOD_STATUS_CODES[v]
+      ? t(BILLING_PERIOD_STATUS_CODES[v])
+      : value;
   } else if (kind === "invoice") {
     const v = value as InvoiceStatus;
     variant = invoiceVariant[v] ?? "secondary";
-    label = INVOICE_STATUS_LABELS[v] ?? value;
+    label = INVOICE_STATUS_CODES[v] ? t(INVOICE_STATUS_CODES[v]) : value;
   } else if (kind === "reading") {
     const v = value as MeterReadingStatus;
     variant = readingVariant[v] ?? "secondary";
-    label = METER_READING_STATUS_LABELS[v] ?? value;
+    label = METER_READING_STATUS_CODES[v]
+      ? t(METER_READING_STATUS_CODES[v])
+      : value;
   }
 
   return <Badge variant={variant}>{label}</Badge>;

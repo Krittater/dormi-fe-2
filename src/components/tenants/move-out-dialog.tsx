@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import type { Tenant } from "@/types";
 
 interface Props {
@@ -35,6 +36,7 @@ export function MoveOutDialog({
   tenant,
   onDone,
 }: Props) {
+  const t = useT();
   const [date, setDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,7 +51,7 @@ export function MoveOutDialog({
       await api.patch(endpoints.tenants.moveOut(tenant.id, apartmentId), {
         moveOutDate: date || undefined,
       });
-      toast.success("บันทึกการย้ายออกสำเร็จ");
+      toast.success(t("move-out-success"));
       onDone();
       onOpenChange(false);
     } catch (err) {
@@ -63,15 +65,17 @@ export function MoveOutDialog({
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>ย้ายผู้เช่าออก</DialogTitle>
+          <DialogTitle>{t("move-out-tenant")}</DialogTitle>
           <DialogDescription>
             {tenant
-              ? `บันทึกการย้ายออกของ ${tenant.firstNameTH} ${tenant.lastNameTH}`
+              ? t("move-out-description", {
+                  name: `${tenant.firstNameTH} ${tenant.lastNameTH}`,
+                })
               : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="moveOutDate">วันที่ย้ายออก</Label>
+          <Label htmlFor="moveOutDate">{t("move-out-date")}</Label>
           <Input
             id="moveOutDate"
             type="date"
@@ -85,7 +89,7 @@ export function MoveOutDialog({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            ยกเลิก
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -93,7 +97,7 @@ export function MoveOutDialog({
             disabled={submitting}
           >
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            ยืนยันย้ายออก
+            {t("confirm-move-out")}
           </Button>
         </DialogFooter>
       </DialogContent>

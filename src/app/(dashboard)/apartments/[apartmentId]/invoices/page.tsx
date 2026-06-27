@@ -23,13 +23,15 @@ import { api, buildQuery } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList, totalPagesOf } from "@/lib/list";
 import { formatCurrency, formatDate, getApiErrorMessage } from "@/lib/format";
-import { INVOICE_STATUS_LABELS, InvoiceStatus } from "@/types";
+import { INVOICE_STATUS_CODES, InvoiceStatus } from "@/types";
 import type { Invoice, PaginationMeta } from "@/types";
+import { useT } from "@/i18n";
 
 const LIMIT = 20;
 const ALL = "all";
 
 export default function InvoicesPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
   const router = useRouter();
 
@@ -70,28 +72,28 @@ export default function InvoicesPage() {
   const columns: Column<Invoice>[] = [
     {
       key: "number",
-      header: "เลขที่บิล",
+      header: t("invoice-number"),
       cell: (i) => (
         <span className="font-medium text-gray-900">
           {i.invoiceNumber ?? i.id.slice(0, 8)}
         </span>
       ),
     },
-    { key: "room", header: "ห้อง", cell: (i) => i.roomName ?? "-" },
-    { key: "tenant", header: "ผู้เช่า", cell: (i) => i.tenantName ?? "-" },
+    { key: "room", header: t("room"), cell: (i) => i.roomName ?? "-" },
+    { key: "tenant", header: t("tenant"), cell: (i) => i.tenantName ?? "-" },
     {
       key: "due",
-      header: "ครบกำหนด",
+      header: t("due"),
       cell: (i) => formatDate(i.dueDate),
     },
     {
       key: "total",
-      header: "ยอดรวม",
+      header: t("total"),
       cell: (i) => formatCurrency(i.total),
     },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (i) => <StatusBadge kind="invoice" value={i.status} />,
     },
   ];
@@ -99,19 +101,19 @@ export default function InvoicesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ใบแจ้งหนี้"
-        description="ติดตามและจัดการใบแจ้งหนี้ทั้งหมด"
+        title={t("nav-invoices")}
+        description={t("invoices-page-description")}
         actions={
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4" />
-            สร้างใบแจ้งหนี้
+            {t("create-invoice")}
           </Button>
         }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="ค้นหาเลขที่บิล..."
+          placeholder={t("search-invoice-number")}
           value={invoiceNumber}
           onChange={(e) => {
             setPage(1);
@@ -127,13 +129,13 @@ export default function InvoicesPage() {
           }}
         >
           <SelectTrigger className="sm:w-48">
-            <SelectValue placeholder="สถานะ" />
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>ทุกสถานะ</SelectItem>
+            <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
             {Object.values(InvoiceStatus).map((s) => (
               <SelectItem key={s} value={s}>
-                {INVOICE_STATUS_LABELS[s]}
+                {t(INVOICE_STATUS_CODES[s])}
               </SelectItem>
             ))}
           </SelectContent>
@@ -148,8 +150,8 @@ export default function InvoicesPage() {
         onRowClick={(i) =>
           router.push(`/apartments/${apartmentId}/invoices/${i.id}`)
         }
-        emptyTitle="ยังไม่มีใบแจ้งหนี้"
-        emptyDescription="สร้างใบแจ้งหนี้หรือออกบิลจากรอบบิล"
+        emptyTitle={t("no-invoices")}
+        emptyDescription={t("no-invoices-description")}
       />
 
       <Pagination

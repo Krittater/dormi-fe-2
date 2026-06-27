@@ -35,6 +35,7 @@ import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 import type { ChargeType, RoomCharge } from "@/types";
 
 interface RoomOption {
@@ -42,14 +43,17 @@ interface RoomOption {
   name: string;
 }
 
-const schema = z.object({
-  roomId: z.string().min(1, "กรุณาเลือกห้อง"),
-  chargeTypeId: z.string().min(1, "กรุณาเลือกประเภทค่าใช้จ่าย"),
-  amount: z.coerce.number({ message: "กรุณากรอกตัวเลข" }).min(0, "ต้องไม่ติดลบ"),
-  unit: z.string().optional(),
-  description: z.string().optional(),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    roomId: z.string().min(1, t("please-select-room")),
+    chargeTypeId: z.string().min(1, t("please-select-charge-type")),
+    amount: z.coerce
+      .number({ message: t("enter-a-number") })
+      .min(0, t("must-not-be-negative")),
+    unit: z.string().optional(),
+    description: z.string().optional(),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 interface Props {
   open: boolean;
@@ -70,11 +74,12 @@ export function RoomChargeFormDialog({
   chargeTypes,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = Boolean(charge);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: {
       roomId: "",
       chargeTypeId: "",
@@ -112,10 +117,10 @@ export function RoomChargeFormDialog({
           unit: values.unit ? Number(values.unit) : null,
           description: values.description || undefined,
         });
-        toast.success("แก้ไขค่าใช้จ่ายสำเร็จ");
+        toast.success(t("room-charge-updated"));
       } else {
         await api.post(endpoints.roomCharges.create(apartmentId), payload);
-        toast.success("เพิ่มค่าใช้จ่ายสำเร็จ");
+        toast.success(t("room-charge-added"));
       }
       onSaved();
       onOpenChange(false);
@@ -131,11 +136,9 @@ export function RoomChargeFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "แก้ไขค่าใช้จ่ายห้อง" : "เพิ่มค่าใช้จ่ายห้อง"}
+            {isEdit ? t("edit-room-charge") : t("add-room-charge")}
           </DialogTitle>
-          <DialogDescription>
-            ผูกประเภทค่าใช้จ่ายเข้ากับห้องเพื่อเรียกเก็บประจำงวด
-          </DialogDescription>
+          <DialogDescription>{t("room-charge-form-description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -144,7 +147,7 @@ export function RoomChargeFormDialog({
               name="roomId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ห้อง</FormLabel>
+                  <FormLabel>{t("room")}</FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
@@ -152,7 +155,7 @@ export function RoomChargeFormDialog({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="เลือกห้อง" />
+                        <SelectValue placeholder={t("select-room")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -172,7 +175,7 @@ export function RoomChargeFormDialog({
               name="chargeTypeId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ประเภทค่าใช้จ่าย</FormLabel>
+                  <FormLabel>{t("nav-charge-types")}</FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
@@ -180,7 +183,7 @@ export function RoomChargeFormDialog({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="เลือกประเภท" />
+                        <SelectValue placeholder={t("select-type")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -201,7 +204,7 @@ export function RoomChargeFormDialog({
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ยอดเรียกเก็บ</FormLabel>
+                    <FormLabel>{t("charge-amount")}</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} step="0.01" {...field} />
                     </FormControl>
@@ -214,7 +217,7 @@ export function RoomChargeFormDialog({
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>จำนวนหน่วย (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("unit-count-optional")}</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} step="0.01" {...field} />
                     </FormControl>
@@ -228,7 +231,7 @@ export function RoomChargeFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>คำอธิบาย (ไม่บังคับ)</FormLabel>
+                  <FormLabel>{t("description-optional")}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -243,11 +246,11 @@ export function RoomChargeFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                บันทึก
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

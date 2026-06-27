@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { formatCurrency, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import type { ChargeType, RoomCharge } from "@/types";
 
 interface SetupCharge {
@@ -45,6 +46,7 @@ interface RoomOption {
 }
 
 export default function RoomChargesSetupPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [rows, setRows] = useState<SetupRow[]>([]);
@@ -166,13 +168,13 @@ export default function RoomChargesSetupPage() {
       }))
     );
     if (charges.length === 0) {
-      toast.error("ยังไม่มีค่าใช้จ่ายให้บันทึก");
+      toast.error(t("no-charges-to-save"));
       return;
     }
     setSaving(true);
     try {
       await api.patch(endpoints.roomCharges.setup(apartmentId), { charges });
-      toast.success("บันทึกการตั้งค่าสำเร็จ");
+      toast.success(t("settings-saved"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -185,7 +187,7 @@ export default function RoomChargesSetupPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.roomCharges.remove(apartmentId, deleting.id));
-      toast.success("ลบค่าใช้จ่ายสำเร็จ");
+      toast.success(t("room-charge-deleted"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -197,8 +199,8 @@ export default function RoomChargesSetupPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ค่าใช้จ่ายประจำห้อง"
-        description="ตั้งค่ายอดเรียกเก็บประจำ และเลือกว่าจะคิดค่าน้ำ-ค่าไฟตามมิเตอร์หรือไม่"
+        title={t("nav-room-charges")}
+        description={t("room-charges-page-description")}
         actions={
           <div className="flex gap-2">
             <Button
@@ -210,7 +212,7 @@ export default function RoomChargesSetupPage() {
               disabled={rooms.length === 0 || chargeTypes.length === 0}
             >
               <Plus className="h-4 w-4" />
-              เพิ่มค่าใช้จ่าย
+              {t("add-charge")}
             </Button>
             <Button onClick={handleSave} disabled={saving || loading}>
               {saving ? (
@@ -218,7 +220,7 @@ export default function RoomChargesSetupPage() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              บันทึกทั้งหมด
+              {t("save-all")}
             </Button>
           </div>
         }
@@ -232,8 +234,8 @@ export default function RoomChargesSetupPage() {
         </div>
       ) : rows.length === 0 ? (
         <EmptyState
-          title="ยังไม่มีห้องสำหรับตั้งค่า"
-          description="เพิ่มห้องพักก่อน จึงจะตั้งค่าค่าใช้จ่ายประจำได้"
+          title={t("no-rooms-to-setup")}
+          description={t("add-rooms-first-description")}
         />
       ) : (
         <div className="space-y-4">
@@ -242,13 +244,15 @@ export default function RoomChargesSetupPage() {
               <CardContent className="p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-gray-900">
-                    ห้อง {room.name}
+                    {t("room-name", { name: room.name })}
                   </h3>
                   <div className="flex flex-wrap gap-4">
                     <label className="flex items-center gap-2 text-sm">
                       <Droplet className="h-4 w-4 text-info" />
                       <span className="text-gray-700">
-                        คิดค่าน้ำ ({formatCurrency(room.waterRatePerUnit)}/หน่วย)
+                        {t("charge-water-rate", {
+                          rate: formatCurrency(room.waterRatePerUnit),
+                        })}
                       </span>
                       <Switch
                         checked={room.isCalWater}
@@ -261,8 +265,9 @@ export default function RoomChargesSetupPage() {
                     <label className="flex items-center gap-2 text-sm">
                       <Zap className="h-4 w-4 text-warning" />
                       <span className="text-gray-700">
-                        คิดค่าไฟ (
-                        {formatCurrency(room.electricityRatePerUnit)}/หน่วย)
+                        {t("charge-electricity-rate", {
+                          rate: formatCurrency(room.electricityRatePerUnit),
+                        })}
                       </span>
                       <Switch
                         checked={room.isCalElectric}
@@ -277,7 +282,7 @@ export default function RoomChargesSetupPage() {
 
                 {room.charges.length === 0 ? (
                   <p className="mt-4 text-sm text-gray-500">
-                    ยังไม่มีค่าใช้จ่ายประจำสำหรับห้องนี้
+                    {t("no-recurring-charges")}
                   </p>
                 ) : (
                   <div className="mt-4 space-y-2">
@@ -288,12 +293,12 @@ export default function RoomChargesSetupPage() {
                       >
                         <div className="sm:col-span-5">
                           <p className="text-sm font-medium text-gray-900">
-                            {c.chargeTypeName ?? "ค่าใช้จ่าย"}
+                            {c.chargeTypeName ?? t("charge")}
                           </p>
                         </div>
                         <div className="sm:col-span-3">
                           <label className="text-xs text-gray-500">
-                            ยอดเรียกเก็บ
+                            {t("charge-amount")}
                           </label>
                           <Input
                             type="number"
@@ -308,7 +313,9 @@ export default function RoomChargesSetupPage() {
                           />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="text-xs text-gray-500">หน่วย</label>
+                          <label className="text-xs text-gray-500">
+                            {t("unit")}
+                          </label>
                           <Input
                             type="number"
                             min={0}
@@ -350,7 +357,7 @@ export default function RoomChargesSetupPage() {
                             onClick={() =>
                               setDeleting({
                                 id: c.id,
-                                name: c.chargeTypeName ?? "ค่าใช้จ่าย",
+                                name: c.chargeTypeName ?? t("charge"),
                               })
                             }
                           >
@@ -380,9 +387,11 @@ export default function RoomChargesSetupPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบค่าใช้จ่าย"
-        description={`ต้องการลบ "${deleting?.name}" ออกจากห้องนี้ใช่หรือไม่?`}
-        confirmLabel="ลบ"
+        title={t("delete-charge")}
+        description={t("delete-charge-from-room-description", {
+          name: deleting?.name ?? "",
+        })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

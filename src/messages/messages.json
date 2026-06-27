@@ -1,11 +1,2480 @@
 [
-    {
-        "code":"hello",
-        "th":"สวัสดี",
-        "en":"Hello",
-        "cn": "你好"
-    },
-    {
-        
-    }
+  {
+    "code": "hello",
+    "th": "สวัสดี",
+    "en": "Hello",
+    "cn": "你好"
+  },
+  {
+    "code": "good-afternoon-teacher",
+    "th": "สวัสดีครับ คุณครู",
+    "en": "Good afternoon teacher",
+    "cn": "下午好老师"
+  },
+  {
+    "code": "language",
+    "th": "ภาษา",
+    "en": "Language",
+    "cn": "语言"
+  },
+  {
+    "code": "change-language",
+    "th": "เปลี่ยนภาษา",
+    "en": "Change language",
+    "cn": "切换语言"
+  },
+  {
+    "code": "nav-section-overview",
+    "th": "ภาพรวม",
+    "en": "Overview",
+    "cn": "概览"
+  },
+  {
+    "code": "nav-apartment-dashboard",
+    "th": "แดชบอร์ดหอพัก",
+    "en": "Apartment dashboard",
+    "cn": "公寓仪表板"
+  },
+  {
+    "code": "nav-section-room-management",
+    "th": "จัดการห้องพัก",
+    "en": "Room management",
+    "cn": "房间管理"
+  },
+  {
+    "code": "nav-rooms",
+    "th": "ห้องพัก",
+    "en": "Rooms",
+    "cn": "房间"
+  },
+  {
+    "code": "nav-room-types",
+    "th": "ประเภทห้อง",
+    "en": "Room types",
+    "cn": "房间类型"
+  },
+  {
+    "code": "nav-tenants",
+    "th": "ผู้เช่า",
+    "en": "Tenants",
+    "cn": "租户"
+  },
+  {
+    "code": "nav-meters",
+    "th": "มิเตอร์",
+    "en": "Meters",
+    "cn": "电水表"
+  },
+  {
+    "code": "nav-section-charge-settings",
+    "th": "ตั้งค่าค่าใช้จ่าย",
+    "en": "Charge settings",
+    "cn": "费用设置"
+  },
+  {
+    "code": "nav-charge-types",
+    "th": "ประเภทค่าใช้จ่าย",
+    "en": "Charge types",
+    "cn": "费用类型"
+  },
+  {
+    "code": "nav-room-charges",
+    "th": "ค่าใช้จ่ายประจำห้อง",
+    "en": "Room charges",
+    "cn": "房间固定费用"
+  },
+  {
+    "code": "nav-invoice-setups",
+    "th": "รูปแบบใบแจ้งหนี้",
+    "en": "Invoice setups",
+    "cn": "账单配置"
+  },
+  {
+    "code": "nav-section-billing",
+    "th": "การเรียกเก็บเงิน",
+    "en": "Billing",
+    "cn": "计费"
+  },
+  {
+    "code": "nav-billing-periods",
+    "th": "รอบบิล",
+    "en": "Billing periods",
+    "cn": "账单周期"
+  },
+  {
+    "code": "nav-invoices",
+    "th": "ใบแจ้งหนี้",
+    "en": "Invoices",
+    "cn": "账单"
+  },
+  {
+    "code": "item-type-rent",
+    "th": "ค่าเช่า",
+    "en": "Rent",
+    "cn": "租金"
+  },
+  {
+    "code": "item-type-electricity",
+    "th": "ค่าไฟฟ้า",
+    "en": "Electricity",
+    "cn": "电费"
+  },
+  {
+    "code": "item-type-water",
+    "th": "ค่าน้ำ",
+    "en": "Water",
+    "cn": "水费"
+  },
+  {
+    "code": "item-type-utility",
+    "th": "ค่าสาธารณูปโภค",
+    "en": "Utilities",
+    "cn": "公共事业费"
+  },
+  {
+    "code": "item-type-service",
+    "th": "ค่าบริการ",
+    "en": "Service",
+    "cn": "服务费"
+  },
+  {
+    "code": "item-type-other",
+    "th": "อื่นๆ",
+    "en": "Other",
+    "cn": "其他"
+  },
+  {
+    "code": "room-status-available",
+    "th": "ว่าง",
+    "en": "Available",
+    "cn": "空闲"
+  },
+  {
+    "code": "room-status-rented",
+    "th": "มีผู้เช่า",
+    "en": "Rented",
+    "cn": "已出租"
+  },
+  {
+    "code": "room-status-booked",
+    "th": "จองแล้ว",
+    "en": "Booked",
+    "cn": "已预订"
+  },
+  {
+    "code": "room-status-overdue",
+    "th": "ค้างชำระ",
+    "en": "Overdue",
+    "cn": "逾期未付"
+  },
+  {
+    "code": "billing-period-status-open",
+    "th": "เปิดรอบ",
+    "en": "Open",
+    "cn": "开放"
+  },
+  {
+    "code": "billing-period-status-generated",
+    "th": "สร้างบิลแล้ว",
+    "en": "Generated",
+    "cn": "已生成"
+  },
+  {
+    "code": "billing-period-status-closed",
+    "th": "ปิดรอบ",
+    "en": "Closed",
+    "cn": "已关闭"
+  },
+  {
+    "code": "billing-period-status-cancelled",
+    "th": "ยกเลิก",
+    "en": "Cancelled",
+    "cn": "已取消"
+  },
+  {
+    "code": "invoice-status-draft",
+    "th": "ฉบับร่าง",
+    "en": "Draft",
+    "cn": "草稿"
+  },
+  {
+    "code": "invoice-status-unpaid",
+    "th": "ยังไม่ชำระ",
+    "en": "Unpaid",
+    "cn": "未付款"
+  },
+  {
+    "code": "invoice-status-paid",
+    "th": "ชำระแล้ว",
+    "en": "Paid",
+    "cn": "已付款"
+  },
+  {
+    "code": "invoice-status-overdue",
+    "th": "เกินกำหนด",
+    "en": "Overdue",
+    "cn": "逾期"
+  },
+  {
+    "code": "invoice-status-cancelled",
+    "th": "ยกเลิก",
+    "en": "Cancelled",
+    "cn": "已取消"
+  },
+  {
+    "code": "meter-status-not-recorded",
+    "th": "ยังไม่จด",
+    "en": "Not recorded",
+    "cn": "未记录"
+  },
+  {
+    "code": "meter-status-recorded",
+    "th": "จดแล้ว",
+    "en": "Recorded",
+    "cn": "已记录"
+  },
+  {
+    "code": "meter-status-billed",
+    "th": "ออกบิลแล้ว",
+    "en": "Billed",
+    "cn": "已开账单"
+  },
+  {
+    "code": "open-menu",
+    "th": "เปิดเมนู",
+    "en": "Open menu",
+    "cn": "打开菜单"
+  },
+  {
+    "code": "user",
+    "th": "ผู้ใช้งาน",
+    "en": "User",
+    "cn": "用户"
+  },
+  {
+    "code": "logged-out",
+    "th": "ออกจากระบบแล้ว",
+    "en": "Logged out",
+    "cn": "已退出登录"
+  },
+  {
+    "code": "my-apartments",
+    "th": "หอพักของฉัน",
+    "en": "My apartments",
+    "cn": "我的公寓"
+  },
+  {
+    "code": "logout",
+    "th": "ออกจากระบบ",
+    "en": "Log out",
+    "cn": "退出登录"
+  },
+  {
+    "code": "no-data",
+    "th": "ไม่มีข้อมูล",
+    "en": "No data",
+    "cn": "暂无数据"
+  },
+  {
+    "code": "confirm",
+    "th": "ยืนยัน",
+    "en": "Confirm",
+    "cn": "确认"
+  },
+  {
+    "code": "cancel",
+    "th": "ยกเลิก",
+    "en": "Cancel",
+    "cn": "取消"
+  },
+  {
+    "code": "save",
+    "th": "บันทึก",
+    "en": "Save",
+    "cn": "保存"
+  },
+  {
+    "code": "saving",
+    "th": "กำลังบันทึก...",
+    "en": "Saving...",
+    "cn": "保存中..."
+  },
+  {
+    "code": "delete",
+    "th": "ลบ",
+    "en": "Delete",
+    "cn": "删除"
+  },
+  {
+    "code": "edit",
+    "th": "แก้ไข",
+    "en": "Edit",
+    "cn": "编辑"
+  },
+  {
+    "code": "select-apartment",
+    "th": "เลือกหอพัก",
+    "en": "Select apartment",
+    "cn": "选择公寓"
+  },
+  {
+    "code": "no-apartments-yet",
+    "th": "ยังไม่มีหอพัก",
+    "en": "No apartments yet",
+    "cn": "暂无公寓"
+  },
+  {
+    "code": "manage-add-apartment",
+    "th": "จัดการ / เพิ่มหอพัก",
+    "en": "Manage / add apartment",
+    "cn": "管理 / 添加公寓"
+  },
+  {
+    "code": "generic-error",
+    "th": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+    "en": "Something went wrong. Please try again.",
+    "cn": "发生错误，请重试。"
+  },
+  {
+    "code": "email",
+    "th": "อีเมล",
+    "en": "Email",
+    "cn": "邮箱"
+  },
+  {
+    "code": "password",
+    "th": "รหัสผ่าน",
+    "en": "Password",
+    "cn": "密码"
+  },
+  {
+    "code": "confirm-password",
+    "th": "ยืนยันรหัสผ่าน",
+    "en": "Confirm password",
+    "cn": "确认密码"
+  },
+  {
+    "code": "first-name",
+    "th": "ชื่อ",
+    "en": "First name",
+    "cn": "名字"
+  },
+  {
+    "code": "last-name",
+    "th": "นามสกุล",
+    "en": "Last name",
+    "cn": "姓氏"
+  },
+  {
+    "code": "phone",
+    "th": "เบอร์โทรศัพท์",
+    "en": "Phone number",
+    "cn": "电话号码"
+  },
+  {
+    "code": "email-invalid",
+    "th": "รูปแบบอีเมลไม่ถูกต้อง",
+    "en": "Invalid email format",
+    "cn": "邮箱格式不正确"
+  },
+  {
+    "code": "password-required",
+    "th": "กรุณากรอกรหัสผ่าน",
+    "en": "Please enter your password",
+    "cn": "请输入密码"
+  },
+  {
+    "code": "phone-invalid",
+    "th": "เบอร์โทรศัพท์ไม่ถูกต้อง",
+    "en": "Invalid phone number",
+    "cn": "电话号码无效"
+  },
+  {
+    "code": "password-min-6",
+    "th": "รหัสผ่านอย่างน้อย 6 ตัวอักษร",
+    "en": "Password must be at least 6 characters",
+    "cn": "密码至少6个字符"
+  },
+  {
+    "code": "confirm-password-required",
+    "th": "กรุณายืนยันรหัสผ่าน",
+    "en": "Please confirm your password",
+    "cn": "请确认密码"
+  },
+  {
+    "code": "passwords-not-matching",
+    "th": "รหัสผ่านไม่ตรงกัน",
+    "en": "Passwords do not match",
+    "cn": "两次输入的密码不一致"
+  },
+  {
+    "code": "dormitory-management",
+    "th": "ระบบจัดการหอพัก",
+    "en": "Dormitory Management",
+    "cn": "宿舍管理"
+  },
+  {
+    "code": "all-in-one-dormitory-system",
+    "th": "ระบบจัดการหอพักครบวงจร",
+    "en": "All-in-one dormitory system",
+    "cn": "一体化宿舍管理系统"
+  },
+  {
+    "code": "login-hero-title",
+    "th": "จัดการหอพักได้ง่ายในที่เดียว",
+    "en": "Manage your dormitory easily in one place",
+    "cn": "在一处轻松管理宿舍"
+  },
+  {
+    "code": "login-hero-subtitle",
+    "th": "ดูแลห้องพัก ผู้เช่า และการเงินอย่างเป็นระบบ ปลอดภัย และตรวจสอบได้",
+    "en": "Manage rooms, tenants, and finances systematically, securely, and transparently",
+    "cn": "系统、安全、可追溯地管理房间、租户和财务"
+  },
+  {
+    "code": "login-highlight-manage",
+    "th": "จัดการห้องพักและผู้เช่าในที่เดียว",
+    "en": "Manage rooms and tenants in one place",
+    "cn": "在一处管理房间和租户"
+  },
+  {
+    "code": "login-highlight-invoice",
+    "th": "ออกใบแจ้งหนี้และติดตามการชำระเงินอัตโนมัติ",
+    "en": "Issue invoices and track payments automatically",
+    "cn": "自动开具账单并跟踪付款"
+  },
+  {
+    "code": "login-highlight-reports",
+    "th": "รายงานสรุปแบบเรียลไทม์",
+    "en": "Real-time summary reports",
+    "cn": "实时汇总报告"
+  },
+  {
+    "code": "secure-login",
+    "th": "เข้าสู่ระบบอย่างปลอดภัย",
+    "en": "Secure login",
+    "cn": "安全登录"
+  },
+  {
+    "code": "welcome-back",
+    "th": "ยินดีต้อนรับกลับ",
+    "en": "Welcome back",
+    "cn": "欢迎回来"
+  },
+  {
+    "code": "login-to-continue",
+    "th": "กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ",
+    "en": "Please log in to continue",
+    "cn": "请登录以继续"
+  },
+  {
+    "code": "hide-password",
+    "th": "ซ่อนรหัสผ่าน",
+    "en": "Hide password",
+    "cn": "隐藏密码"
+  },
+  {
+    "code": "show-password",
+    "th": "แสดงรหัสผ่าน",
+    "en": "Show password",
+    "cn": "显示密码"
+  },
+  {
+    "code": "remember-me",
+    "th": "จดจำฉันไว้",
+    "en": "Remember me",
+    "cn": "记住我"
+  },
+  {
+    "code": "forgot-password",
+    "th": "ลืมรหัสผ่าน?",
+    "en": "Forgot password?",
+    "cn": "忘记密码？"
+  },
+  {
+    "code": "logging-in",
+    "th": "กำลังเข้าสู่ระบบ...",
+    "en": "Logging in...",
+    "cn": "登录中..."
+  },
+  {
+    "code": "login",
+    "th": "เข้าสู่ระบบ",
+    "en": "Log in",
+    "cn": "登录"
+  },
+  {
+    "code": "login-success",
+    "th": "เข้าสู่ระบบสำเร็จ",
+    "en": "Logged in successfully",
+    "cn": "登录成功"
+  },
+  {
+    "code": "no-account-yet",
+    "th": "ยังไม่มีบัญชี?",
+    "en": "Don't have an account?",
+    "cn": "还没有账户？"
+  },
+  {
+    "code": "register",
+    "th": "ลงทะเบียน",
+    "en": "Register",
+    "cn": "注册"
+  },
+  {
+    "code": "register-subtitle",
+    "th": "สร้างบัญชีเพื่อเริ่มจัดการหอพักของคุณ",
+    "en": "Create an account to start managing your dormitory",
+    "cn": "创建账户以开始管理您的宿舍"
+  },
+  {
+    "code": "register-success",
+    "th": "ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ",
+    "en": "Registration successful. Please log in.",
+    "cn": "注册成功，请登录。"
+  },
+  {
+    "code": "already-have-account",
+    "th": "มีบัญชีอยู่แล้ว?",
+    "en": "Already have an account?",
+    "cn": "已有账户？"
+  },
+  {
+    "code": "add-apartment",
+    "th": "เพิ่มหอพัก",
+    "en": "Add apartment",
+    "cn": "添加公寓"
+  },
+  {
+    "code": "delete-apartment",
+    "th": "ลบหอพัก",
+    "en": "Delete apartment",
+    "cn": "删除公寓"
+  },
+  {
+    "code": "apartment-deleted",
+    "th": "ลบหอพักสำเร็จ",
+    "en": "Apartment deleted successfully",
+    "cn": "公寓删除成功"
+  },
+  {
+    "code": "dashboard-subtitle",
+    "th": "เลือกหอพักเพื่อเข้าจัดการ หรือเพิ่มหอพักใหม่",
+    "en": "Select an apartment to manage or add a new one",
+    "cn": "选择公寓进行管理或添加新公寓"
+  },
+  {
+    "code": "add-first-apartment",
+    "th": "เริ่มต้นด้วยการเพิ่มหอพักแห่งแรกของคุณ",
+    "en": "Start by adding your first apartment",
+    "cn": "从添加您的第一个公寓开始"
+  },
+  {
+    "code": "electricity-rate-per-unit",
+    "th": "ค่าไฟ/หน่วย",
+    "en": "Electricity/unit",
+    "cn": "电费/单位"
+  },
+  {
+    "code": "water-rate-per-unit",
+    "th": "ค่าน้ำ/หน่วย",
+    "en": "Water/unit",
+    "cn": "水费/单位"
+  },
+  {
+    "code": "manage",
+    "th": "เข้าจัดการ",
+    "en": "Manage",
+    "cn": "管理"
+  },
+  {
+    "code": "delete-confirm-description",
+    "th": "ต้องการลบ \"{name}\" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "en": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+    "cn": "确定要删除\"{name}\"吗？此操作无法撤销。"
+  },
+  {
+    "code": "rooms-total",
+    "th": "ห้องทั้งหมด",
+    "en": "Total rooms",
+    "cn": "房间总数"
+  },
+  {
+    "code": "rooms-available",
+    "th": "ห้องว่าง",
+    "en": "Available rooms",
+    "cn": "空闲房间"
+  },
+  {
+    "code": "rooms-rented",
+    "th": "มีผู้เช่า",
+    "en": "Rented",
+    "cn": "已出租"
+  },
+  {
+    "code": "rooms-overdue",
+    "th": "ค้างชำระ",
+    "en": "Overdue",
+    "cn": "逾期未付"
+  },
+  {
+    "code": "shortcuts",
+    "th": "ทางลัด",
+    "en": "Shortcuts",
+    "cn": "快捷方式"
+  },
+  {
+    "code": "apartment-overview",
+    "th": "ภาพรวมหอพัก",
+    "en": "Apartment overview",
+    "cn": "公寓概览"
+  },
+  {
+    "code": "apartment-overview-subtitle",
+    "th": "สรุปภาพรวมห้องพักและทางลัดการจัดการ",
+    "en": "Room overview summary and management shortcuts",
+    "cn": "房间概览摘要和管理快捷方式"
+  },
+  {
+    "code": "link-rooms-desc",
+    "th": "จัดการห้องและสถานะ",
+    "en": "Manage rooms and statuses",
+    "cn": "管理房间和状态"
+  },
+  {
+    "code": "link-tenants-desc",
+    "th": "ทะเบียนผู้เช่า",
+    "en": "Tenant registry",
+    "cn": "租户登记"
+  },
+  {
+    "code": "link-meters-desc",
+    "th": "จดมิเตอร์น้ำ-ไฟ",
+    "en": "Record water & electricity meters",
+    "cn": "记录水电表"
+  },
+  {
+    "code": "link-billing-periods-desc",
+    "th": "สร้างและปิดรอบบิล",
+    "en": "Create and close billing periods",
+    "cn": "创建和关闭账单周期"
+  },
+  {
+    "code": "link-invoices-desc",
+    "th": "ออกและติดตามการชำระ",
+    "en": "Issue and track payments",
+    "cn": "开具并跟踪付款"
+  },
+  {
+    "code": "description",
+    "th": "คำอธิบาย",
+    "en": "Description",
+    "cn": "描述"
+  },
+  {
+    "code": "description-optional",
+    "th": "คำอธิบาย (ไม่บังคับ)",
+    "en": "Description (optional)",
+    "cn": "描述（可选）"
+  },
+  {
+    "code": "phone-optional",
+    "th": "เบอร์โทรศัพท์ (ไม่บังคับ)",
+    "en": "Phone number (optional)",
+    "cn": "电话号码（可选）"
+  },
+  {
+    "code": "province",
+    "th": "จังหวัด",
+    "en": "Province",
+    "cn": "省份"
+  },
+  {
+    "code": "district",
+    "th": "อำเภอ/เขต",
+    "en": "District",
+    "cn": "区/县"
+  },
+  {
+    "code": "sub-district",
+    "th": "ตำบล/แขวง",
+    "en": "Sub-district",
+    "cn": "街道/乡"
+  },
+  {
+    "code": "postal-code",
+    "th": "รหัสไปรษณีย์",
+    "en": "Postal code",
+    "cn": "邮政编码"
+  },
+  {
+    "code": "enter-a-number",
+    "th": "กรุณากรอกตัวเลข",
+    "en": "Please enter a number",
+    "cn": "请输入数字"
+  },
+  {
+    "code": "between-1-and-31",
+    "th": "ระหว่าง 1-31",
+    "en": "Between 1 and 31",
+    "cn": "1 至 31 之间"
+  },
+  {
+    "code": "must-not-be-negative",
+    "th": "ต้องไม่ติดลบ",
+    "en": "Must not be negative",
+    "cn": "不能为负数"
+  },
+  {
+    "code": "enter-room-type-name",
+    "th": "กรุณากรอกชื่อประเภทห้อง",
+    "en": "Please enter a room type name",
+    "cn": "请输入房间类型名称"
+  },
+  {
+    "code": "price-must-be-positive",
+    "th": "ราคาต้องมากกว่า 0",
+    "en": "Price must be greater than 0",
+    "cn": "价格必须大于 0"
+  },
+  {
+    "code": "enter-apartment-name",
+    "th": "กรุณากรอกชื่อหอพัก",
+    "en": "Please enter the apartment name",
+    "cn": "请输入公寓名称"
+  },
+  {
+    "code": "enter-province",
+    "th": "กรุณากรอกจังหวัด",
+    "en": "Please enter the province",
+    "cn": "请输入省份"
+  },
+  {
+    "code": "enter-district",
+    "th": "กรุณากรอกอำเภอ/เขต",
+    "en": "Please enter the district",
+    "cn": "请输入区/县"
+  },
+  {
+    "code": "enter-sub-district",
+    "th": "กรุณากรอกตำบล/แขวง",
+    "en": "Please enter the sub-district",
+    "cn": "请输入街道/乡"
+  },
+  {
+    "code": "enter-postal-code",
+    "th": "กรุณากรอกรหัสไปรษณีย์",
+    "en": "Please enter the postal code",
+    "cn": "请输入邮政编码"
+  },
+  {
+    "code": "at-least-one-room-type",
+    "th": "ต้องมีประเภทห้องอย่างน้อย 1 ประเภท",
+    "en": "At least one room type is required",
+    "cn": "至少需要一种房间类型"
+  },
+  {
+    "code": "edit-apartment",
+    "th": "แก้ไขหอพัก",
+    "en": "Edit apartment",
+    "cn": "编辑公寓"
+  },
+  {
+    "code": "add-new-apartment",
+    "th": "เพิ่มหอพักใหม่",
+    "en": "Add new apartment",
+    "cn": "添加新公寓"
+  },
+  {
+    "code": "apartment-form-description",
+    "th": "กรอกข้อมูลหอพัก อัตราค่าน้ำ-ค่าไฟ และวันตัดรอบบิล",
+    "en": "Enter apartment details, water/electricity rates, and billing cut-off dates",
+    "cn": "填写公寓信息、水电费率和账单截止日期"
+  },
+  {
+    "code": "apartment-name",
+    "th": "ชื่อหอพัก",
+    "en": "Apartment name",
+    "cn": "公寓名称"
+  },
+  {
+    "code": "apartment-name-placeholder",
+    "th": "เช่น Dormi Residence",
+    "en": "e.g. Dormi Residence",
+    "cn": "例如 Dormi Residence"
+  },
+  {
+    "code": "rates-and-cutoff-dates",
+    "th": "อัตราค่าบริการและวันตัดรอบ",
+    "en": "Rates and cut-off dates",
+    "cn": "费率和截止日期"
+  },
+  {
+    "code": "invoice-cutoff-date",
+    "th": "วันตัดรอบบิล",
+    "en": "Invoice cut-off date",
+    "cn": "账单截止日"
+  },
+  {
+    "code": "invoice-due-date",
+    "th": "วันครบกำหนดชำระ",
+    "en": "Payment due date",
+    "cn": "付款到期日"
+  },
+  {
+    "code": "electricity-cutoff-date",
+    "th": "วันตัดมิเตอร์ไฟ",
+    "en": "Electricity meter cut-off date",
+    "cn": "电表截止日"
+  },
+  {
+    "code": "electricity-rate-baht",
+    "th": "ค่าไฟ/หน่วย (บาท)",
+    "en": "Electricity/unit (THB)",
+    "cn": "电费/单位（泰铢）"
+  },
+  {
+    "code": "water-cutoff-date",
+    "th": "วันตัดมิเตอร์น้ำ",
+    "en": "Water meter cut-off date",
+    "cn": "水表截止日"
+  },
+  {
+    "code": "water-rate-baht",
+    "th": "ค่าน้ำ/หน่วย (บาท)",
+    "en": "Water/unit (THB)",
+    "cn": "水费/单位（泰铢）"
+  },
+  {
+    "code": "add-type",
+    "th": "เพิ่มประเภท",
+    "en": "Add type",
+    "cn": "添加类型"
+  },
+  {
+    "code": "type-name",
+    "th": "ชื่อประเภท",
+    "en": "Type name",
+    "cn": "类型名称"
+  },
+  {
+    "code": "price-per-month",
+    "th": "ราคา/เดือน",
+    "en": "Price/month",
+    "cn": "价格/月"
+  },
+  {
+    "code": "create-apartment",
+    "th": "สร้างหอพัก",
+    "en": "Create apartment",
+    "cn": "创建公寓"
+  },
+  {
+    "code": "apartment-updated",
+    "th": "แก้ไขหอพักสำเร็จ",
+    "en": "Apartment updated successfully",
+    "cn": "公寓更新成功"
+  },
+  {
+    "code": "apartment-created",
+    "th": "สร้างหอพักสำเร็จ",
+    "en": "Apartment created successfully",
+    "cn": "公寓创建成功"
+  },
+  {
+    "code": "please-select-room-type",
+    "th": "กรุณาเลือกประเภทห้อง",
+    "en": "Please select a room type",
+    "cn": "请选择房间类型"
+  },
+  {
+    "code": "select-room-type",
+    "th": "เลือกประเภทห้อง",
+    "en": "Select room type",
+    "cn": "选择房间类型"
+  },
+  {
+    "code": "enter-room-name-number",
+    "th": "กรุณากรอกชื่อ/เลขห้อง",
+    "en": "Please enter a room name/number",
+    "cn": "请输入房间名称/编号"
+  },
+  {
+    "code": "room-updated",
+    "th": "แก้ไขห้องสำเร็จ",
+    "en": "Room updated successfully",
+    "cn": "房间更新成功"
+  },
+  {
+    "code": "room-created-with-meters",
+    "th": "สร้างห้องสำเร็จ (พร้อมมิเตอร์น้ำ-ไฟ)",
+    "en": "Room created successfully (with water & electric meters)",
+    "cn": "房间创建成功（含水电表）"
+  },
+  {
+    "code": "edit-room",
+    "th": "แก้ไขห้องพัก",
+    "en": "Edit room",
+    "cn": "编辑房间"
+  },
+  {
+    "code": "add-room",
+    "th": "เพิ่มห้องพัก",
+    "en": "Add room",
+    "cn": "添加房间"
+  },
+  {
+    "code": "update-room-info",
+    "th": "ปรับปรุงข้อมูลห้องพัก",
+    "en": "Update room information",
+    "cn": "更新房间信息"
+  },
+  {
+    "code": "create-room-description",
+    "th": "สร้างห้องใหม่ ระบบจะสร้างมิเตอร์น้ำและไฟให้อัตโนมัติ",
+    "en": "Create a new room. The system will automatically create water and electric meters.",
+    "cn": "创建新房间。系统将自动创建水表和电表。"
+  },
+  {
+    "code": "room-name-number",
+    "th": "ชื่อ/เลขห้อง",
+    "en": "Room name/number",
+    "cn": "房间名称/编号"
+  },
+  {
+    "code": "floor-optional",
+    "th": "ชั้น (ไม่บังคับ)",
+    "en": "Floor (optional)",
+    "cn": "楼层（可选）"
+  },
+  {
+    "code": "status",
+    "th": "สถานะ",
+    "en": "Status",
+    "cn": "状态"
+  },
+  {
+    "code": "initial-water-meter",
+    "th": "เลขมิเตอร์น้ำเริ่มต้น",
+    "en": "Initial water meter reading",
+    "cn": "初始水表读数"
+  },
+  {
+    "code": "initial-electric-meter",
+    "th": "เลขมิเตอร์ไฟเริ่มต้น",
+    "en": "Initial electric meter reading",
+    "cn": "初始电表读数"
+  },
+  {
+    "code": "enable-room",
+    "th": "เปิดใช้งานห้อง",
+    "en": "Enable room",
+    "cn": "启用房间"
+  },
+  {
+    "code": "disabled-room-not-billed",
+    "th": "ห้องที่ปิดใช้งานจะไม่ถูกนำไปออกบิล",
+    "en": "Disabled rooms will not be billed",
+    "cn": "已停用的房间不会被计入账单"
+  },
+  {
+    "code": "room-details",
+    "th": "รายละเอียดห้อง",
+    "en": "Room details",
+    "cn": "房间详情"
+  },
+  {
+    "code": "room-info-billing-history",
+    "th": "ข้อมูลห้องพักและประวัติบิล",
+    "en": "Room information and billing history",
+    "cn": "房间信息和账单历史"
+  },
+  {
+    "code": "floor",
+    "th": "ชั้น",
+    "en": "Floor",
+    "cn": "楼层"
+  },
+  {
+    "code": "rent",
+    "th": "ค่าเช่า",
+    "en": "Rent",
+    "cn": "租金"
+  },
+  {
+    "code": "current-tenant",
+    "th": "ผู้เช่าปัจจุบัน",
+    "en": "Current tenant",
+    "cn": "当前租户"
+  },
+  {
+    "code": "move-in",
+    "th": "เข้าพัก",
+    "en": "Move-in",
+    "cn": "入住"
+  },
+  {
+    "code": "no-tenant",
+    "th": "ยังไม่มีผู้เช่า",
+    "en": "No tenant yet",
+    "cn": "暂无租户"
+  },
+  {
+    "code": "invoice-history",
+    "th": "ประวัติใบแจ้งหนี้",
+    "en": "Invoice history",
+    "cn": "账单历史"
+  },
+  {
+    "code": "due",
+    "th": "ครบกำหนด",
+    "en": "Due",
+    "cn": "到期"
+  },
+  {
+    "code": "no-billing-history",
+    "th": "ยังไม่มีประวัติบิล",
+    "en": "No billing history yet",
+    "cn": "暂无账单历史"
+  },
+  {
+    "code": "room-deleted",
+    "th": "ลบห้องสำเร็จ",
+    "en": "Room deleted successfully",
+    "cn": "房间删除成功"
+  },
+  {
+    "code": "room",
+    "th": "ห้อง",
+    "en": "Room",
+    "cn": "房间"
+  },
+  {
+    "code": "type",
+    "th": "ประเภท",
+    "en": "Type",
+    "cn": "类型"
+  },
+  {
+    "code": "active",
+    "th": "ใช้งาน",
+    "en": "Active",
+    "cn": "使用中"
+  },
+  {
+    "code": "on",
+    "th": "เปิด",
+    "en": "On",
+    "cn": "开启"
+  },
+  {
+    "code": "off",
+    "th": "ปิด",
+    "en": "Off",
+    "cn": "关闭"
+  },
+  {
+    "code": "view-details",
+    "th": "ดูรายละเอียด",
+    "en": "View details",
+    "cn": "查看详情"
+  },
+  {
+    "code": "rooms-page-description",
+    "th": "จัดการห้องพัก สถานะ และมิเตอร์",
+    "en": "Manage rooms, statuses, and meters",
+    "cn": "管理房间、状态和电水表"
+  },
+  {
+    "code": "add-room-type-first",
+    "th": "กรุณาเพิ่มประเภทห้องก่อน จึงจะสามารถสร้างห้องพักได้",
+    "en": "Please add a room type first before you can create rooms",
+    "cn": "请先添加房间类型，然后才能创建房间"
+  },
+  {
+    "code": "search-room-number",
+    "th": "ค้นหาเลขห้อง...",
+    "en": "Search room number...",
+    "cn": "搜索房间号..."
+  },
+  {
+    "code": "all-statuses",
+    "th": "ทุกสถานะ",
+    "en": "All statuses",
+    "cn": "所有状态"
+  },
+  {
+    "code": "usage",
+    "th": "การใช้งาน",
+    "en": "Usage",
+    "cn": "使用状态"
+  },
+  {
+    "code": "all",
+    "th": "ทั้งหมด",
+    "en": "All",
+    "cn": "全部"
+  },
+  {
+    "code": "enabled",
+    "th": "เปิดใช้งาน",
+    "en": "Enabled",
+    "cn": "已启用"
+  },
+  {
+    "code": "disabled",
+    "th": "ปิดใช้งาน",
+    "en": "Disabled",
+    "cn": "已停用"
+  },
+  {
+    "code": "no-rooms",
+    "th": "ยังไม่มีห้องพัก",
+    "en": "No rooms yet",
+    "cn": "暂无房间"
+  },
+  {
+    "code": "add-first-room",
+    "th": "เพิ่มห้องพักแรกของหอพักนี้",
+    "en": "Add the first room for this apartment",
+    "cn": "为该公寓添加第一个房间"
+  },
+  {
+    "code": "delete-room",
+    "th": "ลบห้องพัก",
+    "en": "Delete room",
+    "cn": "删除房间"
+  },
+  {
+    "code": "room-type-updated",
+    "th": "แก้ไขประเภทห้องสำเร็จ",
+    "en": "Room type updated successfully",
+    "cn": "房间类型更新成功"
+  },
+  {
+    "code": "room-type-created",
+    "th": "เพิ่มประเภทห้องสำเร็จ",
+    "en": "Room type added successfully",
+    "cn": "房间类型添加成功"
+  },
+  {
+    "code": "room-type-deleted",
+    "th": "ลบประเภทห้องสำเร็จ",
+    "en": "Room type deleted successfully",
+    "cn": "房间类型删除成功"
+  },
+  {
+    "code": "room-types-page-description",
+    "th": "กำหนดประเภทห้องและราคาเช่าต่อเดือน",
+    "en": "Define room types and monthly rental prices",
+    "cn": "设置房间类型和每月租金"
+  },
+  {
+    "code": "add-room-type",
+    "th": "เพิ่มประเภทห้อง",
+    "en": "Add room type",
+    "cn": "添加房间类型"
+  },
+  {
+    "code": "search-room-type",
+    "th": "ค้นหาประเภทห้อง...",
+    "en": "Search room types...",
+    "cn": "搜索房间类型..."
+  },
+  {
+    "code": "no-room-types",
+    "th": "ยังไม่มีประเภทห้อง",
+    "en": "No room types yet",
+    "cn": "暂无房间类型"
+  },
+  {
+    "code": "add-room-type-to-create-rooms",
+    "th": "เพิ่มประเภทห้องเพื่อใช้สร้างห้องพัก",
+    "en": "Add a room type to create rooms",
+    "cn": "添加房间类型以创建房间"
+  },
+  {
+    "code": "edit-room-type",
+    "th": "แก้ไขประเภทห้อง",
+    "en": "Edit room type",
+    "cn": "编辑房间类型"
+  },
+  {
+    "code": "room-type-form-description",
+    "th": "กำหนดชื่อและราคาเช่าต่อเดือนของประเภทห้อง",
+    "en": "Define the name and monthly rental price of the room type",
+    "cn": "设置房间类型的名称和每月租金"
+  },
+  {
+    "code": "price-per-month-baht",
+    "th": "ราคา/เดือน (บาท)",
+    "en": "Price/month (THB)",
+    "cn": "价格/月（泰铢）"
+  },
+  {
+    "code": "delete-room-type",
+    "th": "ลบประเภทห้อง",
+    "en": "Delete room type",
+    "cn": "删除房间类型"
+  },
+  {
+    "code": "enter-first-name",
+    "th": "กรุณากรอกชื่อ",
+    "en": "Please enter first name",
+    "cn": "请输入名字"
+  },
+  {
+    "code": "enter-last-name",
+    "th": "กรุณากรอกนามสกุล",
+    "en": "Please enter last name",
+    "cn": "请输入姓氏"
+  },
+  {
+    "code": "tenant-updated",
+    "th": "แก้ไขผู้เช่าสำเร็จ",
+    "en": "Tenant updated successfully",
+    "cn": "租户更新成功"
+  },
+  {
+    "code": "tenant-added",
+    "th": "เพิ่มผู้เช่าสำเร็จ",
+    "en": "Tenant added successfully",
+    "cn": "租户添加成功"
+  },
+  {
+    "code": "edit-tenant",
+    "th": "แก้ไขผู้เช่า",
+    "en": "Edit tenant",
+    "cn": "编辑租户"
+  },
+  {
+    "code": "add-tenant",
+    "th": "เพิ่มผู้เช่า",
+    "en": "Add tenant",
+    "cn": "添加租户"
+  },
+  {
+    "code": "edit-tenant-description",
+    "th": "ปรับปรุงข้อมูลผู้เช่าและสัญญา",
+    "en": "Update tenant and contract details",
+    "cn": "更新租户和合同信息"
+  },
+  {
+    "code": "add-tenant-description",
+    "th": "หากอีเมลยังไม่มีในระบบ จะสร้างบัญชีใหม่โดยใช้เบอร์โทรเป็นรหัสผ่านชั่วคราว",
+    "en": "If the email is not yet in the system, a new account will be created using the phone number as a temporary password",
+    "cn": "如果系统中尚无该邮箱，将使用电话号码作为临时密码创建新账户"
+  },
+  {
+    "code": "phone-temp-password-hint",
+    "th": "ใช้เป็นรหัสผ่านชั่วคราวสำหรับผู้ใช้ใหม่",
+    "en": "Used as a temporary password for new users",
+    "cn": "用作新用户的临时密码"
+  },
+  {
+    "code": "room-unit",
+    "th": "ห้องพัก",
+    "en": "Room",
+    "cn": "房间"
+  },
+  {
+    "code": "select-room-optional",
+    "th": "เลือกห้อง (ไม่บังคับ)",
+    "en": "Select a room (optional)",
+    "cn": "选择房间（可选）"
+  },
+  {
+    "code": "no-room-assigned",
+    "th": "ยังไม่ระบุห้อง",
+    "en": "No room assigned",
+    "cn": "未指定房间"
+  },
+  {
+    "code": "special-monthly-rent",
+    "th": "ค่าเช่าพิเศษ/เดือน",
+    "en": "Special rent/month",
+    "cn": "特别租金/月"
+  },
+  {
+    "code": "deposit",
+    "th": "เงินมัดจำ",
+    "en": "Deposit",
+    "cn": "押金"
+  },
+  {
+    "code": "contract-start",
+    "th": "เริ่มสัญญา",
+    "en": "Contract start",
+    "cn": "合同开始"
+  },
+  {
+    "code": "contract-end",
+    "th": "สิ้นสุดสัญญา",
+    "en": "Contract end",
+    "cn": "合同结束"
+  },
+  {
+    "code": "move-out-success",
+    "th": "บันทึกการย้ายออกสำเร็จ",
+    "en": "Move-out recorded successfully",
+    "cn": "退租记录成功"
+  },
+  {
+    "code": "move-out-tenant",
+    "th": "ย้ายผู้เช่าออก",
+    "en": "Move out tenant",
+    "cn": "租户退租"
+  },
+  {
+    "code": "move-out-description",
+    "th": "บันทึกการย้ายออกของ {name}",
+    "en": "Record move-out for {name}",
+    "cn": "记录 {name} 的退租"
+  },
+  {
+    "code": "move-out-date",
+    "th": "วันที่ย้ายออก",
+    "en": "Move-out date",
+    "cn": "退租日期"
+  },
+  {
+    "code": "confirm-move-out",
+    "th": "ยืนยันย้ายออก",
+    "en": "Confirm move-out",
+    "cn": "确认退租"
+  },
+  {
+    "code": "tenant-name",
+    "th": "ชื่อผู้เช่า",
+    "en": "Tenant name",
+    "cn": "租户姓名"
+  },
+  {
+    "code": "phone-short",
+    "th": "เบอร์โทร",
+    "en": "Phone",
+    "cn": "电话"
+  },
+  {
+    "code": "not-specified",
+    "th": "ยังไม่ระบุ",
+    "en": "Not specified",
+    "cn": "未指定"
+  },
+  {
+    "code": "moved-out",
+    "th": "ย้ายออกแล้ว",
+    "en": "Moved out",
+    "cn": "已退租"
+  },
+  {
+    "code": "staying",
+    "th": "กำลังพัก",
+    "en": "Staying",
+    "cn": "在住"
+  },
+  {
+    "code": "move-out",
+    "th": "ย้ายออก",
+    "en": "Move out",
+    "cn": "退租"
+  },
+  {
+    "code": "tenants-page-description",
+    "th": "จัดการทะเบียนผู้เช่าและสัญญา",
+    "en": "Manage tenant registry and contracts",
+    "cn": "管理租户登记和合同"
+  },
+  {
+    "code": "search-tenants-placeholder",
+    "th": "ค้นหาชื่อ อีเมล เบอร์โทร หรือห้อง...",
+    "en": "Search by name, email, phone, or room...",
+    "cn": "搜索姓名、邮箱、电话或房间..."
+  },
+  {
+    "code": "no-tenants",
+    "th": "ยังไม่มีผู้เช่า",
+    "en": "No tenants yet",
+    "cn": "暂无租户"
+  },
+  {
+    "code": "no-tenants-description",
+    "th": "เพิ่มผู้เช่าเข้าสู่หอพักนี้",
+    "en": "Add tenants to this apartment",
+    "cn": "向此公寓添加租户"
+  },
+  {
+    "code": "enter-meter-values",
+    "th": "กรุณากรอกเลขมิเตอร์ก่อนและหลัง",
+    "en": "Please enter the previous and current meter values",
+    "cn": "请输入抄表前后的读数"
+  },
+  {
+    "code": "current-not-less-than-previous",
+    "th": "เลขมิเตอร์ปัจจุบันต้องไม่น้อยกว่าเลขก่อนหน้า",
+    "en": "The current meter value must not be less than the previous one",
+    "cn": "本次读数不能小于上次读数"
+  },
+  {
+    "code": "meter-reading-saved",
+    "th": "บันทึกค่ามิเตอร์สำเร็จ",
+    "en": "Meter reading saved successfully",
+    "cn": "抄表读数保存成功"
+  },
+  {
+    "code": "record-meter-reading",
+    "th": "บันทึกค่ามิเตอร์",
+    "en": "Record meter reading",
+    "cn": "记录抄表读数"
+  },
+  {
+    "code": "edit-meter-reading",
+    "th": "แก้ไขค่ามิเตอร์",
+    "en": "Edit meter reading",
+    "cn": "编辑抄表读数"
+  },
+  {
+    "code": "room-with-name",
+    "th": "ห้อง {name}",
+    "en": "Room {name}",
+    "cn": "房间 {name}"
+  },
+  {
+    "code": "previous-meter-value",
+    "th": "เลขมิเตอร์ก่อนหน้า",
+    "en": "Previous meter value",
+    "cn": "上次读数"
+  },
+  {
+    "code": "current-meter-value",
+    "th": "เลขมิเตอร์ปัจจุบัน",
+    "en": "Current meter value",
+    "cn": "本次读数"
+  },
+  {
+    "code": "units-used",
+    "th": "หน่วยที่ใช้",
+    "en": "Units used",
+    "cn": "使用单位"
+  },
+  {
+    "code": "no-meter-readings",
+    "th": "ยังไม่มีรายการจดมิเตอร์",
+    "en": "No meter readings yet",
+    "cn": "暂无抄表记录"
+  },
+  {
+    "code": "no-meter-readings-description",
+    "th": "รายการจะถูกสร้างเมื่อมีรอบบิล",
+    "en": "Records will be created when a billing period exists",
+    "cn": "有账单周期时将自动创建记录"
+  },
+  {
+    "code": "previous",
+    "th": "ก่อนหน้า",
+    "en": "Previous",
+    "cn": "上次"
+  },
+  {
+    "code": "current",
+    "th": "ปัจจุบัน",
+    "en": "Current",
+    "cn": "本次"
+  },
+  {
+    "code": "used",
+    "th": "ใช้",
+    "en": "Used",
+    "cn": "使用"
+  },
+  {
+    "code": "record-value",
+    "th": "บันทึกค่า",
+    "en": "Record",
+    "cn": "记录"
+  },
+  {
+    "code": "meter-number",
+    "th": "เลขมิเตอร์",
+    "en": "Meter number",
+    "cn": "电表号"
+  },
+  {
+    "code": "view-meter-readings",
+    "th": "ดูการจดมิเตอร์",
+    "en": "View readings",
+    "cn": "查看抄表"
+  },
+  {
+    "code": "meters-page-description",
+    "th": "จดและตรวจสอบค่ามิเตอร์น้ำและไฟฟ้า",
+    "en": "Record and review water and electricity meter readings",
+    "cn": "记录并核对水电表读数"
+  },
+  {
+    "code": "meter-list",
+    "th": "รายการมิเตอร์",
+    "en": "Meter list",
+    "cn": "电表列表"
+  },
+  {
+    "code": "record-by-period",
+    "th": "จดตามรอบบิล",
+    "en": "Record by billing period",
+    "cn": "按账单周期抄表"
+  },
+  {
+    "code": "no-meters",
+    "th": "ยังไม่มีมิเตอร์",
+    "en": "No meters yet",
+    "cn": "暂无电表"
+  },
+  {
+    "code": "no-meters-description",
+    "th": "มิเตอร์จะถูกสร้างอัตโนมัติเมื่อเพิ่มห้องพัก",
+    "en": "Meters are created automatically when rooms are added",
+    "cn": "添加房间时将自动创建电表"
+  },
+  {
+    "code": "no-billing-periods",
+    "th": "ยังไม่มีรอบบิล",
+    "en": "No billing periods yet",
+    "cn": "暂无账单周期"
+  },
+  {
+    "code": "no-billing-periods-description",
+    "th": "สร้างรอบบิลเพื่อเริ่มเรียกเก็บเงินและจดมิเตอร์",
+    "en": "Create a billing period to start billing and recording meters",
+    "cn": "创建账单周期以开始计费和抄表"
+  },
+  {
+    "code": "select-billing-period",
+    "th": "เลือกรอบบิล",
+    "en": "Select billing period",
+    "cn": "选择账单周期"
+  },
+  {
+    "code": "no-readings",
+    "th": "ไม่มีรายการจดมิเตอร์",
+    "en": "No meter readings",
+    "cn": "没有抄表记录"
+  },
+  {
+    "code": "no-readings-description",
+    "th": "ไม่มีมิเตอร์ที่ต้องจดในรอบบิลนี้",
+    "en": "No meters to record in this billing period",
+    "cn": "此账单周期没有需要抄表的电表"
+  },
+  {
+    "code": "please-select-room",
+    "th": "กรุณาเลือกห้อง",
+    "en": "Please select a room",
+    "cn": "请选择房间"
+  },
+  {
+    "code": "please-select-charge-type",
+    "th": "กรุณาเลือกประเภทค่าใช้จ่าย",
+    "en": "Please select a charge type",
+    "cn": "请选择费用类型"
+  },
+  {
+    "code": "select-room",
+    "th": "เลือกห้อง",
+    "en": "Select room",
+    "cn": "选择房间"
+  },
+  {
+    "code": "select-type",
+    "th": "เลือกประเภท",
+    "en": "Select type",
+    "cn": "选择类型"
+  },
+  {
+    "code": "charge-amount",
+    "th": "ยอดเรียกเก็บ",
+    "en": "Charge amount",
+    "cn": "收费金额"
+  },
+  {
+    "code": "unit-count-optional",
+    "th": "จำนวนหน่วย (ไม่บังคับ)",
+    "en": "Number of units (optional)",
+    "cn": "单位数量（可选）"
+  },
+  {
+    "code": "room-charge-updated",
+    "th": "แก้ไขค่าใช้จ่ายสำเร็จ",
+    "en": "Room charge updated successfully",
+    "cn": "费用修改成功"
+  },
+  {
+    "code": "room-charge-added",
+    "th": "เพิ่มค่าใช้จ่ายสำเร็จ",
+    "en": "Room charge added successfully",
+    "cn": "费用添加成功"
+  },
+  {
+    "code": "edit-room-charge",
+    "th": "แก้ไขค่าใช้จ่ายห้อง",
+    "en": "Edit room charge",
+    "cn": "编辑房间费用"
+  },
+  {
+    "code": "add-room-charge",
+    "th": "เพิ่มค่าใช้จ่ายห้อง",
+    "en": "Add room charge",
+    "cn": "添加房间费用"
+  },
+  {
+    "code": "room-charge-form-description",
+    "th": "ผูกประเภทค่าใช้จ่ายเข้ากับห้องเพื่อเรียกเก็บประจำงวด",
+    "en": "Link a charge type to a room for recurring billing",
+    "cn": "将费用类型关联到房间以进行周期性收费"
+  },
+  {
+    "code": "no-charges-to-save",
+    "th": "ยังไม่มีค่าใช้จ่ายให้บันทึก",
+    "en": "No charges to save",
+    "cn": "没有可保存的费用"
+  },
+  {
+    "code": "settings-saved",
+    "th": "บันทึกการตั้งค่าสำเร็จ",
+    "en": "Settings saved successfully",
+    "cn": "设置保存成功"
+  },
+  {
+    "code": "room-charge-deleted",
+    "th": "ลบค่าใช้จ่ายสำเร็จ",
+    "en": "Room charge deleted successfully",
+    "cn": "费用删除成功"
+  },
+  {
+    "code": "room-charges-page-description",
+    "th": "ตั้งค่ายอดเรียกเก็บประจำ และเลือกว่าจะคิดค่าน้ำ-ค่าไฟตามมิเตอร์หรือไม่",
+    "en": "Set recurring charges and choose whether to bill water and electricity by meter",
+    "cn": "设置周期性费用，并选择是否按电水表计费"
+  },
+  {
+    "code": "add-charge",
+    "th": "เพิ่มค่าใช้จ่าย",
+    "en": "Add charge",
+    "cn": "添加费用"
+  },
+  {
+    "code": "save-all",
+    "th": "บันทึกทั้งหมด",
+    "en": "Save all",
+    "cn": "全部保存"
+  },
+  {
+    "code": "no-rooms-to-setup",
+    "th": "ยังไม่มีห้องสำหรับตั้งค่า",
+    "en": "No rooms to set up",
+    "cn": "暂无可设置的房间"
+  },
+  {
+    "code": "add-rooms-first-description",
+    "th": "เพิ่มห้องพักก่อน จึงจะตั้งค่าค่าใช้จ่ายประจำได้",
+    "en": "Add rooms first before setting up recurring charges",
+    "cn": "请先添加房间，然后才能设置周期性费用"
+  },
+  {
+    "code": "room-name",
+    "th": "ห้อง {name}",
+    "en": "Room {name}",
+    "cn": "房间 {name}"
+  },
+  {
+    "code": "charge-water-rate",
+    "th": "คิดค่าน้ำ ({rate}/หน่วย)",
+    "en": "Charge water ({rate}/unit)",
+    "cn": "收取水费（{rate}/单位）"
+  },
+  {
+    "code": "charge-electricity-rate",
+    "th": "คิดค่าไฟ ({rate}/หน่วย)",
+    "en": "Charge electricity ({rate}/unit)",
+    "cn": "收取电费（{rate}/单位）"
+  },
+  {
+    "code": "no-recurring-charges",
+    "th": "ยังไม่มีค่าใช้จ่ายประจำสำหรับห้องนี้",
+    "en": "No recurring charges for this room yet",
+    "cn": "该房间暂无周期性费用"
+  },
+  {
+    "code": "charge",
+    "th": "ค่าใช้จ่าย",
+    "en": "Charge",
+    "cn": "费用"
+  },
+  {
+    "code": "unit",
+    "th": "หน่วย",
+    "en": "Unit",
+    "cn": "单位"
+  },
+  {
+    "code": "delete-charge",
+    "th": "ลบค่าใช้จ่าย",
+    "en": "Delete charge",
+    "cn": "删除费用"
+  },
+  {
+    "code": "delete-charge-from-room-description",
+    "th": "ต้องการลบ \"{name}\" ออกจากห้องนี้ใช่หรือไม่?",
+    "en": "Are you sure you want to remove \"{name}\" from this room?",
+    "cn": "确定要从该房间移除\"{name}\"吗？"
+  },
+  {
+    "code": "enter-name",
+    "th": "กรุณากรอกชื่อ",
+    "en": "Please enter a name",
+    "cn": "请输入名称"
+  },
+  {
+    "code": "charge-type-updated",
+    "th": "แก้ไขประเภทค่าใช้จ่ายสำเร็จ",
+    "en": "Charge type updated successfully",
+    "cn": "费用类型修改成功"
+  },
+  {
+    "code": "charge-type-added",
+    "th": "เพิ่มประเภทค่าใช้จ่ายสำเร็จ",
+    "en": "Charge type added successfully",
+    "cn": "费用类型添加成功"
+  },
+  {
+    "code": "charge-type-deleted",
+    "th": "ลบประเภทค่าใช้จ่ายสำเร็จ",
+    "en": "Charge type deleted successfully",
+    "cn": "费用类型删除成功"
+  },
+  {
+    "code": "name",
+    "th": "ชื่อ",
+    "en": "Name",
+    "cn": "名称"
+  },
+  {
+    "code": "category",
+    "th": "หมวดหมู่",
+    "en": "Category",
+    "cn": "类别"
+  },
+  {
+    "code": "suggested-amount",
+    "th": "จำนวนแนะนำ",
+    "en": "Suggested amount",
+    "cn": "建议金额"
+  },
+  {
+    "code": "inactive",
+    "th": "ปิด",
+    "en": "Inactive",
+    "cn": "停用"
+  },
+  {
+    "code": "charge-types-page-description",
+    "th": "กำหนดประเภทค่าใช้จ่ายสำหรับนำไปผูกกับห้อง",
+    "en": "Define charge types to link with rooms",
+    "cn": "定义可关联到房间的费用类型"
+  },
+  {
+    "code": "no-charge-types",
+    "th": "ยังไม่มีประเภทค่าใช้จ่าย",
+    "en": "No charge types yet",
+    "cn": "暂无费用类型"
+  },
+  {
+    "code": "no-charge-types-description",
+    "th": "เพิ่มประเภทค่าใช้จ่าย เช่น ค่าส่วนกลาง ค่าอินเทอร์เน็ต",
+    "en": "Add charge types such as common area fees or internet fees",
+    "cn": "添加费用类型，例如公共区域费或网络费"
+  },
+  {
+    "code": "edit-charge-type",
+    "th": "แก้ไขประเภทค่าใช้จ่าย",
+    "en": "Edit charge type",
+    "cn": "编辑费用类型"
+  },
+  {
+    "code": "add-charge-type",
+    "th": "เพิ่มประเภทค่าใช้จ่าย",
+    "en": "Add charge type",
+    "cn": "添加费用类型"
+  },
+  {
+    "code": "charge-type-form-description",
+    "th": "ตั้งชื่อ หมวดหมู่ และจำนวนเงินแนะนำ",
+    "en": "Set the name, category, and suggested amount",
+    "cn": "设置名称、类别和建议金额"
+  },
+  {
+    "code": "common-area-fee",
+    "th": "ค่าส่วนกลาง",
+    "en": "Common area fee",
+    "cn": "公共区域费"
+  },
+  {
+    "code": "suggested-amount-optional",
+    "th": "จำนวนเงินแนะนำ (ไม่บังคับ)",
+    "en": "Suggested amount (optional)",
+    "cn": "建议金额（可选）"
+  },
+  {
+    "code": "enable",
+    "th": "เปิดใช้งาน",
+    "en": "Enable",
+    "cn": "启用"
+  },
+  {
+    "code": "delete-charge-type",
+    "th": "ลบประเภทค่าใช้จ่าย",
+    "en": "Delete charge type",
+    "cn": "删除费用类型"
+  },
+  {
+    "code": "select-effective-date",
+    "th": "กรุณาเลือกวันเริ่มมีผล",
+    "en": "Please select an effective date",
+    "cn": "请选择生效日期"
+  },
+  {
+    "code": "rate-required-for-utilities",
+    "th": "ต้องระบุเรทต่อหน่วยสำหรับค่าไฟ/ค่าน้ำ",
+    "en": "Rate per unit is required for electricity/water",
+    "cn": "电费/水费必须指定每单位费率"
+  },
+  {
+    "code": "invoice-setup-updated",
+    "th": "แก้ไขรูปแบบใบแจ้งหนี้สำเร็จ",
+    "en": "Invoice setup updated successfully",
+    "cn": "账单配置修改成功"
+  },
+  {
+    "code": "invoice-setup-added",
+    "th": "เพิ่มรูปแบบใบแจ้งหนี้สำเร็จ",
+    "en": "Invoice setup added successfully",
+    "cn": "账单配置添加成功"
+  },
+  {
+    "code": "invoice-setup-deleted",
+    "th": "ลบรูปแบบใบแจ้งหนี้สำเร็จ",
+    "en": "Invoice setup deleted successfully",
+    "cn": "账单配置删除成功"
+  },
+  {
+    "code": "cutoff-issue-due",
+    "th": "ตัดรอบ / ออกบิล / ครบกำหนด",
+    "en": "Cut-off / Issue / Due",
+    "cn": "截止 / 出账 / 到期"
+  },
+  {
+    "code": "rate-per-unit",
+    "th": "เรท/หน่วย",
+    "en": "Rate/unit",
+    "cn": "费率/单位"
+  },
+  {
+    "code": "effective",
+    "th": "มีผล",
+    "en": "Effective",
+    "cn": "生效"
+  },
+  {
+    "code": "no-end-date",
+    "th": "ไม่มีกำหนด",
+    "en": "No end date",
+    "cn": "无结束日期"
+  },
+  {
+    "code": "invoice-setups-page-description",
+    "th": "กำหนดวันตัดรอบ ออกบิล ครบกำหนด และเรทค่าน้ำ-ค่าไฟ",
+    "en": "Set cut-off, issue, due dates, and water/electricity rates",
+    "cn": "设置截止、出账、到期日期及水电费率"
+  },
+  {
+    "code": "add-setup",
+    "th": "เพิ่มรูปแบบ",
+    "en": "Add setup",
+    "cn": "添加配置"
+  },
+  {
+    "code": "no-invoice-setups",
+    "th": "ยังไม่มีรูปแบบใบแจ้งหนี้",
+    "en": "No invoice setups yet",
+    "cn": "暂无账单配置"
+  },
+  {
+    "code": "no-invoice-setups-description",
+    "th": "เพิ่มรูปแบบเพื่อใช้สร้างรอบบิลอัตโนมัติ",
+    "en": "Add a setup to generate billing periods automatically",
+    "cn": "添加配置以自动生成账单周期"
+  },
+  {
+    "code": "edit-invoice-setup",
+    "th": "แก้ไขรูปแบบใบแจ้งหนี้",
+    "en": "Edit invoice setup",
+    "cn": "编辑账单配置"
+  },
+  {
+    "code": "add-invoice-setup",
+    "th": "เพิ่มรูปแบบใบแจ้งหนี้",
+    "en": "Add invoice setup",
+    "cn": "添加账单配置"
+  },
+  {
+    "code": "invoice-setup-form-description",
+    "th": "ระบุประเภทและกำหนดการของใบแจ้งหนี้",
+    "en": "Specify the type and schedule of the invoice",
+    "cn": "指定账单的类型和日程"
+  },
+  {
+    "code": "cutoff-date",
+    "th": "วันตัดรอบ",
+    "en": "Cut-off date",
+    "cn": "截止日"
+  },
+  {
+    "code": "issue-date",
+    "th": "วันออกบิล",
+    "en": "Issue date",
+    "cn": "出账日"
+  },
+  {
+    "code": "due-date",
+    "th": "วันครบกำหนด",
+    "en": "Due date",
+    "cn": "到期日"
+  },
+  {
+    "code": "rate-per-unit-baht",
+    "th": "เรทต่อหน่วย (บาท)",
+    "en": "Rate per unit (THB)",
+    "cn": "每单位费率（泰铢）"
+  },
+  {
+    "code": "effective-from",
+    "th": "เริ่มมีผล",
+    "en": "Effective from",
+    "cn": "生效起始"
+  },
+  {
+    "code": "effective-to-optional",
+    "th": "สิ้นสุด (ไม่บังคับ)",
+    "en": "Effective to (optional)",
+    "cn": "结束（可选）"
+  },
+  {
+    "code": "delete-invoice-setup",
+    "th": "ลบรูปแบบใบแจ้งหนี้",
+    "en": "Delete invoice setup",
+    "cn": "删除账单配置"
+  },
+  {
+    "code": "delete-invoice-setup-description",
+    "th": "ต้องการลบรูปแบบ \"{name}\" ใช่หรือไม่?",
+    "en": "Are you sure you want to delete the setup \"{name}\"?",
+    "cn": "确定要删除配置\"{name}\"吗？"
+  },
+  {
+    "code": "please-select-billing-period",
+    "th": "กรุณาเลือกรอบบิล",
+    "en": "Please select a billing period",
+    "cn": "请选择账单周期"
+  },
+  {
+    "code": "please-select-tenant",
+    "th": "กรุณาเลือกผู้เช่า",
+    "en": "Please select a tenant",
+    "cn": "请选择租户"
+  },
+  {
+    "code": "please-select-issue-date",
+    "th": "กรุณาเลือกวันออกบิล",
+    "en": "Please select an issue date",
+    "cn": "请选择开票日期"
+  },
+  {
+    "code": "please-select-due-date",
+    "th": "กรุณาเลือกวันครบกำหนด",
+    "en": "Please select a due date",
+    "cn": "请选择到期日期"
+  },
+  {
+    "code": "must-be-greater-than-0",
+    "th": "ต้องมากกว่า 0",
+    "en": "Must be greater than 0",
+    "cn": "必须大于 0"
+  },
+  {
+    "code": "at-least-one-item",
+    "th": "ต้องมีรายการอย่างน้อย 1 รายการ",
+    "en": "At least one item is required",
+    "cn": "至少需要一个项目"
+  },
+  {
+    "code": "bill-type",
+    "th": "ประเภทบิล",
+    "en": "Bill type",
+    "cn": "账单类型"
+  },
+  {
+    "code": "select-bill-type",
+    "th": "เลือกประเภทบิล",
+    "en": "Select bill type",
+    "cn": "选择账单类型"
+  },
+  {
+    "code": "tenant",
+    "th": "ผู้เช่า",
+    "en": "Tenant",
+    "cn": "租户"
+  },
+  {
+    "code": "select-tenant",
+    "th": "เลือกผู้เช่า",
+    "en": "Select tenant",
+    "cn": "选择租户"
+  },
+  {
+    "code": "items",
+    "th": "รายการ",
+    "en": "Items",
+    "cn": "项目"
+  },
+  {
+    "code": "add-item",
+    "th": "เพิ่มรายการ",
+    "en": "Add item",
+    "cn": "添加项目"
+  },
+  {
+    "code": "details",
+    "th": "รายละเอียด",
+    "en": "Details",
+    "cn": "详情"
+  },
+  {
+    "code": "quantity",
+    "th": "จำนวน",
+    "en": "Quantity",
+    "cn": "数量"
+  },
+  {
+    "code": "unit-price",
+    "th": "ราคา/หน่วย",
+    "en": "Unit price",
+    "cn": "单价"
+  },
+  {
+    "code": "create-invoice",
+    "th": "สร้างใบแจ้งหนี้",
+    "en": "Create invoice",
+    "cn": "创建账单"
+  },
+  {
+    "code": "create-invoice-description",
+    "th": "ออกใบแจ้งหนี้เพิ่มเติมให้ผู้เช่าในรอบบิลที่เลือก",
+    "en": "Issue an additional invoice for a tenant in the selected billing period",
+    "cn": "为所选账单周期内的租户开具额外账单"
+  },
+  {
+    "code": "invoice-created",
+    "th": "สร้างใบแจ้งหนี้สำเร็จ",
+    "en": "Invoice created successfully",
+    "cn": "账单创建成功"
+  },
+  {
+    "code": "invoice-number",
+    "th": "เลขที่บิล",
+    "en": "Invoice number",
+    "cn": "账单编号"
+  },
+  {
+    "code": "total",
+    "th": "ยอดรวม",
+    "en": "Total",
+    "cn": "合计"
+  },
+  {
+    "code": "invoices-page-description",
+    "th": "ติดตามและจัดการใบแจ้งหนี้ทั้งหมด",
+    "en": "Track and manage all invoices",
+    "cn": "跟踪和管理所有账单"
+  },
+  {
+    "code": "search-invoice-number",
+    "th": "ค้นหาเลขที่บิล...",
+    "en": "Search invoice number...",
+    "cn": "搜索账单编号..."
+  },
+  {
+    "code": "no-invoices",
+    "th": "ยังไม่มีใบแจ้งหนี้",
+    "en": "No invoices yet",
+    "cn": "暂无账单"
+  },
+  {
+    "code": "no-invoices-description",
+    "th": "สร้างใบแจ้งหนี้หรือออกบิลจากรอบบิล",
+    "en": "Create an invoice or generate bills from a billing period",
+    "cn": "创建账单或从账单周期生成账单"
+  },
+  {
+    "code": "items-saved",
+    "th": "บันทึกรายการสำเร็จ",
+    "en": "Items saved successfully",
+    "cn": "项目保存成功"
+  },
+  {
+    "code": "mark-as-paid",
+    "th": "ทำเครื่องหมายชำระแล้ว",
+    "en": "Mark as paid",
+    "cn": "标记为已付款"
+  },
+  {
+    "code": "invoice-cancelled",
+    "th": "ยกเลิกใบแจ้งหนี้แล้ว",
+    "en": "Invoice cancelled",
+    "cn": "账单已取消"
+  },
+  {
+    "code": "back-to-invoices",
+    "th": "กลับไปรายการใบแจ้งหนี้",
+    "en": "Back to invoices",
+    "cn": "返回账单列表"
+  },
+  {
+    "code": "invoice-not-found",
+    "th": "ไม่พบใบแจ้งหนี้",
+    "en": "Invoice not found",
+    "cn": "未找到账单"
+  },
+  {
+    "code": "invoice-title",
+    "th": "ใบแจ้งหนี้ {number}",
+    "en": "Invoice {number}",
+    "cn": "账单 {number}"
+  },
+  {
+    "code": "edit-items",
+    "th": "แก้ไขรายการ",
+    "en": "Edit items",
+    "cn": "编辑项目"
+  },
+  {
+    "code": "cancel-invoice",
+    "th": "ยกเลิกใบแจ้งหนี้",
+    "en": "Cancel invoice",
+    "cn": "取消账单"
+  },
+  {
+    "code": "amount",
+    "th": "รวม",
+    "en": "Amount",
+    "cn": "金额"
+  },
+  {
+    "code": "grand-total",
+    "th": "ยอดรวมทั้งหมด",
+    "en": "Grand total",
+    "cn": "总计"
+  },
+  {
+    "code": "confirm-payment",
+    "th": "ยืนยันการชำระเงิน",
+    "en": "Confirm payment",
+    "cn": "确认付款"
+  },
+  {
+    "code": "confirm-payment-description",
+    "th": "ทำเครื่องหมายว่าใบแจ้งหนี้นี้ชำระแล้วใช่หรือไม่?",
+    "en": "Mark this invoice as paid?",
+    "cn": "将此账单标记为已付款吗？"
+  },
+  {
+    "code": "cancel-invoice-description",
+    "th": "ต้องการยกเลิกใบแจ้งหนี้นี้ใช่หรือไม่?",
+    "en": "Are you sure you want to cancel this invoice?",
+    "cn": "确定要取消此账单吗？"
+  },
+  {
+    "code": "cancel-bill",
+    "th": "ยกเลิกบิล",
+    "en": "Cancel bill",
+    "cn": "取消账单"
+  },
+  {
+    "code": "month-january",
+    "th": "มกราคม",
+    "en": "January",
+    "cn": "一月"
+  },
+  {
+    "code": "month-february",
+    "th": "กุมภาพันธ์",
+    "en": "February",
+    "cn": "二月"
+  },
+  {
+    "code": "month-march",
+    "th": "มีนาคม",
+    "en": "March",
+    "cn": "三月"
+  },
+  {
+    "code": "month-april",
+    "th": "เมษายน",
+    "en": "April",
+    "cn": "四月"
+  },
+  {
+    "code": "month-may",
+    "th": "พฤษภาคม",
+    "en": "May",
+    "cn": "五月"
+  },
+  {
+    "code": "month-june",
+    "th": "มิถุนายน",
+    "en": "June",
+    "cn": "六月"
+  },
+  {
+    "code": "month-july",
+    "th": "กรกฎาคม",
+    "en": "July",
+    "cn": "七月"
+  },
+  {
+    "code": "month-august",
+    "th": "สิงหาคม",
+    "en": "August",
+    "cn": "八月"
+  },
+  {
+    "code": "month-september",
+    "th": "กันยายน",
+    "en": "September",
+    "cn": "九月"
+  },
+  {
+    "code": "month-october",
+    "th": "ตุลาคม",
+    "en": "October",
+    "cn": "十月"
+  },
+  {
+    "code": "month-november",
+    "th": "พฤศจิกายน",
+    "en": "November",
+    "cn": "十一月"
+  },
+  {
+    "code": "month-december",
+    "th": "ธันวาคม",
+    "en": "December",
+    "cn": "十二月"
+  },
+  {
+    "code": "billing-period-created",
+    "th": "สร้างรอบบิลสำเร็จ",
+    "en": "Billing period created successfully",
+    "cn": "账单周期创建成功"
+  },
+  {
+    "code": "billing-periods-page-description",
+    "th": "สร้างรอบบิลรายเดือน จดมิเตอร์ ออกและเผยแพร่ใบแจ้งหนี้",
+    "en": "Create monthly billing periods, record meters, and issue and publish invoices",
+    "cn": "创建每月账单周期、记录电水表、开具并发布账单"
+  },
+  {
+    "code": "create-billing-period",
+    "th": "สร้างรอบบิล",
+    "en": "Create billing period",
+    "cn": "创建账单周期"
+  },
+  {
+    "code": "invoice-count",
+    "th": "จำนวนบิล",
+    "en": "Invoices",
+    "cn": "账单数"
+  },
+  {
+    "code": "create-billing-period-description",
+    "th": "เลือกเดือนและปีของรอบบิลที่ต้องการสร้าง",
+    "en": "Select the month and year of the billing period to create",
+    "cn": "选择要创建的账单周期的月份和年份"
+  },
+  {
+    "code": "month",
+    "th": "เดือน",
+    "en": "Month",
+    "cn": "月份"
+  },
+  {
+    "code": "year-ce",
+    "th": "ปี (ค.ศ.)",
+    "en": "Year (CE)",
+    "cn": "年份（公历）"
+  },
+  {
+    "code": "type-optional",
+    "th": "ประเภท (ไม่บังคับ)",
+    "en": "Type (optional)",
+    "cn": "类型（可选）"
+  },
+  {
+    "code": "all-types",
+    "th": "ทุกประเภท",
+    "en": "All types",
+    "cn": "所有类型"
+  },
+  {
+    "code": "invoice-setup-optional",
+    "th": "รูปแบบใบแจ้งหนี้ (ไม่บังคับ)",
+    "en": "Invoice setup (optional)",
+    "cn": "账单配置（可选）"
+  },
+  {
+    "code": "all-setups",
+    "th": "ทุกรูปแบบ",
+    "en": "All setups",
+    "cn": "所有配置"
+  },
+  {
+    "code": "invoices-generated-draft",
+    "th": "สร้างใบแจ้งหนี้ (ฉบับร่าง) สำเร็จ",
+    "en": "Draft invoices generated successfully",
+    "cn": "草稿账单生成成功"
+  },
+  {
+    "code": "invoices-published",
+    "th": "เผยแพร่ใบแจ้งหนี้สำเร็จ",
+    "en": "Invoices published successfully",
+    "cn": "账单发布成功"
+  },
+  {
+    "code": "invoices-regenerated",
+    "th": "สร้างใบแจ้งหนี้ใหม่สำเร็จ",
+    "en": "Invoices regenerated successfully",
+    "cn": "账单重新生成成功"
+  },
+  {
+    "code": "back-to-billing-periods",
+    "th": "กลับไปรายการรอบบิล",
+    "en": "Back to billing periods",
+    "cn": "返回账单周期列表"
+  },
+  {
+    "code": "billing-period-not-found",
+    "th": "ไม่พบรอบบิล",
+    "en": "Billing period not found",
+    "cn": "未找到账单周期"
+  },
+  {
+    "code": "record-meters",
+    "th": "จดมิเตอร์",
+    "en": "Record meters",
+    "cn": "记录电水表"
+  },
+  {
+    "code": "publish-invoices",
+    "th": "เผยแพร่ใบแจ้งหนี้",
+    "en": "Publish invoices",
+    "cn": "发布账单"
+  },
+  {
+    "code": "regenerate",
+    "th": "สร้างใหม่",
+    "en": "Regenerate",
+    "cn": "重新生成"
+  },
+  {
+    "code": "close-billing-period",
+    "th": "ปิดรอบบิล",
+    "en": "Close billing period",
+    "cn": "关闭账单周期"
+  },
+  {
+    "code": "cancel-billing-period",
+    "th": "ยกเลิกรอบบิล",
+    "en": "Cancel billing period",
+    "cn": "取消账单周期"
+  },
+  {
+    "code": "invoices-in-period",
+    "th": "ใบแจ้งหนี้ในรอบบิลนี้",
+    "en": "Invoices in this period",
+    "cn": "本周期的账单"
+  },
+  {
+    "code": "no-invoices-period-description",
+    "th": "กดสร้างใบแจ้งหนี้เพื่อออกบิลให้ผู้เช่า",
+    "en": "Generate invoices to bill tenants",
+    "cn": "生成账单以向租户开账单"
+  },
+  {
+    "code": "cancel-billing-period-description",
+    "th": "การยกเลิกจะทำให้ไม่สามารถออกบิลในรอบนี้ได้ ต้องการดำเนินการต่อหรือไม่?",
+    "en": "Cancelling will prevent issuing bills in this period. Do you want to continue?",
+    "cn": "取消后将无法在此周期开具账单。是否继续？"
+  },
+  {
+    "code": "billing-period-cancelled",
+    "th": "ยกเลิกรอบบิลแล้ว",
+    "en": "Billing period cancelled",
+    "cn": "账单周期已取消"
+  },
+  {
+    "code": "close-billing-period-description",
+    "th": "ปิดรอบบิลหลังจากเรียกเก็บเงินเสร็จสิ้น ต้องการดำเนินการต่อหรือไม่?",
+    "en": "Close the billing period after billing is complete. Do you want to continue?",
+    "cn": "计费完成后关闭账单周期。是否继续？"
+  },
+  {
+    "code": "billing-period-closed",
+    "th": "ปิดรอบบิลแล้ว",
+    "en": "Billing period closed",
+    "cn": "账单周期已关闭"
+  },
+  {
+    "code": "regenerate-invoices",
+    "th": "สร้างใบแจ้งหนี้ใหม่",
+    "en": "Regenerate invoices",
+    "cn": "重新生成账单"
+  },
+  {
+    "code": "regenerate-invoices-description",
+    "th": "ระบบจะสร้างใบแจ้งหนี้ฉบับร่างใหม่สำหรับรอบบิลนี้ ต้องการดำเนินการต่อหรือไม่?",
+    "en": "The system will generate new draft invoices for this billing period. Do you want to continue?",
+    "cn": "系统将为此账单周期生成新的草稿账单。是否继续？"
+  },
+  {
+    "code": "close",
+    "th": "ปิด",
+    "en": "Close",
+    "cn": "关闭"
+  },
+  {
+    "code": "next",
+    "th": "ถัดไป",
+    "en": "Next",
+    "cn": "下一页"
+  },
+  {
+    "code": "pagination",
+    "th": "แบ่งหน้า",
+    "en": "Pagination",
+    "cn": "分页"
+  },
+  {
+    "code": "api-error-with-status",
+    "th": "เกิดข้อผิดพลาด ({status})",
+    "en": "An error occurred ({status})",
+    "cn": "发生错误（{status}）"
+  }
 ]

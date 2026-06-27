@@ -31,10 +31,12 @@ import { useApartmentStore } from "@/stores/apartment.store";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatCurrency, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import type { Apartment } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const t = useT();
   const apartments = useApartmentStore((s) => s.apartments);
   const isLoading = useApartmentStore((s) => s.isLoading);
   const hasLoaded = useApartmentStore((s) => s.hasLoaded);
@@ -63,7 +65,7 @@ export default function DashboardPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.apartments.remove(deleting.id));
-      toast.success("ลบหอพักสำเร็จ");
+      toast.success(t("apartment-deleted"));
       await fetchApartments().catch(() => undefined);
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -82,12 +84,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="หอพักของฉัน"
-        description="เลือกหอพักเพื่อเข้าจัดการ หรือเพิ่มหอพักใหม่"
+        title={t("my-apartments")}
+        description={t("dashboard-subtitle")}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            เพิ่มหอพัก
+            {t("add-apartment")}
           </Button>
         }
       />
@@ -101,12 +103,12 @@ export default function DashboardPage() {
       ) : apartments.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="ยังไม่มีหอพัก"
-          description="เริ่มต้นด้วยการเพิ่มหอพักแห่งแรกของคุณ"
+          title={t("no-apartments-yet")}
+          description={t("add-first-apartment")}
           action={
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              เพิ่มหอพัก
+              {t("add-apartment")}
             </Button>
           }
         />
@@ -144,14 +146,14 @@ export default function DashboardPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(apt)}>
                         <Pencil className="h-4 w-4" />
-                        แก้ไข
+                        {t("edit")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDeleting(apt)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
-                        ลบ
+                        {t("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -161,7 +163,9 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
                     <Zap className="h-4 w-4 text-warning" />
                     <div>
-                      <p className="text-xs text-gray-500">ค่าไฟ/หน่วย</p>
+                      <p className="text-xs text-gray-500">
+                        {t("electricity-rate-per-unit")}
+                      </p>
                       <p className="font-medium text-gray-900">
                         {formatCurrency(apt.electricityRatePerUnit)}
                       </p>
@@ -170,7 +174,9 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
                     <Droplet className="h-4 w-4 text-info" />
                     <div>
-                      <p className="text-xs text-gray-500">ค่าน้ำ/หน่วย</p>
+                      <p className="text-xs text-gray-500">
+                        {t("water-rate-per-unit")}
+                      </p>
                       <p className="font-medium text-gray-900">
                         {formatCurrency(apt.waterRatePerUnit)}
                       </p>
@@ -183,7 +189,7 @@ export default function DashboardPage() {
                   variant="outline"
                   onClick={() => enterApartment(apt)}
                 >
-                  เข้าจัดการ
+                  {t("manage")}
                 </Button>
               </CardContent>
             </Card>
@@ -201,9 +207,11 @@ export default function DashboardPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบหอพัก"
-        description={`ต้องการลบ "${deleting?.name}" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้`}
-        confirmLabel="ลบ"
+        title={t("delete-apartment")}
+        description={t("delete-confirm-description", {
+          name: deleting?.name ?? "",
+        })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

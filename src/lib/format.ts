@@ -1,6 +1,8 @@
+import { getIntlLocale, translate } from "@/i18n/runtime";
+
 export function formatCurrency(value: number | null | undefined): string {
   const n = typeof value === "number" ? value : 0;
-  return new Intl.NumberFormat("th-TH", {
+  return new Intl.NumberFormat(getIntlLocale(), {
     style: "currency",
     currency: "THB",
     minimumFractionDigits: 2,
@@ -10,7 +12,7 @@ export function formatCurrency(value: number | null | undefined): string {
 
 export function formatNumber(value: number | null | undefined): string {
   const n = typeof value === "number" ? value : 0;
-  return new Intl.NumberFormat("th-TH", {
+  return new Intl.NumberFormat(getIntlLocale(), {
     maximumFractionDigits: 2,
   }).format(n);
 }
@@ -19,7 +21,7 @@ export function formatDate(value: string | null | undefined): string {
   if (!value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "-";
-  return new Intl.DateTimeFormat("th-TH", {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -37,5 +39,5 @@ export function getApiErrorMessage(err: unknown): string {
   if (err && typeof err === "object" && "message" in err) {
     return String((err as { message: unknown }).message);
   }
-  return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
+  return translate("generic-error");
 }

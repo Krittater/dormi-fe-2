@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { apartmentNav } from "@/lib/nav";
+import { useT } from "@/i18n";
 
 interface NavContentProps {
   apartmentId: string | null;
@@ -13,6 +14,7 @@ interface NavContentProps {
 
 export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
   const pathname = usePathname();
+  const t = useT();
 
   const isActive = (segment: string) => {
     if (!apartmentId) return false;
@@ -27,7 +29,7 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
       {apartmentNav.map((section) => (
         <div key={section.title}>
           <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {section.title}
+            {t(section.title)}
           </p>
           <ul className="space-y-1">
             {section.items.map((item) => {
@@ -40,7 +42,7 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
               const active = isActive(item.segment);
               const disabled = !apartmentId;
               return (
-                <li key={item.label}>
+                <li key={item.segment}>
                   <Link
                     href={disabled ? "#" : href}
                     onClick={(e) => {
@@ -57,7 +59,7 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate">{t(item.label)}</span>
                   </Link>
                 </li>
               );

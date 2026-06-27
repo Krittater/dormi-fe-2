@@ -51,6 +51,8 @@ export interface Apartment {
 
 export interface RoomType {
   id: string;
+  /** Raw identifier returned by the API (no `id` field). */
+  roomTypeId?: string;
   apartmentId: string;
   name: string;
   price: number;
@@ -60,6 +62,7 @@ export interface RoomType {
 
 export interface Room {
   id: string;
+  roomId?: string;
   apartmentId: string;
   roomTypeId: string;
   roomType?: RoomType | null;

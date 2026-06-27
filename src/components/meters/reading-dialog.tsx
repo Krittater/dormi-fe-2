@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatNumber, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import type { MeterReading } from "@/types";
 
 interface Props {
@@ -37,6 +38,7 @@ export function ReadingDialog({
   mode,
   onDone,
 }: Props) {
+  const t = useT();
   const [previousValue, setPreviousValue] = useState("");
   const [currentValue, setCurrentValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -62,11 +64,11 @@ export function ReadingDialog({
   const handleSubmit = async () => {
     if (!reading) return;
     if (previousValue === "" || currentValue === "") {
-      toast.error("กรุณากรอกเลขมิเตอร์ก่อนและหลัง");
+      toast.error(t("enter-meter-values"));
       return;
     }
     if (curr < prev) {
-      toast.error("เลขมิเตอร์ปัจจุบันต้องไม่น้อยกว่าเลขก่อนหน้า");
+      toast.error(t("current-not-less-than-previous"));
       return;
     }
     setSubmitting(true);
@@ -84,7 +86,7 @@ export function ReadingDialog({
           body
         );
       }
-      toast.success("บันทึกค่ามิเตอร์สำเร็จ");
+      toast.success(t("meter-reading-saved"));
       onDone();
       onOpenChange(false);
     } catch (err) {
@@ -99,16 +101,20 @@ export function ReadingDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {mode === "record" ? "บันทึกค่ามิเตอร์" : "แก้ไขค่ามิเตอร์"}
+            {mode === "record"
+              ? t("record-meter-reading")
+              : t("edit-meter-reading")}
           </DialogTitle>
           <DialogDescription>
-            {reading?.roomName ? `ห้อง ${reading.roomName} · ` : ""}
+            {reading?.roomName
+              ? `${t("room-with-name", { name: reading.roomName })} · `
+              : ""}
             {reading?.meterType ?? ""}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="prev">เลขมิเตอร์ก่อนหน้า</Label>
+            <Label htmlFor="prev">{t("previous-meter-value")}</Label>
             <Input
               id="prev"
               type="number"
@@ -119,7 +125,7 @@ export function ReadingDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="curr">เลขมิเตอร์ปัจจุบัน</Label>
+            <Label htmlFor="curr">{t("current-meter-value")}</Label>
             <Input
               id="curr"
               type="number"
@@ -130,7 +136,7 @@ export function ReadingDialog({
             />
           </div>
           <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm">
-            <span className="text-gray-500">หน่วยที่ใช้: </span>
+            <span className="text-gray-500">{t("units-used")}: </span>
             <span className="font-medium text-gray-900">
               {units != null ? formatNumber(units) : "-"}
             </span>
@@ -142,11 +148,11 @@ export function ReadingDialog({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            ยกเลิก
+            {t("cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            บันทึก
+            {t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

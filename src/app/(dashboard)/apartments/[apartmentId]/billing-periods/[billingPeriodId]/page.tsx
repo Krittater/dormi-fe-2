@@ -26,17 +26,20 @@ import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { formatCurrency, formatDate, getApiErrorMessage } from "@/lib/format";
 import {
-  BILLING_PERIOD_TYPE_LABELS,
+  BILLING_PERIOD_TYPE_CODES,
   BillingPeriodStatus,
 } from "@/types";
 import type { BillingPeriod, Invoice } from "@/types";
+import { useT } from "@/i18n";
 
-const MONTHS = [
-  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+const MONTH_CODES = [
+  "month-january", "month-february", "month-march", "month-april",
+  "month-may", "month-june", "month-july", "month-august",
+  "month-september", "month-october", "month-november", "month-december",
 ];
 
 export default function BillingPeriodDetailPage() {
+  const t = useT();
   const { apartmentId, billingPeriodId } = useParams<{
     apartmentId: string;
     billingPeriodId: string;
@@ -97,7 +100,7 @@ export default function BillingPeriodDetailPage() {
           endpoints.billingPeriods.generateInvoices(apartmentId, billingPeriodId),
           { skipExistingInvoices: true }
         ),
-      "สร้างใบแจ้งหนี้ (ฉบับร่าง) สำเร็จ"
+      t("invoices-generated-draft")
     );
 
   const publishInvoices = () =>
@@ -108,7 +111,7 @@ export default function BillingPeriodDetailPage() {
           endpoints.billingPeriods.publishInvoices(apartmentId, billingPeriodId),
           {}
         ),
-      "เผยแพร่ใบแจ้งหนี้สำเร็จ"
+      t("invoices-published")
     );
 
   const transition = (status: BillingPeriodStatus, msg: string) =>
@@ -133,7 +136,7 @@ export default function BillingPeriodDetailPage() {
           ),
           {}
         ),
-      "สร้างใบแจ้งหนี้ใหม่สำเร็จ"
+      t("invoices-regenerated")
     );
 
   const status = period?.status;
@@ -143,23 +146,23 @@ export default function BillingPeriodDetailPage() {
   const invoiceColumns: Column<Invoice>[] = [
     {
       key: "number",
-      header: "เลขที่บิล",
+      header: t("invoice-number"),
       cell: (i) => (
         <span className="font-medium text-gray-900">
           {i.invoiceNumber ?? i.id.slice(0, 8)}
         </span>
       ),
     },
-    { key: "room", header: "ห้อง", cell: (i) => i.roomName ?? "-" },
-    { key: "tenant", header: "ผู้เช่า", cell: (i) => i.tenantName ?? "-" },
+    { key: "room", header: t("room"), cell: (i) => i.roomName ?? "-" },
+    { key: "tenant", header: t("tenant"), cell: (i) => i.tenantName ?? "-" },
     {
       key: "total",
-      header: "ยอดรวม",
+      header: t("total"),
       cell: (i) => formatCurrency(i.total),
     },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (i) => <StatusBadge kind="invoice" value={i.status} />,
     },
   ];
@@ -173,28 +176,32 @@ export default function BillingPeriodDetailPage() {
         onClick={() => router.push(`/apartments/${apartmentId}/billing-periods`)}
       >
         <ArrowLeft className="h-4 w-4" />
-        กลับไปรายการรอบบิล
+        {t("back-to-billing-periods")}
       </Button>
 
       {loading ? (
         <Skeleton className="h-32 w-full rounded-xl" />
       ) : !period ? (
-        <p className="text-sm text-gray-500">ไม่พบรอบบิล</p>
+        <p className="text-sm text-gray-500">{t("billing-period-not-found")}</p>
       ) : (
         <>
           <PageHeader
             title={
               period.name ??
-              `${MONTHS[(period.periodMonth ?? 1) - 1]} ${period.periodYear}`
+              `${t(MONTH_CODES[(period.periodMonth ?? 1) - 1])} ${period.periodYear}`
             }
-            description={BILLING_PERIOD_TYPE_LABELS[period.type] ?? period.type}
+            description={
+              period.type
+                ? t(BILLING_PERIOD_TYPE_CODES[period.type]) ?? period.type
+                : period.type
+            }
             actions={<StatusBadge kind="billing" value={period.status} />}
           />
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">จำนวนบิล</p>
+                <p className="text-sm text-gray-500">{t("invoice-count")}</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                   {invoices.length}
                 </p>
@@ -202,7 +209,7 @@ export default function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">ครบกำหนด</p>
+                <p className="text-sm text-gray-500">{t("due")}</p>
                 <p className="mt-1 text-base font-medium text-gray-900">
                   {formatDate(period.dueDate)}
                 </p>
@@ -210,7 +217,7 @@ export default function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">ยอดรวมทั้งหมด</p>
+                <p className="text-sm text-gray-500">{t("grand-total")}</p>
                 <p className="mt-1 text-base font-medium text-gray-900">
                   {formatCurrency(
                     invoices.reduce((sum, i) => sum + (i.total ?? 0), 0)
@@ -220,7 +227,7 @@ export default function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">ชำระแล้ว</p>
+                <p className="text-sm text-gray-500">{t("invoice-status-paid")}</p>
                 <p className="mt-1 text-base font-medium text-success">
                   {invoices.filter((i) => i.status === "PAID").length}
                 </p>
@@ -237,7 +244,7 @@ export default function BillingPeriodDetailPage() {
                 }
               >
                 <Gauge className="h-4 w-4" />
-                จดมิเตอร์
+                {t("record-meters")}
               </Button>
 
               {isOpen && (
@@ -247,7 +254,7 @@ export default function BillingPeriodDetailPage() {
                   ) : (
                     <FilePlus2 className="h-4 w-4" />
                   )}
-                  สร้างใบแจ้งหนี้
+                  {t("create-invoice")}
                 </Button>
               )}
 
@@ -259,7 +266,7 @@ export default function BillingPeriodDetailPage() {
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
-                    เผยแพร่ใบแจ้งหนี้
+                    {t("publish-invoices")}
                   </Button>
                   <Button
                     variant="outline"
@@ -267,7 +274,7 @@ export default function BillingPeriodDetailPage() {
                     disabled={busy !== null}
                   >
                     <RefreshCw className="h-4 w-4" />
-                    สร้างใหม่
+                    {t("regenerate")}
                   </Button>
                   <Button
                     variant="outline"
@@ -275,7 +282,7 @@ export default function BillingPeriodDetailPage() {
                     disabled={busy !== null}
                   >
                     <FileCheck2 className="h-4 w-4" />
-                    ปิดรอบบิล
+                    {t("close-billing-period")}
                   </Button>
                 </>
               )}
@@ -288,7 +295,7 @@ export default function BillingPeriodDetailPage() {
                   disabled={busy !== null}
                 >
                   <XCircle className="h-4 w-4" />
-                  ยกเลิกรอบบิล
+                  {t("cancel-billing-period")}
                 </Button>
               )}
             </CardContent>
@@ -296,7 +303,7 @@ export default function BillingPeriodDetailPage() {
 
           <div>
             <h2 className="mb-3 text-sm font-semibold text-gray-900">
-              ใบแจ้งหนี้ในรอบบิลนี้
+              {t("invoices-in-period")}
             </h2>
             <DataTable
               columns={invoiceColumns}
@@ -306,8 +313,8 @@ export default function BillingPeriodDetailPage() {
               onRowClick={(i) =>
                 router.push(`/apartments/${apartmentId}/invoices/${i.id}`)
               }
-              emptyTitle="ยังไม่มีใบแจ้งหนี้"
-              emptyDescription="กดสร้างใบแจ้งหนี้เพื่อออกบิลให้ผู้เช่า"
+              emptyTitle={t("no-invoices")}
+              emptyDescription={t("no-invoices-period-description")}
             />
           </div>
         </>
@@ -316,30 +323,30 @@ export default function BillingPeriodDetailPage() {
       <ConfirmDialog
         open={confirm === "cancel"}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="ยกเลิกรอบบิล"
-        description="การยกเลิกจะทำให้ไม่สามารถออกบิลในรอบนี้ได้ ต้องการดำเนินการต่อหรือไม่?"
-        confirmLabel="ยกเลิกรอบบิล"
+        title={t("cancel-billing-period")}
+        description={t("cancel-billing-period-description")}
+        confirmLabel={t("cancel-billing-period")}
         destructive
         onConfirm={() =>
-          transition(BillingPeriodStatus.CANCELLED, "ยกเลิกรอบบิลแล้ว")
+          transition(BillingPeriodStatus.CANCELLED, t("billing-period-cancelled"))
         }
       />
       <ConfirmDialog
         open={confirm === "close"}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="ปิดรอบบิล"
-        description="ปิดรอบบิลหลังจากเรียกเก็บเงินเสร็จสิ้น ต้องการดำเนินการต่อหรือไม่?"
-        confirmLabel="ปิดรอบบิล"
+        title={t("close-billing-period")}
+        description={t("close-billing-period-description")}
+        confirmLabel={t("close-billing-period")}
         onConfirm={() =>
-          transition(BillingPeriodStatus.CLOSED, "ปิดรอบบิลแล้ว")
+          transition(BillingPeriodStatus.CLOSED, t("billing-period-closed"))
         }
       />
       <ConfirmDialog
         open={confirm === "regenerate"}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="สร้างใบแจ้งหนี้ใหม่"
-        description="ระบบจะสร้างใบแจ้งหนี้ฉบับร่างใหม่สำหรับรอบบิลนี้ ต้องการดำเนินการต่อหรือไม่?"
-        confirmLabel="สร้างใหม่"
+        title={t("regenerate-invoices")}
+        description={t("regenerate-invoices-description")}
+        confirmLabel={t("regenerate")}
         onConfirm={regenerate}
       />
     </div>

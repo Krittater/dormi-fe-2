@@ -23,6 +23,7 @@ import { api, buildQuery } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { formatNumber, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import { MeterReadingStatus } from "@/types";
 import type { Meter, MeterReading } from "@/types";
 
@@ -32,6 +33,7 @@ interface BillingPeriodOption {
 }
 
 export default function MetersPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [meters, setMeters] = useState<Meter[]>([]);
@@ -118,15 +120,15 @@ export default function MetersPage() {
   const meterColumns: Column<Meter>[] = [
     {
       key: "room",
-      header: "ห้อง",
+      header: t("room"),
       cell: (m) => (
         <span className="font-medium text-gray-900">{m.roomName ?? "-"}</span>
       ),
     },
-    { key: "type", header: "ประเภท", cell: (m) => m.type },
+    { key: "type", header: t("type"), cell: (m) => m.type },
     {
       key: "number",
-      header: "เลขมิเตอร์",
+      header: t("meter-number"),
       cell: (m) => m.meterNumber || "-",
     },
     {
@@ -136,7 +138,7 @@ export default function MetersPage() {
       hideOnMobile: true,
       cell: (m) => (
         <Button variant="outline" size="sm" onClick={() => openMeter(m)}>
-          ดูการจดมิเตอร์
+          {t("view-meter-readings")}
         </Button>
       ),
     },
@@ -145,30 +147,30 @@ export default function MetersPage() {
   const readingColumns: Column<MeterReading>[] = [
     {
       key: "room",
-      header: "ห้อง",
+      header: t("room"),
       cell: (r) => (
         <span className="font-medium text-gray-900">{r.roomName ?? "-"}</span>
       ),
     },
-    { key: "type", header: "ประเภท", cell: (r) => r.meterType ?? "-" },
+    { key: "type", header: t("type"), cell: (r) => r.meterType ?? "-" },
     {
       key: "previous",
-      header: "ก่อนหน้า",
+      header: t("previous"),
       cell: (r) => formatNumber(r.previousValue ?? 0),
     },
     {
       key: "current",
-      header: "ปัจจุบัน",
+      header: t("current"),
       cell: (r) => formatNumber(r.currentValue ?? 0),
     },
     {
       key: "units",
-      header: "หน่วยที่ใช้",
+      header: t("units-used"),
       cell: (r) => formatNumber(r.unitsUsed ?? 0),
     },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (r) => <StatusBadge kind="reading" value={r.readingStatus} />,
     },
     {
@@ -180,8 +182,8 @@ export default function MetersPage() {
         r.readingStatus !== MeterReadingStatus.BILLED ? (
           <Button variant="outline" size="sm" onClick={() => openReading(r)}>
             {r.readingStatus === MeterReadingStatus.NOT_RECORDED
-              ? "บันทึก"
-              : "แก้ไข"}
+              ? t("save")
+              : t("edit")}
           </Button>
         ) : null,
     },
@@ -190,14 +192,14 @@ export default function MetersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="มิเตอร์"
-        description="จดและตรวจสอบค่ามิเตอร์น้ำและไฟฟ้า"
+        title={t("nav-meters")}
+        description={t("meters-page-description")}
       />
 
       <Tabs defaultValue="meters">
         <TabsList>
-          <TabsTrigger value="meters">รายการมิเตอร์</TabsTrigger>
-          <TabsTrigger value="by-period">จดตามรอบบิล</TabsTrigger>
+          <TabsTrigger value="meters">{t("meter-list")}</TabsTrigger>
+          <TabsTrigger value="by-period">{t("record-by-period")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="meters" className="mt-4">
@@ -207,23 +209,23 @@ export default function MetersPage() {
             loading={loading}
             getRowId={(m) => m.id}
             onRowClick={openMeter}
-            emptyTitle="ยังไม่มีมิเตอร์"
-            emptyDescription="มิเตอร์จะถูกสร้างอัตโนมัติเมื่อเพิ่มห้องพัก"
+            emptyTitle={t("no-meters")}
+            emptyDescription={t("no-meters-description")}
           />
         </TabsContent>
 
         <TabsContent value="by-period" className="mt-4 space-y-4">
           {periods.length === 0 ? (
             <EmptyState
-              title="ยังไม่มีรอบบิล"
-              description="สร้างรอบบิลก่อนเพื่อจดมิเตอร์ตามรอบ"
+              title={t("no-billing-periods")}
+              description={t("no-billing-periods-description")}
             />
           ) : (
             <>
               <div className="max-w-xs">
                 <Select value={periodId} onValueChange={setPeriodId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="เลือกรอบบิล" />
+                    <SelectValue placeholder={t("select-billing-period")} />
                   </SelectTrigger>
                   <SelectContent>
                     {periods.map((p) => (
@@ -239,8 +241,8 @@ export default function MetersPage() {
                 data={periodReadings}
                 loading={readingsLoading}
                 getRowId={(r) => r.id}
-                emptyTitle="ไม่มีรายการจดมิเตอร์"
-                emptyDescription="ไม่มีมิเตอร์ที่ต้องจดในรอบบิลนี้"
+                emptyTitle={t("no-readings")}
+                emptyDescription={t("no-readings-description")}
               />
             </>
           )}

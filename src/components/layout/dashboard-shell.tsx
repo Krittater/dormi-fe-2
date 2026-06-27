@@ -16,10 +16,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavContent } from "@/components/layout/nav-content";
 import { ApartmentSwitcher } from "@/components/layout/apartment-switcher";
 import { UserMenu } from "@/components/layout/user-menu";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { useApartmentStore } from "@/stores/apartment.store";
 import { useApartmentIdFromPath } from "@/hooks/use-apartment-id";
+import { useT } from "@/i18n";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const [mobileOpen, setMobileOpen] = useState(false);
   const fetchApartments = useApartmentStore((s) => s.fetchApartments);
   const setCurrent = useApartmentStore((s) => s.setCurrent);
@@ -68,7 +71,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   variant="ghost"
                   size="icon"
                   className="lg:hidden"
-                  aria-label="เปิดเมนู"
+                  aria-label={t("open-menu")}
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -92,6 +95,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="flex-1">
               <ApartmentSwitcher />
             </div>
+            <LanguageSwitcher />
             <UserMenu />
           </header>
 

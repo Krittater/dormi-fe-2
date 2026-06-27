@@ -16,6 +16,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatCurrency, formatDate, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 
 interface RoomDetail {
   room: {
@@ -57,6 +58,7 @@ export function RoomDetailSheet({
   apartmentId,
   roomId,
 }: Props) {
+  const t = useT();
   const [data, setData] = useState<RoomDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -88,9 +90,9 @@ export function RoomDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{room?.name ?? "รายละเอียดห้อง"}</SheetTitle>
+          <SheetTitle>{room?.name ?? t("room-details")}</SheetTitle>
           <SheetDescription>
-            {room?.roomType?.name ?? "ข้อมูลห้องพักและประวัติบิล"}
+            {room?.roomType?.name ?? t("room-info-billing-history")}
           </SheetDescription>
         </SheetHeader>
 
@@ -105,17 +107,17 @@ export function RoomDetailSheet({
             <>
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">สถานะ</span>
+                  <span className="text-sm text-gray-500">{t("status")}</span>
                   {room && <StatusBadge kind="room" value={room.status} />}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">ชั้น</span>
+                  <span className="text-sm text-gray-500">{t("floor")}</span>
                   <span className="text-sm text-gray-900">
                     {room?.floor || "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">ค่าเช่า</span>
+                  <span className="text-sm text-gray-500">{t("rent")}</span>
                   <span className="text-sm font-medium text-gray-900">
                     {formatCurrency(room?.roomType?.price ?? 0)}
                   </span>
@@ -129,7 +131,7 @@ export function RoomDetailSheet({
 
               <section>
                 <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                  ผู้เช่าปัจจุบัน
+                  {t("current-tenant")}
                 </h3>
                 {tenant ? (
                   <div className="space-y-1 rounded-lg bg-gray-50 p-3 text-sm">
@@ -139,11 +141,11 @@ export function RoomDetailSheet({
                     <p className="text-gray-500">{tenant.phone}</p>
                     <p className="text-gray-500">{tenant.email}</p>
                     <p className="text-gray-500">
-                      เข้าพัก: {formatDate(tenant.moveInDate)}
+                      {t("move-in")}: {formatDate(tenant.moveInDate)}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">ยังไม่มีผู้เช่า</p>
+                  <p className="text-sm text-gray-500">{t("no-tenant")}</p>
                 )}
               </section>
 
@@ -151,7 +153,7 @@ export function RoomDetailSheet({
 
               <section>
                 <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                  ประวัติใบแจ้งหนี้
+                  {t("invoice-history")}
                 </h3>
                 {data?.invoiceHistory?.length ? (
                   <ul className="space-y-2">
@@ -165,7 +167,7 @@ export function RoomDetailSheet({
                             {inv.invoiceNumber}
                           </p>
                           <p className="text-xs text-gray-500">
-                            ครบกำหนด {formatDate(inv.dueDate)}
+                            {t("due")} {formatDate(inv.dueDate)}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -178,7 +180,7 @@ export function RoomDetailSheet({
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">ยังไม่มีประวัติบิล</p>
+                  <p className="text-sm text-gray-500">{t("no-billing-history")}</p>
                 )}
               </section>
             </>

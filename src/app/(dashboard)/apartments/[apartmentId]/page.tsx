@@ -17,6 +17,7 @@ import { useFetch } from "@/hooks/use-fetch";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { useApartmentStore } from "@/stores/apartment.store";
+import { useT } from "@/i18n";
 import type { RoomOverview } from "@/types";
 
 const numberOr = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -25,6 +26,7 @@ export default function ApartmentOverviewPage() {
   const params = useParams<{ apartmentId: string }>();
   const apartmentId = params.apartmentId;
   const router = useRouter();
+  const t = useT();
   const apartments = useApartmentStore((s) => s.apartments);
   const apartment = apartments.find((a) => a.id === apartmentId);
 
@@ -34,28 +36,28 @@ export default function ApartmentOverviewPage() {
   );
 
   const kpis = [
-    { label: "ห้องทั้งหมด", value: numberOr(data?.total), tone: "text-gray-900" },
-    { label: "ห้องว่าง", value: numberOr(data?.available), tone: "text-gray-700" },
-    { label: "มีผู้เช่า", value: numberOr(data?.rented), tone: "text-success" },
-    { label: "ค้างชำระ", value: numberOr(data?.overdue), tone: "text-danger" },
+    { label: t("rooms-total"), value: numberOr(data?.total), tone: "text-gray-900" },
+    { label: t("rooms-available"), value: numberOr(data?.available), tone: "text-gray-700" },
+    { label: t("rooms-rented"), value: numberOr(data?.rented), tone: "text-success" },
+    { label: t("rooms-overdue"), value: numberOr(data?.overdue), tone: "text-danger" },
   ];
 
   const links = [
-    { label: "ห้องพัก", desc: "จัดการห้องและสถานะ", icon: DoorOpen, seg: "rooms" },
-    { label: "ผู้เช่า", desc: "ทะเบียนผู้เช่า", icon: Users, seg: "tenants" },
-    { label: "มิเตอร์", desc: "จดมิเตอร์น้ำ-ไฟ", icon: Gauge, seg: "meters" },
-    { label: "รอบบิล", desc: "สร้างและปิดรอบบิล", icon: FileText, seg: "billing-periods" },
-    { label: "ใบแจ้งหนี้", desc: "ออกและติดตามการชำระ", icon: Receipt, seg: "invoices" },
+    { label: t("nav-rooms"), desc: t("link-rooms-desc"), icon: DoorOpen, seg: "rooms" },
+    { label: t("nav-tenants"), desc: t("link-tenants-desc"), icon: Users, seg: "tenants" },
+    { label: t("nav-meters"), desc: t("link-meters-desc"), icon: Gauge, seg: "meters" },
+    { label: t("nav-billing-periods"), desc: t("link-billing-periods-desc"), icon: FileText, seg: "billing-periods" },
+    { label: t("nav-invoices"), desc: t("link-invoices-desc"), icon: Receipt, seg: "invoices" },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={apartment?.name ?? "ภาพรวมหอพัก"}
+        title={apartment?.name ?? t("apartment-overview")}
         description={
           apartment
             ? `${apartment.subDistrict}, ${apartment.district}, ${apartment.province}`
-            : "สรุปภาพรวมห้องพักและทางลัดการจัดการ"
+            : t("apartment-overview-subtitle")
         }
       />
 
@@ -77,7 +79,9 @@ export default function ApartmentOverviewPage() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-gray-900">ทางลัด</h2>
+        <h2 className="mb-3 text-sm font-semibold text-gray-900">
+          {t("shortcuts")}
+        </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {links.map((link) => {
             const Icon = link.icon;

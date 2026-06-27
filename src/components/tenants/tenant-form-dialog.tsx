@@ -36,22 +36,24 @@ import {
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 import type { Tenant } from "@/types";
 
 const NO_ROOM = "none";
 
-const schema = z.object({
-  firstNameTH: z.string().min(1, "กรุณากรอกชื่อ"),
-  lastNameTH: z.string().min(1, "กรุณากรอกนามสกุล"),
-  email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-  phone: z.string().min(9, "เบอร์โทรศัพท์ไม่ถูกต้อง"),
-  roomId: z.string().optional(),
-  monthlyRentOverride: z.string().optional(),
-  depositAmount: z.string().optional(),
-  contractStartDate: z.string().optional(),
-  contractEndDate: z.string().optional(),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    firstNameTH: z.string().min(1, t("enter-first-name")),
+    lastNameTH: z.string().min(1, t("enter-last-name")),
+    email: z.string().email(t("email-invalid")),
+    phone: z.string().min(9, t("phone-invalid")),
+    roomId: z.string().optional(),
+    monthlyRentOverride: z.string().optional(),
+    depositAmount: z.string().optional(),
+    contractStartDate: z.string().optional(),
+    contractEndDate: z.string().optional(),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 interface RoomOption {
   id: string;
@@ -75,11 +77,12 @@ export function TenantFormDialog({
   rooms,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = Boolean(tenant);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(makeSchema(t)),
     defaultValues: {
       firstNameTH: "",
       lastNameTH: "",
@@ -129,7 +132,7 @@ export function TenantFormDialog({
           contractStartDate: values.contractStartDate || undefined,
           contractEndDate: values.contractEndDate || undefined,
         });
-        toast.success("แก้ไขผู้เช่าสำเร็จ");
+        toast.success(t("tenant-updated"));
       } else {
         await api.post(endpoints.tenants.create(), {
           firstNameTH: values.firstNameTH,
@@ -139,7 +142,7 @@ export function TenantFormDialog({
           apartmentId,
           roomId,
         });
-        toast.success("เพิ่มผู้เช่าสำเร็จ");
+        toast.success(t("tenant-added"));
       }
       onSaved();
       onOpenChange(false);
@@ -154,11 +157,11 @@ export function TenantFormDialog({
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "แก้ไขผู้เช่า" : "เพิ่มผู้เช่า"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("edit-tenant") : t("add-tenant")}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "ปรับปรุงข้อมูลผู้เช่าและสัญญา"
-              : "หากอีเมลยังไม่มีในระบบ จะสร้างบัญชีใหม่โดยใช้เบอร์โทรเป็นรหัสผ่านชั่วคราว"}
+              ? t("edit-tenant-description")
+              : t("add-tenant-description")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -169,7 +172,7 @@ export function TenantFormDialog({
                 name="firstNameTH"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อ</FormLabel>
+                    <FormLabel>{t("first-name")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -182,7 +185,7 @@ export function TenantFormDialog({
                 name="lastNameTH"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>นามสกุล</FormLabel>
+                    <FormLabel>{t("last-name")}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -196,7 +199,7 @@ export function TenantFormDialog({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>อีเมล</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} />
                   </FormControl>
@@ -209,13 +212,13 @@ export function TenantFormDialog({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>เบอร์โทรศัพท์</FormLabel>
+                  <FormLabel>{t("phone")}</FormLabel>
                   <FormControl>
                     <Input placeholder="0812345678" {...field} />
                   </FormControl>
                   {!isEdit && (
                     <FormDescription>
-                      ใช้เป็นรหัสผ่านชั่วคราวสำหรับผู้ใช้ใหม่
+                      {t("phone-temp-password-hint")}
                     </FormDescription>
                   )}
                   <FormMessage />
@@ -227,15 +230,17 @@ export function TenantFormDialog({
               name="roomId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ห้องพัก</FormLabel>
+                  <FormLabel>{t("room-unit")}</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="เลือกห้อง (ไม่บังคับ)" />
+                        <SelectValue placeholder={t("select-room-optional")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={NO_ROOM}>ยังไม่ระบุห้อง</SelectItem>
+                      <SelectItem value={NO_ROOM}>
+                        {t("no-room-assigned")}
+                      </SelectItem>
                       {rooms.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
                           {r.name}
@@ -255,7 +260,7 @@ export function TenantFormDialog({
                   name="monthlyRentOverride"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ค่าเช่าพิเศษ/เดือน</FormLabel>
+                      <FormLabel>{t("special-monthly-rent")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -268,7 +273,7 @@ export function TenantFormDialog({
                   name="depositAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เงินมัดจำ</FormLabel>
+                      <FormLabel>{t("deposit")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -281,7 +286,7 @@ export function TenantFormDialog({
                   name="contractStartDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เริ่มสัญญา</FormLabel>
+                      <FormLabel>{t("contract-start")}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -294,7 +299,7 @@ export function TenantFormDialog({
                   name="contractEndDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>สิ้นสุดสัญญา</FormLabel>
+                      <FormLabel>{t("contract-end")}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -312,11 +317,11 @@ export function TenantFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                บันทึก
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

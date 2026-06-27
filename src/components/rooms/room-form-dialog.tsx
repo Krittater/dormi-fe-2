@@ -37,24 +37,26 @@ import {
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getApiErrorMessage } from "@/lib/format";
-import { ROOM_STATUS_LABELS, RoomStatus } from "@/types";
+import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
 import type { Room, RoomType } from "@/types";
+import { useT, type TranslateFn } from "@/i18n";
 
-const schema = z.object({
-  roomTypeId: z.string().min(1, "กรุณาเลือกประเภทห้อง"),
-  name: z.string().min(1, "กรุณากรอกชื่อ/เลขห้อง"),
-  floor: z.string().optional(),
-  description: z.string().optional(),
-  status: z.nativeEnum(RoomStatus),
-  isActive: z.boolean(),
-  currentWaterMeterReading: z.coerce
-    .number({ message: "กรุณากรอกตัวเลข" })
-    .min(0, "ต้องไม่ติดลบ"),
-  currentElectricMeterReading: z.coerce
-    .number({ message: "กรุณากรอกตัวเลข" })
-    .min(0, "ต้องไม่ติดลบ"),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    roomTypeId: z.string().min(1, t("please-select-room-type")),
+    name: z.string().min(1, t("enter-room-name-number")),
+    floor: z.string().optional(),
+    description: z.string().optional(),
+    status: z.nativeEnum(RoomStatus),
+    isActive: z.boolean(),
+    currentWaterMeterReading: z.coerce
+      .number({ message: t("enter-a-number") })
+      .min(0, t("must-not-be-negative")),
+    currentElectricMeterReading: z.coerce
+      .number({ message: t("enter-a-number") })
+      .min(0, t("must-not-be-negative")),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 interface Props {
   open: boolean;
@@ -73,11 +75,12 @@ export function RoomFormDialog({
   roomTypes,
   onSaved,
 }: Props) {
+  const t = useT();
   const isEdit = Boolean(room);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: {
       roomTypeId: "",
       name: "",
@@ -117,7 +120,7 @@ export function RoomFormDialog({
           status: values.status,
           isActive: values.isActive,
         });
-        toast.success("แก้ไขห้องสำเร็จ");
+        toast.success(t("room-updated"));
       } else {
         await api.post(endpoints.rooms.create(apartmentId), {
           roomTypeId: values.roomTypeId,
@@ -129,7 +132,7 @@ export function RoomFormDialog({
           currentWaterMeterReading: values.currentWaterMeterReading,
           currentElectricMeterReading: values.currentElectricMeterReading,
         });
-        toast.success("สร้างห้องสำเร็จ (พร้อมมิเตอร์น้ำ-ไฟ)");
+        toast.success(t("room-created-with-meters"));
       }
       onSaved();
       onOpenChange(false);
@@ -144,11 +147,9 @@ export function RoomFormDialog({
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "แก้ไขห้องพัก" : "เพิ่มห้องพัก"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("edit-room") : t("add-room")}</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "ปรับปรุงข้อมูลห้องพัก"
-              : "สร้างห้องใหม่ ระบบจะสร้างมิเตอร์น้ำและไฟให้อัตโนมัติ"}
+            {isEdit ? t("update-room-info") : t("create-room-description")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -158,14 +159,14 @@ export function RoomFormDialog({
               name="roomTypeId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ประเภทห้อง</FormLabel>
+                  <FormLabel>{t("nav-room-types")}</FormLabel>
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="เลือกประเภทห้อง" />
+                        <SelectValue placeholder={t("select-room-type")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -187,7 +188,7 @@ export function RoomFormDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อ/เลขห้อง</FormLabel>
+                    <FormLabel>{t("room-name-number")}</FormLabel>
                     <FormControl>
                       <Input placeholder="A-101" {...field} />
                     </FormControl>
@@ -200,7 +201,7 @@ export function RoomFormDialog({
                 name="floor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชั้น (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("floor-optional")}</FormLabel>
                     <FormControl>
                       <Input placeholder="1" {...field} />
                     </FormControl>
@@ -215,7 +216,7 @@ export function RoomFormDialog({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>สถานะ</FormLabel>
+                  <FormLabel>{t("status")}</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
@@ -225,7 +226,7 @@ export function RoomFormDialog({
                     <SelectContent>
                       {Object.values(RoomStatus).map((s) => (
                         <SelectItem key={s} value={s}>
-                          {ROOM_STATUS_LABELS[s]}
+                          {t(ROOM_STATUS_CODES[s])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -240,7 +241,7 @@ export function RoomFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>คำอธิบาย (ไม่บังคับ)</FormLabel>
+                  <FormLabel>{t("description-optional")}</FormLabel>
                   <FormControl>
                     <Textarea rows={2} {...field} />
                   </FormControl>
@@ -256,7 +257,7 @@ export function RoomFormDialog({
                   name="currentWaterMeterReading"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เลขมิเตอร์น้ำเริ่มต้น</FormLabel>
+                      <FormLabel>{t("initial-water-meter")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -269,7 +270,7 @@ export function RoomFormDialog({
                   name="currentElectricMeterReading"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เลขมิเตอร์ไฟเริ่มต้น</FormLabel>
+                      <FormLabel>{t("initial-electric-meter")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -286,9 +287,9 @@ export function RoomFormDialog({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
                   <div>
-                    <FormLabel>เปิดใช้งานห้อง</FormLabel>
+                    <FormLabel>{t("enable-room")}</FormLabel>
                     <p className="text-xs text-gray-500">
-                      ห้องที่ปิดใช้งานจะไม่ถูกนำไปออกบิล
+                      {t("disabled-room-not-billed")}
                     </p>
                   </div>
                   <FormControl>
@@ -308,11 +309,11 @@ export function RoomFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                บันทึก
+                {t("save")}
               </Button>
             </DialogFooter>
           </form>

@@ -26,31 +26,31 @@ export interface NavSection {
 
 export const apartmentNav: NavSection[] = [
   {
-    title: "ภาพรวม",
-    items: [{ label: "แดชบอร์ดหอพัก", segment: "", icon: LayoutGrid }],
+    title: "nav-section-overview",
+    items: [{ label: "nav-apartment-dashboard", segment: "", icon: LayoutGrid }],
   },
   {
-    title: "จัดการห้องพัก",
+    title: "nav-section-room-management",
     items: [
-      { label: "ห้องพัก", segment: "rooms", icon: DoorOpen },
-      { label: "ประเภทห้อง", segment: "room-types", icon: ListTree },
-      { label: "ผู้เช่า", segment: "tenants", icon: Users },
-      { label: "มิเตอร์", segment: "meters", icon: Gauge },
+      { label: "nav-rooms", segment: "rooms", icon: DoorOpen },
+      { label: "nav-room-types", segment: "room-types", icon: ListTree },
+      { label: "nav-tenants", segment: "tenants", icon: Users },
+      { label: "nav-meters", segment: "meters", icon: Gauge },
     ],
   },
   {
-    title: "ตั้งค่าค่าใช้จ่าย",
+    title: "nav-section-charge-settings",
     items: [
-      { label: "ประเภทค่าใช้จ่าย", segment: "charge-types", icon: Tags },
-      { label: "ค่าใช้จ่ายประจำห้อง", segment: "room-charges", icon: Wallet },
-      { label: "รูปแบบใบแจ้งหนี้", segment: "invoice-setups", icon: Settings2 },
+      { label: "nav-charge-types", segment: "charge-types", icon: Tags },
+      { label: "nav-room-charges", segment: "room-charges", icon: Wallet },
+      { label: "nav-invoice-setups", segment: "invoice-setups", icon: Settings2 },
     ],
   },
   {
-    title: "การเรียกเก็บเงิน",
+    title: "nav-section-billing",
     items: [
-      { label: "รอบบิล", segment: "billing-periods", icon: FileText },
-      { label: "ใบแจ้งหนี้", segment: "invoices", icon: Receipt },
+      { label: "nav-billing-periods", segment: "billing-periods", icon: FileText },
+      { label: "nav-invoices", segment: "invoices", icon: Receipt },
     ],
   },
 ];

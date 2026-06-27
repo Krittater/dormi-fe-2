@@ -42,31 +42,34 @@ import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { formatCurrency, formatDate, getApiErrorMessage } from "@/lib/format";
-import { INVOICE_TYPE_LABELS, InvoiceType } from "@/types";
+import { useT, type TranslateFn } from "@/i18n";
+import { INVOICE_TYPE_CODES, InvoiceType } from "@/types";
 import type { InvoiceSetup } from "@/types";
 
 const RATE_TYPES = [InvoiceType.ELECTRICITY, InvoiceType.WATER];
 
-const schema = z
-  .object({
-    type: z.nativeEnum(InvoiceType),
-    cutOffDate: z.coerce.number().int().min(1).max(31),
-    issueDate: z.coerce.number().int().min(1).max(31),
-    dueDate: z.coerce.number().int().min(1).max(31),
-    effectiveFrom: z.string().min(1, "กรุณาเลือกวันเริ่มมีผล"),
-    effectiveTo: z.string().optional(),
-    ratePerUnit: z.string().optional(),
-    isActive: z.boolean(),
-  })
-  .refine(
-    (d) =>
-      !RATE_TYPES.includes(d.type) ||
-      (d.ratePerUnit !== "" && d.ratePerUnit !== undefined),
-    { message: "ต้องระบุเรทต่อหน่วยสำหรับค่าไฟ/ค่าน้ำ", path: ["ratePerUnit"] }
-  );
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z
+    .object({
+      type: z.nativeEnum(InvoiceType),
+      cutOffDate: z.coerce.number().int().min(1).max(31),
+      issueDate: z.coerce.number().int().min(1).max(31),
+      dueDate: z.coerce.number().int().min(1).max(31),
+      effectiveFrom: z.string().min(1, t("select-effective-date")),
+      effectiveTo: z.string().optional(),
+      ratePerUnit: z.string().optional(),
+      isActive: z.boolean(),
+    })
+    .refine(
+      (d) =>
+        !RATE_TYPES.includes(d.type) ||
+        (d.ratePerUnit !== "" && d.ratePerUnit !== undefined),
+      { message: t("rate-required-for-utilities"), path: ["ratePerUnit"] }
+    );
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function InvoiceSetupsPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [items, setItems] = useState<InvoiceSetup[]>([]);
@@ -77,7 +80,7 @@ export default function InvoiceSetupsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: {
       type: InvoiceType.RENT,
       cutOffDate: 25,
@@ -151,7 +154,7 @@ export default function InvoiceSetupsPage() {
               ? Number(values.ratePerUnit)
               : undefined,
         });
-        toast.success("แก้ไขรูปแบบใบแจ้งหนี้สำเร็จ");
+        toast.success(t("invoice-setup-updated"));
       } else {
         await api.post(endpoints.invoiceSetups.create(apartmentId), {
           type: values.type,
@@ -166,7 +169,7 @@ export default function InvoiceSetupsPage() {
               ? Number(values.ratePerUnit)
               : undefined,
         });
-        toast.success("เพิ่มรูปแบบใบแจ้งหนี้สำเร็จ");
+        toast.success(t("invoice-setup-added"));
       }
       setFormOpen(false);
       load();
@@ -181,7 +184,7 @@ export default function InvoiceSetupsPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.invoiceSetups.remove(apartmentId, deleting.id));
-      toast.success("ลบรูปแบบใบแจ้งหนี้สำเร็จ");
+      toast.success(t("invoice-setup-deleted"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -193,39 +196,39 @@ export default function InvoiceSetupsPage() {
   const columns: Column<InvoiceSetup>[] = [
     {
       key: "type",
-      header: "ประเภท",
+      header: t("type"),
       cell: (s) => (
         <span className="font-medium text-gray-900">
-          {INVOICE_TYPE_LABELS[s.type]}
+          {t(INVOICE_TYPE_CODES[s.type])}
         </span>
       ),
     },
     {
       key: "dates",
-      header: "ตัดรอบ / ออกบิล / ครบกำหนด",
+      header: t("cutoff-issue-due"),
       cell: (s) => `${s.cutOffDate} / ${s.issueDate} / ${s.dueDate}`,
     },
     {
       key: "rate",
-      header: "เรท/หน่วย",
+      header: t("rate-per-unit"),
       cell: (s) => (s.ratePerUnit != null ? formatCurrency(s.ratePerUnit) : "-"),
     },
     {
       key: "effective",
-      header: "มีผล",
+      header: t("effective"),
       cell: (s) =>
         `${formatDate(s.effectiveFrom)} - ${
-          s.effectiveTo ? formatDate(s.effectiveTo) : "ไม่มีกำหนด"
+          s.effectiveTo ? formatDate(s.effectiveTo) : t("no-end-date")
         }`,
     },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (s) =>
         s.isActive ? (
-          <Badge variant="success">ใช้งาน</Badge>
+          <Badge variant="success">{t("active")}</Badge>
         ) : (
-          <Badge variant="outline">ปิด</Badge>
+          <Badge variant="outline">{t("inactive")}</Badge>
         ),
     },
     {
@@ -258,12 +261,12 @@ export default function InvoiceSetupsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="รูปแบบใบแจ้งหนี้"
-        description="กำหนดวันตัดรอบ ออกบิล ครบกำหนด และเรทค่าน้ำ-ค่าไฟ"
+        title={t("nav-invoice-setups")}
+        description={t("invoice-setups-page-description")}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            เพิ่มรูปแบบ
+            {t("add-setup")}
           </Button>
         }
       />
@@ -273,19 +276,17 @@ export default function InvoiceSetupsPage() {
         data={items}
         loading={loading}
         getRowId={(s) => s.id}
-        emptyTitle="ยังไม่มีรูปแบบใบแจ้งหนี้"
-        emptyDescription="เพิ่มรูปแบบเพื่อใช้สร้างรอบบิลอัตโนมัติ"
+        emptyTitle={t("no-invoice-setups")}
+        emptyDescription={t("no-invoice-setups-description")}
       />
 
       <Dialog open={formOpen} onOpenChange={(o) => !submitting && setFormOpen(o)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "แก้ไขรูปแบบใบแจ้งหนี้" : "เพิ่มรูปแบบใบแจ้งหนี้"}
+              {editing ? t("edit-invoice-setup") : t("add-invoice-setup")}
             </DialogTitle>
-            <DialogDescription>
-              ระบุประเภทและกำหนดการของใบแจ้งหนี้
-            </DialogDescription>
+            <DialogDescription>{t("invoice-setup-form-description")}</DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -294,7 +295,7 @@ export default function InvoiceSetupsPage() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ประเภท</FormLabel>
+                    <FormLabel>{t("type")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
@@ -302,9 +303,9 @@ export default function InvoiceSetupsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.values(InvoiceType).map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {INVOICE_TYPE_LABELS[t]}
+                        {Object.values(InvoiceType).map((it) => (
+                          <SelectItem key={it} value={it}>
+                            {t(INVOICE_TYPE_CODES[it])}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -319,7 +320,7 @@ export default function InvoiceSetupsPage() {
                   name="cutOffDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันตัดรอบ</FormLabel>
+                      <FormLabel>{t("cutoff-date")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} max={31} {...field} />
                       </FormControl>
@@ -332,7 +333,7 @@ export default function InvoiceSetupsPage() {
                   name="issueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>วันออกบิล</FormLabel>
+                      <FormLabel>{t("issue-date")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -351,7 +352,7 @@ export default function InvoiceSetupsPage() {
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ครบกำหนด</FormLabel>
+                      <FormLabel>{t("due-date")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -373,7 +374,7 @@ export default function InvoiceSetupsPage() {
                   name="ratePerUnit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เรทต่อหน่วย (บาท)</FormLabel>
+                      <FormLabel>{t("rate-per-unit-baht")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
@@ -389,7 +390,7 @@ export default function InvoiceSetupsPage() {
                   name="effectiveFrom"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เริ่มมีผล</FormLabel>
+                      <FormLabel>{t("effective-from")}</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
@@ -406,7 +407,7 @@ export default function InvoiceSetupsPage() {
                   name="effectiveTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>สิ้นสุด (ไม่บังคับ)</FormLabel>
+                      <FormLabel>{t("effective-to-optional")}</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
@@ -426,7 +427,7 @@ export default function InvoiceSetupsPage() {
                   name="isActive"
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                      <FormLabel>เปิดใช้งาน</FormLabel>
+                      <FormLabel>{t("enable")}</FormLabel>
                       <FormControl>
                         <Switch
                           checked={field.value}
@@ -445,11 +446,11 @@ export default function InvoiceSetupsPage() {
                   onClick={() => setFormOpen(false)}
                   disabled={submitting}
                 >
-                  ยกเลิก
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  บันทึก
+                  {t("save")}
                 </Button>
               </DialogFooter>
             </form>
@@ -460,11 +461,11 @@ export default function InvoiceSetupsPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบรูปแบบใบแจ้งหนี้"
-        description={`ต้องการลบรูปแบบ "${
-          deleting ? INVOICE_TYPE_LABELS[deleting.type] : ""
-        }" ใช่หรือไม่?`}
-        confirmLabel="ลบ"
+        title={t("delete-invoice-setup")}
+        description={t("delete-invoice-setup-description", {
+          name: deleting ? t(INVOICE_TYPE_CODES[deleting.type]) : "",
+        })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

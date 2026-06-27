@@ -43,22 +43,25 @@ import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { formatCurrency, getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 import {
-  CHARGE_TYPE_CATEGORY_LABELS,
+  CHARGE_TYPE_CATEGORY_CODES,
   ChargeTypeCategory,
 } from "@/types";
 import type { ChargeType } from "@/types";
 
-const schema = z.object({
-  name: z.string().min(1, "กรุณากรอกชื่อ"),
-  description: z.string().optional(),
-  category: z.nativeEnum(ChargeTypeCategory),
-  defaultAmount: z.string().optional(),
-  isActive: z.boolean(),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    name: z.string().min(1, t("enter-name")),
+    description: z.string().optional(),
+    category: z.nativeEnum(ChargeTypeCategory),
+    defaultAmount: z.string().optional(),
+    isActive: z.boolean(),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function ChargeTypesPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
 
   const [items, setItems] = useState<ChargeType[]>([]);
@@ -69,7 +72,7 @@ export default function ChargeTypesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: {
       name: "",
       description: "",
@@ -136,10 +139,10 @@ export default function ChargeTypesPage() {
           endpoints.chargeTypes.update(apartmentId, editing.id),
           payload
         );
-        toast.success("แก้ไขประเภทค่าใช้จ่ายสำเร็จ");
+        toast.success(t("charge-type-updated"));
       } else {
         await api.post(endpoints.chargeTypes.create(apartmentId), payload);
-        toast.success("เพิ่มประเภทค่าใช้จ่ายสำเร็จ");
+        toast.success(t("charge-type-added"));
       }
       setFormOpen(false);
       load();
@@ -154,7 +157,7 @@ export default function ChargeTypesPage() {
     if (!deleting) return;
     try {
       await api.delete(endpoints.chargeTypes.remove(apartmentId, deleting.id));
-      toast.success("ลบประเภทค่าใช้จ่ายสำเร็จ");
+      toast.success(t("charge-type-deleted"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -166,32 +169,32 @@ export default function ChargeTypesPage() {
   const columns: Column<ChargeType>[] = [
     {
       key: "name",
-      header: "ชื่อ",
+      header: t("name"),
       cell: (c) => <span className="font-medium text-gray-900">{c.name}</span>,
     },
     {
       key: "category",
-      header: "หมวดหมู่",
+      header: t("category"),
       cell: (c) => (
         <Badge variant="secondary">
-          {CHARGE_TYPE_CATEGORY_LABELS[c.category ?? ChargeTypeCategory.OTHER]}
+          {t(CHARGE_TYPE_CATEGORY_CODES[c.category ?? ChargeTypeCategory.OTHER])}
         </Badge>
       ),
     },
     {
       key: "defaultAmount",
-      header: "จำนวนแนะนำ",
+      header: t("suggested-amount"),
       cell: (c) =>
         c.defaultAmount != null ? formatCurrency(c.defaultAmount) : "-",
     },
     {
       key: "isActive",
-      header: "สถานะ",
+      header: t("status"),
       cell: (c) =>
         c.isActive ? (
-          <Badge variant="success">ใช้งาน</Badge>
+          <Badge variant="success">{t("active")}</Badge>
         ) : (
-          <Badge variant="outline">ปิด</Badge>
+          <Badge variant="outline">{t("inactive")}</Badge>
         ),
     },
     {
@@ -224,12 +227,12 @@ export default function ChargeTypesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ประเภทค่าใช้จ่าย"
-        description="กำหนดประเภทค่าใช้จ่ายสำหรับนำไปผูกกับห้อง"
+        title={t("nav-charge-types")}
+        description={t("charge-types-page-description")}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            เพิ่มประเภท
+            {t("add-type")}
           </Button>
         }
       />
@@ -239,19 +242,17 @@ export default function ChargeTypesPage() {
         data={items}
         loading={loading}
         getRowId={(c) => c.id}
-        emptyTitle="ยังไม่มีประเภทค่าใช้จ่าย"
-        emptyDescription="เพิ่มประเภทค่าใช้จ่าย เช่น ค่าส่วนกลาง ค่าอินเทอร์เน็ต"
+        emptyTitle={t("no-charge-types")}
+        emptyDescription={t("no-charge-types-description")}
       />
 
       <Dialog open={formOpen} onOpenChange={(o) => !submitting && setFormOpen(o)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "แก้ไขประเภทค่าใช้จ่าย" : "เพิ่มประเภทค่าใช้จ่าย"}
+              {editing ? t("edit-charge-type") : t("add-charge-type")}
             </DialogTitle>
-            <DialogDescription>
-              ตั้งชื่อ หมวดหมู่ และจำนวนเงินแนะนำ
-            </DialogDescription>
+            <DialogDescription>{t("charge-type-form-description")}</DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -260,9 +261,9 @@ export default function ChargeTypesPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อ</FormLabel>
+                    <FormLabel>{t("name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="ค่าส่วนกลาง" {...field} />
+                      <Input placeholder={t("common-area-fee")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -273,7 +274,7 @@ export default function ChargeTypesPage() {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>หมวดหมู่</FormLabel>
+                    <FormLabel>{t("category")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
@@ -283,7 +284,7 @@ export default function ChargeTypesPage() {
                       <SelectContent>
                         {Object.values(ChargeTypeCategory).map((c) => (
                           <SelectItem key={c} value={c}>
-                            {CHARGE_TYPE_CATEGORY_LABELS[c]}
+                            {t(CHARGE_TYPE_CATEGORY_CODES[c])}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -297,7 +298,7 @@ export default function ChargeTypesPage() {
                 name="defaultAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>จำนวนเงินแนะนำ (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("suggested-amount-optional")}</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} step="0.01" {...field} />
                     </FormControl>
@@ -310,7 +311,7 @@ export default function ChargeTypesPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>คำอธิบาย (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("description-optional")}</FormLabel>
                     <FormControl>
                       <Textarea rows={2} {...field} />
                     </FormControl>
@@ -323,7 +324,7 @@ export default function ChargeTypesPage() {
                 name="isActive"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                    <FormLabel>เปิดใช้งาน</FormLabel>
+                    <FormLabel>{t("enable")}</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -340,11 +341,11 @@ export default function ChargeTypesPage() {
                   onClick={() => setFormOpen(false)}
                   disabled={submitting}
                 >
-                  ยกเลิก
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  บันทึก
+                  {t("save")}
                 </Button>
               </DialogFooter>
             </form>
@@ -355,9 +356,11 @@ export default function ChargeTypesPage() {
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="ลบประเภทค่าใช้จ่าย"
-        description={`ต้องการลบ "${deleting?.name}" ใช่หรือไม่?`}
-        confirmLabel="ลบ"
+        title={t("delete-charge-type")}
+        description={t("delete-confirm-description", {
+          name: deleting?.name ?? "",
+        })}
+        confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
       />

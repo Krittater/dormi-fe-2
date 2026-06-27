@@ -38,35 +38,37 @@ import { toList } from "@/lib/list";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { getApiErrorMessage } from "@/lib/format";
 import {
-  INVOICE_ITEM_TYPE_LABELS,
+  INVOICE_ITEM_TYPE_CODES,
   InvoiceItemType,
 } from "@/types";
 import type { BillTypeDropdownItem, Tenant } from "@/types";
+import { useT, type TranslateFn } from "@/i18n";
 
 interface Option {
   id: string;
   name: string;
 }
 
-const schema = z.object({
-  billingPeriodId: z.string().min(1, "กรุณาเลือกรอบบิล"),
-  roomId: z.string().min(1, "กรุณาเลือกห้อง"),
-  tenantId: z.string().min(1, "กรุณาเลือกผู้เช่า"),
-  issuedDate: z.string().min(1, "กรุณาเลือกวันออกบิล"),
-  dueDate: z.string().min(1, "กรุณาเลือกวันครบกำหนด"),
-  billType: z.string().optional(),
-  items: z
-    .array(
-      z.object({
-        itemType: z.nativeEnum(InvoiceItemType),
-        description: z.string().optional(),
-        quantity: z.coerce.number().min(0.01, "ต้องมากกว่า 0"),
-        unitPrice: z.coerce.number().min(0, "ต้องไม่ติดลบ"),
-      })
-    )
-    .min(1, "ต้องมีรายการอย่างน้อย 1 รายการ"),
-});
-type FormValues = z.infer<typeof schema>;
+const makeSchema = (t: TranslateFn) =>
+  z.object({
+    billingPeriodId: z.string().min(1, t("please-select-billing-period")),
+    roomId: z.string().min(1, t("please-select-room")),
+    tenantId: z.string().min(1, t("please-select-tenant")),
+    issuedDate: z.string().min(1, t("please-select-issue-date")),
+    dueDate: z.string().min(1, t("please-select-due-date")),
+    billType: z.string().optional(),
+    items: z
+      .array(
+        z.object({
+          itemType: z.nativeEnum(InvoiceItemType),
+          description: z.string().optional(),
+          quantity: z.coerce.number().min(0.01, t("must-be-greater-than-0")),
+          unitPrice: z.coerce.number().min(0, t("must-not-be-negative")),
+        })
+      )
+      .min(1, t("at-least-one-item")),
+  });
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 interface Props {
   open: boolean;
@@ -81,6 +83,7 @@ export function InvoiceFormDialog({
   apartmentId,
   onSaved,
 }: Props) {
+  const t = useT();
   const [submitting, setSubmitting] = useState(false);
   const [periods, setPeriods] = useState<Option[]>([]);
   const [rooms, setRooms] = useState<Option[]>([]);
@@ -88,7 +91,7 @@ export function InvoiceFormDialog({
   const [billTypes, setBillTypes] = useState<BillTypeDropdownItem[]>([]);
 
   const form = useForm<FormValues>({
-    resolver: zodFormResolver<FormValues>(schema),
+    resolver: zodFormResolver<FormValues>(makeSchema(t)),
     defaultValues: {
       billingPeriodId: "",
       roomId: "",
@@ -171,7 +174,7 @@ export function InvoiceFormDialog({
           unitPrice: it.unitPrice,
         })),
       });
-      toast.success("สร้างใบแจ้งหนี้สำเร็จ");
+      toast.success(t("invoice-created"));
       onSaved();
       onOpenChange(false);
     } catch (err) {
@@ -185,9 +188,9 @@ export function InvoiceFormDialog({
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>สร้างใบแจ้งหนี้</DialogTitle>
+          <DialogTitle>{t("create-invoice")}</DialogTitle>
           <DialogDescription>
-            ออกใบแจ้งหนี้เพิ่มเติมให้ผู้เช่าในรอบบิลที่เลือก
+            {t("create-invoice-description")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -198,11 +201,11 @@ export function InvoiceFormDialog({
                 name="billingPeriodId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>รอบบิล</FormLabel>
+                    <FormLabel>{t("nav-billing-periods")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="เลือกรอบบิล" />
+                          <SelectValue placeholder={t("select-billing-period")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -222,11 +225,11 @@ export function InvoiceFormDialog({
                 name="billType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ประเภทบิล</FormLabel>
+                    <FormLabel>{t("bill-type")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="เลือกประเภทบิล" />
+                          <SelectValue placeholder={t("select-bill-type")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -246,11 +249,11 @@ export function InvoiceFormDialog({
                 name="roomId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ห้อง</FormLabel>
+                    <FormLabel>{t("room")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="เลือกห้อง" />
+                          <SelectValue placeholder={t("select-room")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -270,11 +273,11 @@ export function InvoiceFormDialog({
                 name="tenantId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ผู้เช่า</FormLabel>
+                    <FormLabel>{t("tenant")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="เลือกผู้เช่า" />
+                          <SelectValue placeholder={t("select-tenant")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -294,7 +297,7 @@ export function InvoiceFormDialog({
                 name="issuedDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>วันออกบิล</FormLabel>
+                    <FormLabel>{t("issue-date")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -307,7 +310,7 @@ export function InvoiceFormDialog({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>วันครบกำหนด</FormLabel>
+                    <FormLabel>{t("due-date")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -322,7 +325,7 @@ export function InvoiceFormDialog({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">
-                  รายการ
+                  {t("items")}
                 </h3>
                 <Button
                   type="button"
@@ -338,7 +341,7 @@ export function InvoiceFormDialog({
                   }
                 >
                   <Plus className="h-4 w-4" />
-                  เพิ่มรายการ
+                  {t("add-item")}
                 </Button>
               </div>
               {form.formState.errors.items?.root && (
@@ -357,7 +360,7 @@ export function InvoiceFormDialog({
                       name={`items.${index}.itemType`}
                       render={({ field }) => (
                         <FormItem className="sm:col-span-3">
-                          <FormLabel>ประเภท</FormLabel>
+                          <FormLabel>{t("type")}</FormLabel>
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
@@ -368,9 +371,9 @@ export function InvoiceFormDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Object.values(InvoiceItemType).map((t) => (
-                                <SelectItem key={t} value={t}>
-                                  {INVOICE_ITEM_TYPE_LABELS[t]}
+                              {Object.values(InvoiceItemType).map((it) => (
+                                <SelectItem key={it} value={it}>
+                                  {t(INVOICE_ITEM_TYPE_CODES[it])}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -383,7 +386,7 @@ export function InvoiceFormDialog({
                       name={`items.${index}.description`}
                       render={({ field }) => (
                         <FormItem className="sm:col-span-4">
-                          <FormLabel>รายละเอียด</FormLabel>
+                          <FormLabel>{t("details")}</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -395,7 +398,7 @@ export function InvoiceFormDialog({
                       name={`items.${index}.quantity`}
                       render={({ field }) => (
                         <FormItem className="sm:col-span-2">
-                          <FormLabel>จำนวน</FormLabel>
+                          <FormLabel>{t("quantity")}</FormLabel>
                           <FormControl>
                             <Input type="number" min={0} step="0.01" {...field} />
                           </FormControl>
@@ -408,7 +411,7 @@ export function InvoiceFormDialog({
                       name={`items.${index}.unitPrice`}
                       render={({ field }) => (
                         <FormItem className="sm:col-span-2">
-                          <FormLabel>ราคา/หน่วย</FormLabel>
+                          <FormLabel>{t("unit-price")}</FormLabel>
                           <FormControl>
                             <Input type="number" min={0} step="0.01" {...field} />
                           </FormControl>
@@ -440,11 +443,11 @@ export function InvoiceFormDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                ยกเลิก
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                สร้างใบแจ้งหนี้
+                {t("create-invoice")}
               </Button>
             </DialogFooter>
           </form>

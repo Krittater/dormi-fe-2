@@ -42,15 +42,17 @@ import { toList } from "@/lib/list";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { getApiErrorMessage } from "@/lib/format";
 import {
-  BILLING_PERIOD_TYPE_LABELS,
+  BILLING_PERIOD_TYPE_CODES,
   BillingPeriodStatus,
   BillingPeriodType,
 } from "@/types";
 import type { BillingPeriod, InvoiceSetup } from "@/types";
+import { useT } from "@/i18n";
 
-const MONTHS = [
-  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+const MONTH_CODES = [
+  "month-january", "month-february", "month-march", "month-april",
+  "month-may", "month-june", "month-july", "month-august",
+  "month-september", "month-october", "month-november", "month-december",
 ];
 
 const ANY = "any";
@@ -64,6 +66,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function BillingPeriodsPage() {
+  const t = useT();
   const { apartmentId } = useParams<{ apartmentId: string }>();
   const router = useRouter();
 
@@ -123,7 +126,7 @@ export default function BillingPeriodsPage() {
         type: values.type === ANY ? undefined : values.type,
         setupId: values.setupId === ANY ? undefined : values.setupId,
       });
-      toast.success("สร้างรอบบิลสำเร็จ");
+      toast.success(t("billing-period-created"));
       setFormOpen(false);
       load();
     } catch (err) {
@@ -136,26 +139,28 @@ export default function BillingPeriodsPage() {
   const columns: Column<BillingPeriod>[] = [
     {
       key: "period",
-      header: "รอบบิล",
+      header: t("nav-billing-periods"),
       cell: (b) => (
         <span className="font-medium text-gray-900">
-          {b.name ?? `${MONTHS[(b.periodMonth ?? 1) - 1]} ${b.periodYear}`}
+          {b.name ??
+            `${t(MONTH_CODES[(b.periodMonth ?? 1) - 1])} ${b.periodYear}`}
         </span>
       ),
     },
     {
       key: "type",
-      header: "ประเภท",
-      cell: (b) => BILLING_PERIOD_TYPE_LABELS[b.type] ?? b.type,
+      header: t("type"),
+      cell: (b) =>
+        b.type ? t(BILLING_PERIOD_TYPE_CODES[b.type]) ?? b.type : b.type,
     },
     {
       key: "invoices",
-      header: "จำนวนบิล",
+      header: t("invoice-count"),
       cell: (b) => b.invoiceCount ?? 0,
     },
     {
       key: "status",
-      header: "สถานะ",
+      header: t("status"),
       cell: (b) => <StatusBadge kind="billing" value={b.status} />,
     },
     {
@@ -170,25 +175,31 @@ export default function BillingPeriodsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="รอบบิล"
-        description="สร้างรอบบิลรายเดือน จดมิเตอร์ ออกและเผยแพร่ใบแจ้งหนี้"
+        title={t("nav-billing-periods")}
+        description={t("billing-periods-page-description")}
         actions={
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4" />
-            สร้างรอบบิล
+            {t("create-billing-period")}
           </Button>
         }
       />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
-          <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.OPEN}>เปิดรอบ</TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.GENERATED}>
-            สร้างบิลแล้ว
+          <TabsTrigger value="all">{t("all")}</TabsTrigger>
+          <TabsTrigger value={BillingPeriodStatus.OPEN}>
+            {t("billing-period-status-open")}
           </TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.CLOSED}>ปิดรอบ</TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.CANCELLED}>ยกเลิก</TabsTrigger>
+          <TabsTrigger value={BillingPeriodStatus.GENERATED}>
+            {t("billing-period-status-generated")}
+          </TabsTrigger>
+          <TabsTrigger value={BillingPeriodStatus.CLOSED}>
+            {t("billing-period-status-closed")}
+          </TabsTrigger>
+          <TabsTrigger value={BillingPeriodStatus.CANCELLED}>
+            {t("billing-period-status-cancelled")}
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -200,16 +211,16 @@ export default function BillingPeriodsPage() {
         onRowClick={(b) =>
           router.push(`/apartments/${apartmentId}/billing-periods/${b.id}`)
         }
-        emptyTitle="ยังไม่มีรอบบิล"
-        emptyDescription="สร้างรอบบิลแรกเพื่อเริ่มเรียกเก็บเงิน"
+        emptyTitle={t("no-billing-periods")}
+        emptyDescription={t("no-billing-periods-description")}
       />
 
       <Dialog open={formOpen} onOpenChange={(o) => !submitting && setFormOpen(o)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>สร้างรอบบิล</DialogTitle>
+            <DialogTitle>{t("create-billing-period")}</DialogTitle>
             <DialogDescription>
-              เลือกเดือนและปีของรอบบิลที่ต้องการสร้าง
+              {t("create-billing-period-description")}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -223,7 +234,7 @@ export default function BillingPeriodsPage() {
                   name="periodMonth"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>เดือน</FormLabel>
+                      <FormLabel>{t("month")}</FormLabel>
                       <Select
                         value={String(field.value)}
                         onValueChange={(v) => field.onChange(Number(v))}
@@ -234,9 +245,9 @@ export default function BillingPeriodsPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {MONTHS.map((m, i) => (
-                            <SelectItem key={m} value={String(i + 1)}>
-                              {m}
+                          {MONTH_CODES.map((code, i) => (
+                            <SelectItem key={code} value={String(i + 1)}>
+                              {t(code)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -250,7 +261,7 @@ export default function BillingPeriodsPage() {
                   name="periodYear"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ปี (ค.ศ.)</FormLabel>
+                      <FormLabel>{t("year-ce")}</FormLabel>
                       <FormControl>
                         <Input type="number" min={2000} max={2100} {...field} />
                       </FormControl>
@@ -264,18 +275,18 @@ export default function BillingPeriodsPage() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ประเภท (ไม่บังคับ)</FormLabel>
+                    <FormLabel>{t("type-optional")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="ทุกประเภท" />
+                          <SelectValue placeholder={t("all-types")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={ANY}>ทุกประเภท</SelectItem>
-                        {Object.values(BillingPeriodType).map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {BILLING_PERIOD_TYPE_LABELS[t]}
+                        <SelectItem value={ANY}>{t("all-types")}</SelectItem>
+                        {Object.values(BillingPeriodType).map((opt) => (
+                          <SelectItem key={opt} value={opt}>
+                            {t(BILLING_PERIOD_TYPE_CODES[opt])}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -290,18 +301,18 @@ export default function BillingPeriodsPage() {
                   name="setupId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>รูปแบบใบแจ้งหนี้ (ไม่บังคับ)</FormLabel>
+                      <FormLabel>{t("invoice-setup-optional")}</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="ทุกรูปแบบ" />
+                            <SelectValue placeholder={t("all-setups")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={ANY}>ทุกรูปแบบ</SelectItem>
+                          <SelectItem value={ANY}>{t("all-setups")}</SelectItem>
                           {setups.map((s) => (
                             <SelectItem key={s.id} value={s.id}>
                               {s.type}
@@ -321,11 +332,11 @@ export default function BillingPeriodsPage() {
                   onClick={() => setFormOpen(false)}
                   disabled={submitting}
                 >
-                  ยกเลิก
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  สร้างรอบบิล
+                  {t("create-billing-period")}
                 </Button>
               </DialogFooter>
             </form>

@@ -19,6 +19,7 @@ import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import { formatDate, formatNumber, getApiErrorMessage } from "@/lib/format";
+import { useT } from "@/i18n";
 import { MeterReadingStatus } from "@/types";
 import type { Meter, MeterReading } from "@/types";
 
@@ -35,6 +36,7 @@ export function MeterReadingsSheet({
   apartmentId,
   meter,
 }: Props) {
+  const t = useT();
   const [readings, setReadings] = useState<MeterReading[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -82,7 +84,10 @@ export function MeterReadingsSheet({
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>
-            มิเตอร์ {meter?.roomName ? `ห้อง ${meter.roomName}` : ""}
+            {t("nav-meters")}{" "}
+            {meter?.roomName
+              ? t("room-with-name", { name: meter.roomName })
+              : ""}
           </SheetTitle>
           <SheetDescription>
             {meter?.type} {meter?.meterNumber ? `· ${meter.meterNumber}` : ""}
@@ -98,8 +103,8 @@ export function MeterReadingsSheet({
             </div>
           ) : readings.length === 0 ? (
             <EmptyState
-              title="ยังไม่มีรายการจดมิเตอร์"
-              description="รายการจะถูกสร้างเมื่อมีรอบบิล"
+              title={t("no-meter-readings")}
+              description={t("no-meter-readings-description")}
             />
           ) : (
             <ul className="space-y-2">
@@ -114,9 +119,9 @@ export function MeterReadingsSheet({
                         {r.billingPeriodName ?? formatDate(r.recordedAt)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        ก่อนหน้า: {formatNumber(r.previousValue ?? 0)} ·
-                        ปัจจุบัน: {formatNumber(r.currentValue ?? 0)} · ใช้:{" "}
-                        {formatNumber(r.unitsUsed ?? 0)}
+                        {t("previous")}: {formatNumber(r.previousValue ?? 0)} ·{" "}
+                        {t("current")}: {formatNumber(r.currentValue ?? 0)} ·{" "}
+                        {t("used")}: {formatNumber(r.unitsUsed ?? 0)}
                       </p>
                     </div>
                     <StatusBadge kind="reading" value={r.readingStatus} />
@@ -129,8 +134,8 @@ export function MeterReadingsSheet({
                         onClick={() => openRecord(r)}
                       >
                         {r.readingStatus === MeterReadingStatus.NOT_RECORDED
-                          ? "บันทึกค่า"
-                          : "แก้ไข"}
+                          ? t("record-value")
+                          : t("edit")}
                       </Button>
                     </div>
                   )}

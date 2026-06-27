@@ -40,11 +40,12 @@ import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatCurrency, formatDate, getApiErrorMessage } from "@/lib/format";
 import {
-  INVOICE_ITEM_TYPE_LABELS,
+  INVOICE_ITEM_TYPE_CODES,
   InvoiceItemType,
   InvoiceStatus,
 } from "@/types";
 import type { Invoice, InvoiceItem } from "@/types";
+import { useT } from "@/i18n";
 
 interface EditItem {
   itemType: InvoiceItemType;
@@ -54,6 +55,7 @@ interface EditItem {
 }
 
 export default function InvoiceDetailPage() {
+  const t = useT();
   const { apartmentId, invoiceId } = useParams<{
     apartmentId: string;
     invoiceId: string;
@@ -148,7 +150,7 @@ export default function InvoiceDetailPage() {
 
   const saveItems = async () => {
     if (editItems.length === 0) {
-      toast.error("ต้องมีรายการอย่างน้อย 1 รายการ");
+      toast.error(t("at-least-one-item"));
       return;
     }
     setBusy("save");
@@ -161,7 +163,7 @@ export default function InvoiceDetailPage() {
           unitPrice: it.unitPrice,
         })),
       });
-      toast.success("บันทึกรายการสำเร็จ");
+      toast.success(t("items-saved"));
       setEditing(false);
       load();
     } catch (err) {
@@ -175,7 +177,7 @@ export default function InvoiceDetailPage() {
     setBusy("paid");
     try {
       await api.patch(endpoints.invoices.markPaid(apartmentId, invoiceId), {});
-      toast.success("ทำเครื่องหมายชำระแล้ว");
+      toast.success(t("mark-as-paid"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -188,7 +190,7 @@ export default function InvoiceDetailPage() {
     setBusy("cancel");
     try {
       await api.delete(endpoints.invoices.cancel(apartmentId, invoiceId));
-      toast.success("ยกเลิกใบแจ้งหนี้แล้ว");
+      toast.success(t("invoice-cancelled"));
       load();
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -218,42 +220,42 @@ export default function InvoiceDetailPage() {
         onClick={() => router.push(`/apartments/${apartmentId}/invoices`)}
       >
         <ArrowLeft className="h-4 w-4" />
-        กลับไปรายการใบแจ้งหนี้
+        {t("back-to-invoices")}
       </Button>
 
       {loading ? (
         <Skeleton className="h-40 w-full rounded-xl" />
       ) : !invoice ? (
-        <p className="text-sm text-gray-500">ไม่พบใบแจ้งหนี้</p>
+        <p className="text-sm text-gray-500">{t("invoice-not-found")}</p>
       ) : (
         <>
           <PageHeader
-            title={`ใบแจ้งหนี้ ${invoice.invoiceNumber ?? ""}`}
+            title={t("invoice-title", { number: invoice.invoiceNumber ?? "" })}
             actions={<StatusBadge kind="invoice" value={invoice.status} />}
           />
 
           <Card>
             <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
               <div>
-                <p className="text-xs text-gray-500">ห้อง</p>
+                <p className="text-xs text-gray-500">{t("room")}</p>
                 <p className="font-medium text-gray-900">
                   {invoice.roomName ?? "-"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">ผู้เช่า</p>
+                <p className="text-xs text-gray-500">{t("tenant")}</p>
                 <p className="font-medium text-gray-900">
                   {invoice.tenantName ?? "-"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">วันออกบิล</p>
+                <p className="text-xs text-gray-500">{t("issue-date")}</p>
                 <p className="font-medium text-gray-900">
                   {formatDate(invoice.issueDate)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">ครบกำหนด</p>
+                <p className="text-xs text-gray-500">{t("due")}</p>
                 <p className="font-medium text-gray-900">
                   {formatDate(invoice.dueDate)}
                 </p>
@@ -265,13 +267,13 @@ export default function InvoiceDetailPage() {
             {isDraft && !editing && (
               <Button variant="outline" onClick={startEdit}>
                 <Pencil className="h-4 w-4" />
-                แก้ไขรายการ
+                {t("edit-items")}
               </Button>
             )}
             {canPay && (
               <Button onClick={() => setConfirm("paid")} disabled={busy !== null}>
                 <BadgeCheck className="h-4 w-4" />
-                ทำเครื่องหมายชำระแล้ว
+                {t("mark-as-paid")}
               </Button>
             )}
             {canCancel && (
@@ -282,7 +284,7 @@ export default function InvoiceDetailPage() {
                 disabled={busy !== null}
               >
                 <XCircle className="h-4 w-4" />
-                ยกเลิกใบแจ้งหนี้
+                {t("cancel-invoice")}
               </Button>
             )}
           </div>
@@ -297,7 +299,7 @@ export default function InvoiceDetailPage() {
                       className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:grid-cols-12"
                     >
                       <div className="sm:col-span-3">
-                        <label className="text-xs text-gray-500">ประเภท</label>
+                        <label className="text-xs text-gray-500">{t("type")}</label>
                         <Select
                           value={it.itemType}
                           onValueChange={(v) =>
@@ -310,9 +312,9 @@ export default function InvoiceDetailPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {Object.values(InvoiceItemType).map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {INVOICE_ITEM_TYPE_LABELS[t]}
+                            {Object.values(InvoiceItemType).map((opt) => (
+                              <SelectItem key={opt} value={opt}>
+                                {t(INVOICE_ITEM_TYPE_CODES[opt])}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -320,7 +322,7 @@ export default function InvoiceDetailPage() {
                       </div>
                       <div className="sm:col-span-4">
                         <label className="text-xs text-gray-500">
-                          รายละเอียด
+                          {t("details")}
                         </label>
                         <Input
                           value={it.description}
@@ -330,7 +332,7 @@ export default function InvoiceDetailPage() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-xs text-gray-500">จำนวน</label>
+                        <label className="text-xs text-gray-500">{t("quantity")}</label>
                         <Input
                           type="number"
                           min={0}
@@ -345,7 +347,7 @@ export default function InvoiceDetailPage() {
                       </div>
                       <div className="sm:col-span-2">
                         <label className="text-xs text-gray-500">
-                          ราคา/หน่วย
+                          {t("unit-price")}
                         </label>
                         <Input
                           type="number"
@@ -393,10 +395,10 @@ export default function InvoiceDetailPage() {
                       }
                     >
                       <Plus className="h-4 w-4" />
-                      เพิ่มรายการ
+                      {t("add-item")}
                     </Button>
                     <p className="text-sm font-semibold text-gray-900">
-                      ยอดรวม: {formatCurrency(editTotal)}
+                      {t("total")}: {formatCurrency(editTotal)}
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -405,7 +407,7 @@ export default function InvoiceDetailPage() {
                       onClick={() => setEditing(false)}
                       disabled={busy === "save"}
                     >
-                      ยกเลิก
+                      {t("cancel")}
                     </Button>
                     <Button onClick={saveItems} disabled={busy === "save"}>
                       {busy === "save" ? (
@@ -413,7 +415,7 @@ export default function InvoiceDetailPage() {
                       ) : (
                         <Save className="h-4 w-4" />
                       )}
-                      บันทึก
+                      {t("save")}
                     </Button>
                   </div>
                 </div>
@@ -421,10 +423,10 @@ export default function InvoiceDetailPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>รายการ</TableHead>
-                      <TableHead className="text-right">จำนวน</TableHead>
-                      <TableHead className="text-right">ราคา/หน่วย</TableHead>
-                      <TableHead className="text-right">รวม</TableHead>
+                      <TableHead>{t("items")}</TableHead>
+                      <TableHead className="text-right">{t("quantity")}</TableHead>
+                      <TableHead className="text-right">{t("unit-price")}</TableHead>
+                      <TableHead className="text-right">{t("amount")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -433,9 +435,11 @@ export default function InvoiceDetailPage() {
                         <TableCell>
                           <p className="font-medium text-gray-900">
                             {it.itemType
-                              ? INVOICE_ITEM_TYPE_LABELS[
-                                  it.itemType as InvoiceItemType
-                                ] ?? it.itemType
+                              ? t(
+                                  INVOICE_ITEM_TYPE_CODES[
+                                    it.itemType as InvoiceItemType
+                                  ]
+                                ) ?? it.itemType
                               : it.name}
                           </p>
                           {it.description && (
@@ -457,7 +461,7 @@ export default function InvoiceDetailPage() {
                     ))}
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={3} className="text-right font-semibold">
-                        ยอดรวมทั้งหมด
+                        {t("grand-total")}
                       </TableCell>
                       <TableCell className="text-right text-base font-bold text-gray-900">
                         {formatCurrency(invoice.total)}
@@ -474,17 +478,17 @@ export default function InvoiceDetailPage() {
       <ConfirmDialog
         open={confirm === "paid"}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="ยืนยันการชำระเงิน"
-        description="ทำเครื่องหมายว่าใบแจ้งหนี้นี้ชำระแล้วใช่หรือไม่?"
-        confirmLabel="ยืนยัน"
+        title={t("confirm-payment")}
+        description={t("confirm-payment-description")}
+        confirmLabel={t("confirm")}
         onConfirm={markPaid}
       />
       <ConfirmDialog
         open={confirm === "cancel"}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="ยกเลิกใบแจ้งหนี้"
-        description="ต้องการยกเลิกใบแจ้งหนี้นี้ใช่หรือไม่?"
-        confirmLabel="ยกเลิกบิล"
+        title={t("cancel-invoice")}
+        description={t("cancel-invoice-description")}
+        confirmLabel={t("cancel-bill")}
         destructive
         onConfirm={cancelInvoice}
       />

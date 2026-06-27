@@ -66,13 +66,13 @@ export enum InvoiceItemType {
   OTHER = "OTHER",
 }
 
-export const INVOICE_ITEM_TYPE_LABELS: Record<InvoiceItemType, string> = {
-  [InvoiceItemType.RENT]: "ค่าเช่า",
-  [InvoiceItemType.ELECTRICITY]: "ค่าไฟฟ้า",
-  [InvoiceItemType.WATER]: "ค่าน้ำ",
-  [InvoiceItemType.UTILITY]: "ค่าสาธารณูปโภค",
-  [InvoiceItemType.SERVICE]: "ค่าบริการ",
-  [InvoiceItemType.OTHER]: "อื่นๆ",
+export const INVOICE_ITEM_TYPE_CODES: Record<InvoiceItemType, string> = {
+  [InvoiceItemType.RENT]: "item-type-rent",
+  [InvoiceItemType.ELECTRICITY]: "item-type-electricity",
+  [InvoiceItemType.WATER]: "item-type-water",
+  [InvoiceItemType.UTILITY]: "item-type-utility",
+  [InvoiceItemType.SERVICE]: "item-type-service",
+  [InvoiceItemType.OTHER]: "item-type-other",
 };
 
 export enum MeterReadingStatus {
@@ -88,56 +88,56 @@ export enum ChargeTypeCategory {
   OTHER = "OTHER",
 }
 
-export const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
-  [RoomStatus.AVAILABLE]: "ว่าง",
-  [RoomStatus.RENTED]: "มีผู้เช่า",
-  [RoomStatus.BOOKED]: "จองแล้ว",
-  [RoomStatus.OVERDUE]: "ค้างชำระ",
+export const ROOM_STATUS_CODES: Record<RoomStatus, string> = {
+  [RoomStatus.AVAILABLE]: "room-status-available",
+  [RoomStatus.RENTED]: "room-status-rented",
+  [RoomStatus.BOOKED]: "room-status-booked",
+  [RoomStatus.OVERDUE]: "room-status-overdue",
 };
 
-export const BILLING_PERIOD_STATUS_LABELS: Record<BillingPeriodStatus, string> =
+export const BILLING_PERIOD_STATUS_CODES: Record<BillingPeriodStatus, string> =
   {
-    [BillingPeriodStatus.OPEN]: "เปิดรอบ",
-    [BillingPeriodStatus.GENERATED]: "สร้างบิลแล้ว",
-    [BillingPeriodStatus.CLOSED]: "ปิดรอบ",
-    [BillingPeriodStatus.CANCELLED]: "ยกเลิก",
+    [BillingPeriodStatus.OPEN]: "billing-period-status-open",
+    [BillingPeriodStatus.GENERATED]: "billing-period-status-generated",
+    [BillingPeriodStatus.CLOSED]: "billing-period-status-closed",
+    [BillingPeriodStatus.CANCELLED]: "billing-period-status-cancelled",
   };
 
-export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
-  [InvoiceStatus.DRAFT]: "ฉบับร่าง",
-  [InvoiceStatus.UNPAID]: "ยังไม่ชำระ",
-  [InvoiceStatus.PAID]: "ชำระแล้ว",
-  [InvoiceStatus.OVERDUE]: "เกินกำหนด",
-  [InvoiceStatus.CANCELLED]: "ยกเลิก",
+export const INVOICE_STATUS_CODES: Record<InvoiceStatus, string> = {
+  [InvoiceStatus.DRAFT]: "invoice-status-draft",
+  [InvoiceStatus.UNPAID]: "invoice-status-unpaid",
+  [InvoiceStatus.PAID]: "invoice-status-paid",
+  [InvoiceStatus.OVERDUE]: "invoice-status-overdue",
+  [InvoiceStatus.CANCELLED]: "invoice-status-cancelled",
 };
 
-export const INVOICE_TYPE_LABELS: Record<InvoiceType, string> = {
-  [InvoiceType.RENT]: "ค่าเช่า",
-  [InvoiceType.ELECTRICITY]: "ค่าไฟฟ้า",
-  [InvoiceType.WATER]: "ค่าน้ำ",
-  [InvoiceType.UTILITY]: "ค่าสาธารณูปโภค",
-  [InvoiceType.SERVICE]: "ค่าบริการ",
-  [InvoiceType.OTHER]: "อื่นๆ",
+export const INVOICE_TYPE_CODES: Record<InvoiceType, string> = {
+  [InvoiceType.RENT]: "item-type-rent",
+  [InvoiceType.ELECTRICITY]: "item-type-electricity",
+  [InvoiceType.WATER]: "item-type-water",
+  [InvoiceType.UTILITY]: "item-type-utility",
+  [InvoiceType.SERVICE]: "item-type-service",
+  [InvoiceType.OTHER]: "item-type-other",
 };
 
-export const BILLING_PERIOD_TYPE_LABELS: Record<BillingPeriodType, string> = {
-  [BillingPeriodType.RENT]: "ค่าเช่า",
-  [BillingPeriodType.ELECTRICITY]: "ค่าไฟฟ้า",
-  [BillingPeriodType.WATER]: "ค่าน้ำ",
-  [BillingPeriodType.UTILITY]: "ค่าสาธารณูปโภค",
-  [BillingPeriodType.SERVICE]: "ค่าบริการ",
-  [BillingPeriodType.OTHER]: "อื่นๆ",
+export const BILLING_PERIOD_TYPE_CODES: Record<BillingPeriodType, string> = {
+  [BillingPeriodType.RENT]: "item-type-rent",
+  [BillingPeriodType.ELECTRICITY]: "item-type-electricity",
+  [BillingPeriodType.WATER]: "item-type-water",
+  [BillingPeriodType.UTILITY]: "item-type-utility",
+  [BillingPeriodType.SERVICE]: "item-type-service",
+  [BillingPeriodType.OTHER]: "item-type-other",
 };
 
-export const CHARGE_TYPE_CATEGORY_LABELS: Record<ChargeTypeCategory, string> = {
-  [ChargeTypeCategory.RENT]: "ค่าเช่า",
-  [ChargeTypeCategory.UTILITY]: "ค่าสาธารณูปโภค",
-  [ChargeTypeCategory.SERVICE]: "ค่าบริการ",
-  [ChargeTypeCategory.OTHER]: "อื่นๆ",
+export const CHARGE_TYPE_CATEGORY_CODES: Record<ChargeTypeCategory, string> = {
+  [ChargeTypeCategory.RENT]: "item-type-rent",
+  [ChargeTypeCategory.UTILITY]: "item-type-utility",
+  [ChargeTypeCategory.SERVICE]: "item-type-service",
+  [ChargeTypeCategory.OTHER]: "item-type-other",
 };
 
-export const METER_READING_STATUS_LABELS: Record<MeterReadingStatus, string> = {
-  [MeterReadingStatus.NOT_RECORDED]: "ยังไม่จด",
-  [MeterReadingStatus.RECORDED]: "จดแล้ว",
-  [MeterReadingStatus.BILLED]: "ออกบิลแล้ว",
+export const METER_READING_STATUS_CODES: Record<MeterReadingStatus, string> = {
+  [MeterReadingStatus.NOT_RECORDED]: "meter-status-not-recorded",
+  [MeterReadingStatus.RECORDED]: "meter-status-recorded",
+  [MeterReadingStatus.BILLED]: "meter-status-billed",
 };

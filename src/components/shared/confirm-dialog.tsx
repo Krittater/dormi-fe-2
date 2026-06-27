@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useT } from "@/i18n";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -29,11 +30,12 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "ยืนยัน",
-  cancelLabel = "ยกเลิก",
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   onConfirm,
 }: ConfirmDialogProps) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -59,7 +61,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            {cancelLabel}
+            {cancelLabel ?? t("cancel")}
           </Button>
           <Button
             variant={destructive ? "destructive" : "default"}
@@ -67,7 +69,7 @@ export function ConfirmDialog({
             disabled={loading}
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {confirmLabel}
+            {confirmLabel ?? t("confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -30,33 +30,43 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth.store";
 import { getApiErrorMessage } from "@/lib/format";
+import { useT, type TranslateFn } from "@/i18n";
 
-const schema = z
-  .object({
-    firstNameTH: z.string().optional(),
-    lastNameTH: z.string().optional(),
-    email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
-    phone: z
-      .string()
-      .min(9, "เบอร์โทรศัพท์ไม่ถูกต้อง")
-      .max(15, "เบอร์โทรศัพท์ไม่ถูกต้อง"),
-    password: z.string().min(6, "รหัสผ่านอย่างน้อย 6 ตัวอักษร"),
-    confirmPassword: z.string().min(1, "กรุณายืนยันรหัสผ่าน"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "รหัสผ่านไม่ตรงกัน",
-    path: ["confirmPassword"],
-  });
+const makeSchema = (t: TranslateFn) =>
+  z
+    .object({
+      firstNameTH: z.string().optional(),
+      lastNameTH: z.string().optional(),
+      email: z.string().email(t("email-invalid")),
+      phone: z
+        .string()
+        .min(9, t("phone-invalid"))
+        .max(15, t("phone-invalid")),
+      password: z.string().min(6, t("password-min-6")),
+      confirmPassword: z.string().min(1, t("confirm-password-required")),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwords-not-matching"),
+      path: ["confirmPassword"],
+    });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = {
+  firstNameTH?: string;
+  lastNameTH?: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useT();
   const register = useAuthStore((s) => s.register);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(makeSchema(t)),
     defaultValues: {
       firstNameTH: "",
       lastNameTH: "",
@@ -78,7 +88,7 @@ export default function RegisterPage() {
         firstNameTH: values.firstNameTH || undefined,
         lastNameTH: values.lastNameTH || undefined,
       });
-      toast.success("ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ");
+      toast.success(t("register-success"));
       router.replace("/login");
     } catch (err) {
       toast.error(getApiErrorMessage(err));
@@ -96,14 +106,14 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           Dormi
         </h1>
-        <p className="mt-1 text-sm text-gray-500">ระบบจัดการหอพักครบวงจร</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {t("all-in-one-dormitory-system")}
+        </p>
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-xl">ลงทะเบียน</CardTitle>
-          <CardDescription>
-            สร้างบัญชีเพื่อเริ่มจัดการหอพักของคุณ
-          </CardDescription>
+          <CardTitle className="text-xl">{t("register")}</CardTitle>
+          <CardDescription>{t("register-subtitle")}</CardDescription>
         </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -118,9 +128,9 @@ export default function RegisterPage() {
                 name="firstNameTH"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ชื่อ</FormLabel>
+                    <FormLabel>{t("first-name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="ชื่อจริง" {...field} />
+                      <Input placeholder={t("first-name")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -131,9 +141,9 @@ export default function RegisterPage() {
                 name="lastNameTH"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>นามสกุล</FormLabel>
+                    <FormLabel>{t("last-name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="นามสกุล" {...field} />
+                      <Input placeholder={t("last-name")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,7 +155,7 @@ export default function RegisterPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>อีเมล</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="you@example.com" {...field} />
                   </FormControl>
@@ -158,7 +168,7 @@ export default function RegisterPage() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>เบอร์โทรศัพท์</FormLabel>
+                  <FormLabel>{t("phone")}</FormLabel>
                   <FormControl>
                     <Input placeholder="0812345678" {...field} />
                   </FormControl>
@@ -171,7 +181,7 @@ export default function RegisterPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>รหัสผ่าน</FormLabel>
+                  <FormLabel>{t("password")}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -184,7 +194,7 @@ export default function RegisterPage() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ยืนยันรหัสผ่าน</FormLabel>
+                  <FormLabel>{t("confirm-password")}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -194,17 +204,17 @@ export default function RegisterPage() {
             />
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              ลงทะเบียน
+              {t("register")}
             </Button>
           </form>
         </Form>
         <p className="mt-6 text-center text-sm text-gray-500">
-          มีบัญชีอยู่แล้ว?{" "}
+          {t("already-have-account")}{" "}
           <Link
             href="/login"
             className="font-medium text-primary hover:text-primary-hover"
           >
-            เข้าสู่ระบบ
+            {t("login")}
           </Link>
         </p>
       </CardContent>
