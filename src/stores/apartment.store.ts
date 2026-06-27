@@ -3,18 +3,18 @@ import { persist } from "zustand/middleware";
 
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import type { Apartment } from "@/types";
+import type { ApartmentOverview } from "@/types";
 
 interface ApartmentState {
-  apartments: Apartment[];
+  apartments: ApartmentOverview[];
   currentApartmentId: string | null;
   isLoading: boolean;
   hasLoaded: boolean;
-  fetchApartments: () => Promise<Apartment[]>;
+  fetchApartments: () => Promise<ApartmentOverview[]>;
   setCurrent: (id: string | null) => void;
-  upsertLocal: (apartment: Apartment) => void;
+  upsertLocal: (apartment: ApartmentOverview) => void;
   removeLocal: (id: string) => void;
-  getCurrent: () => Apartment | undefined;
+  getCurrent: () => ApartmentOverview | undefined;
 }
 
 export const useApartmentStore = create<ApartmentState>()(
@@ -28,7 +28,9 @@ export const useApartmentStore = create<ApartmentState>()(
       fetchApartments: async () => {
         set({ isLoading: true });
         try {
-          const data = await api.get<Apartment[]>(endpoints.apartments.list());
+          const data = await api.get<ApartmentOverview[]>(
+            endpoints.apartments.list()
+          );
           const list = Array.isArray(data) ? data : [];
           const current = get().currentApartmentId;
           const stillExists = list.some((apt) => apt.id === current);

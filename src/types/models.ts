@@ -49,9 +49,23 @@ export interface Apartment {
   updatedAt?: string;
 }
 
+export interface ApartmentOverview {
+  id: string;
+  name: string;
+  address: string;
+  totalRooms: number;
+  availableRooms: number;
+  overdueRooms: number;
+  rentedRooms: number;
+  bookedRooms: number;
+  availableRate: number;
+  overdueRate: number;
+  rentedRate: number;
+  bookedRate: number;
+}
+
 export interface RoomType {
   id: string;
-  /** Raw identifier returned by the API (no `id` field). */
   roomTypeId?: string;
   apartmentId: string;
   name: string;

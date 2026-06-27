@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
@@ -27,11 +27,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getApiErrorMessage } from "@/lib/format";
 import { useT, type TranslateFn } from "@/i18n";
-import type { Apartment } from "@/types";
+import {
+  getDistricts,
+  getPostcode,
+  getProvinces,
+  getSubDistricts,
+} from "@/constants/thai-address-data";
+import type { Apartment, ApartmentOverview } from "@/types";
 
 const makeBaseSchema = (t: TranslateFn) => {
   const dayField = z.coerce
@@ -80,9 +93,14 @@ type CreateValues = z.infer<ReturnType<typeof makeCreateSchema>>;
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  apartment?: Apartment | null;
+  apartment?: Apartment | ApartmentOverview | null;
   onSaved: (apartment: Apartment) => void;
 }
+
+const isFullApartment = (
+  apartment: Apartment | ApartmentOverview | null | undefined
+): apartment is Apartment =>
+  Boolean(apartment) && "province" in (apartment as Apartment);
 
 export function ApartmentFormDialog({
   open,
@@ -121,23 +139,40 @@ export function ApartmentFormDialog({
     name: "roomTypes",
   });
 
+  const selectedProvince = form.watch("province");
+  const selectedDistrict = form.watch("district");
+
+  const provinceOptions = useMemo(() => getProvinces(), []);
+  const districtOptions = useMemo(
+    () => (selectedProvince ? getDistricts(selectedProvince) : []),
+    [selectedProvince],
+  );
+  const subDistrictOptions = useMemo(
+    () =>
+      selectedProvince && selectedDistrict
+        ? getSubDistricts(selectedProvince, selectedDistrict)
+        : [],
+    [selectedProvince, selectedDistrict],
+  );
+
   useEffect(() => {
     if (open) {
       if (apartment) {
+        const full = isFullApartment(apartment) ? apartment : null;
         form.reset({
           name: apartment.name,
-          province: apartment.province,
-          district: apartment.district,
-          subDistrict: apartment.subDistrict,
-          postalCode: apartment.postalCode,
-          phone: apartment.phone ?? "",
-          description: apartment.description ?? "",
-          invoiceCutOffDate: apartment.invoiceCutOffDate,
-          invoiceDueDate: apartment.invoiceDueDate,
-          electricityCutOffDate: apartment.electricityCutOffDate,
-          electricityRatePerUnit: apartment.electricityRatePerUnit,
-          waterCutOffDate: apartment.waterCutOffDate,
-          waterRatePerUnit: apartment.waterRatePerUnit,
+          province: full?.province ?? "",
+          district: full?.district ?? "",
+          subDistrict: full?.subDistrict ?? "",
+          postalCode: full?.postalCode ?? "",
+          phone: full?.phone ?? "",
+          description: full?.description ?? "",
+          invoiceCutOffDate: full?.invoiceCutOffDate ?? 1,
+          invoiceDueDate: full?.invoiceDueDate ?? 5,
+          electricityCutOffDate: full?.electricityCutOffDate ?? 1,
+          electricityRatePerUnit: full?.electricityRatePerUnit ?? 0,
+          waterCutOffDate: full?.waterCutOffDate ?? 1,
+          waterRatePerUnit: full?.waterRatePerUnit ?? 0,
           roomTypes: [{ name: "", price: 0, description: "" }],
         });
       } else {
@@ -221,9 +256,28 @@ export function ApartmentFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("province")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("district", "");
+                        form.setValue("subDistrict", "");
+                        form.setValue("postalCode", "");
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("select-province")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {provinceOptions.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -234,9 +288,28 @@ export function ApartmentFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("district")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue("subDistrict", "");
+                        form.setValue("postalCode", "");
+                      }}
+                      disabled={!selectedProvince}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("select-district")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {districtOptions.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -247,9 +320,32 @@ export function ApartmentFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("sub-district")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const postcode = getPostcode(
+                          selectedProvince,
+                          selectedDistrict,
+                          value,
+                        );
+                        if (postcode) form.setValue("postalCode", postcode);
+                      }}
+                      disabled={!selectedDistrict}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("select-sub-district")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {subDistrictOptions.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -261,7 +357,7 @@ export function ApartmentFormDialog({
                   <FormItem>
                     <FormLabel>{t("postal-code")}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input readOnly {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -708,6 +708,24 @@
     "cn": "邮政编码"
   },
   {
+    "code": "select-province",
+    "th": "เลือกจังหวัด",
+    "en": "Select province",
+    "cn": "选择省份"
+  },
+  {
+    "code": "select-district",
+    "th": "เลือกอำเภอ/เขต",
+    "en": "Select district",
+    "cn": "选择区/县"
+  },
+  {
+    "code": "select-sub-district",
+    "th": "เลือกตำบล/แขวง",
+    "en": "Select sub-district",
+    "cn": "选择街道/乡"
+  },
+  {
     "code": "enter-a-number",
     "th": "กรุณากรอกตัวเลข",
     "en": "Please enter a number",
@@ -2476,5 +2494,173 @@
     "th": "เกิดข้อผิดพลาด ({status})",
     "en": "An error occurred ({status})",
     "cn": "发生错误（{status}）"
+  },
+  {
+    "code": "greeting-morning",
+    "th": "สวัสดีตอนเช้า",
+    "en": "Good morning",
+    "cn": "早上好"
+  },
+  {
+    "code": "greeting-afternoon",
+    "th": "สวัสดีตอนบ่าย",
+    "en": "Good afternoon",
+    "cn": "下午好"
+  },
+  {
+    "code": "greeting-evening",
+    "th": "สวัสดีตอนค่ำ",
+    "en": "Good evening",
+    "cn": "晚上好"
+  },
+  {
+    "code": "dashboard-overview-subtitle",
+    "th": "ภาพรวมกิจการหอพัก ณ วันที่ {date}",
+    "en": "Apartment business overview as of {date}",
+    "cn": "公寓经营概览，截至 {date}"
+  },
+  {
+    "code": "occupancy-rate",
+    "th": "เข้าพัก {rate}%",
+    "en": "{rate}% occupied",
+    "cn": "入住率 {rate}%"
+  },
+  {
+    "code": "percent-of-total",
+    "th": "{rate}% ของทั้งหมด",
+    "en": "{rate}% of total",
+    "cn": "占总数 {rate}%"
+  },
+  {
+    "code": "unit-room",
+    "th": "ห้อง",
+    "en": "rooms",
+    "cn": "间"
+  },
+  {
+    "code": "unit-items",
+    "th": "รายการ",
+    "en": "items",
+    "cn": "项"
+  },
+  {
+    "code": "total-overdue-amount",
+    "th": "ยอดรวม {amount} บาท",
+    "en": "Total {amount} THB",
+    "cn": "合计 {amount} 泰铢"
+  },
+  {
+    "code": "amount-with-baht",
+    "th": "{amount} บาท",
+    "en": "{amount} THB",
+    "cn": "{amount} 泰铢"
+  },
+  {
+    "code": "recent-overdue",
+    "th": "รายการค้างชำระล่าสุด",
+    "en": "Recent overdue",
+    "cn": "最近逾期"
+  },
+  {
+    "code": "view-all",
+    "th": "ดูทั้งหมด",
+    "en": "View all",
+    "cn": "查看全部"
+  },
+  {
+    "code": "no-overdue",
+    "th": "ไม่มีรายการค้างชำระ",
+    "en": "No overdue items",
+    "cn": "暂无逾期项目"
+  },
+  {
+    "code": "overdue-days",
+    "th": "ค้าง {days} วัน",
+    "en": "{days} days overdue",
+    "cn": "逾期 {days} 天"
+  },
+  {
+    "code": "revenue-overview",
+    "th": "ภาพรวมรายรับ",
+    "en": "Revenue overview",
+    "cn": "收入概览"
+  },
+  {
+    "code": "revenue-subtitle",
+    "th": "เทียบกับเดือนที่ผ่านมา",
+    "en": "Compared with last month",
+    "cn": "与上月相比"
+  },
+  {
+    "code": "revenue-total-label",
+    "th": "รายรับรวม ({month})",
+    "en": "Total revenue ({month})",
+    "cn": "总收入（{month}）"
+  },
+  {
+    "code": "this-month",
+    "th": "เดือนนี้",
+    "en": "This month",
+    "cn": "本月"
+  },
+  {
+    "code": "notifications",
+    "th": "การแจ้งเตือน",
+    "en": "Notifications",
+    "cn": "通知"
+  },
+  {
+    "code": "no-notifications",
+    "th": "ไม่มีการแจ้งเตือนใหม่",
+    "en": "No new notifications",
+    "cn": "暂无新通知"
+  },
+  {
+    "code": "notif-due-soon-title",
+    "th": "ใกล้ครบกำหนดใบแจ้งหนี้",
+    "en": "Invoices due soon",
+    "cn": "账单即将到期"
+  },
+  {
+    "code": "notif-due-soon-desc",
+    "th": "มี {count} รายการที่กำลังจะครบกำหนดใน {days} วัน",
+    "en": "{count} invoices will be due within {days} days",
+    "cn": "{count} 张账单将在 {days} 天内到期"
+  },
+  {
+    "code": "notif-overdue-title",
+    "th": "มีใบแจ้งหนี้ค้างชำระ",
+    "en": "Overdue invoices",
+    "cn": "有逾期账单"
+  },
+  {
+    "code": "notif-overdue-desc",
+    "th": "มี {count} รายการที่ค้างชำระ รวม {amount} บาท",
+    "en": "{count} invoices overdue, totaling {amount} THB",
+    "cn": "{count} 张账单逾期，合计 {amount} 泰铢"
+  },
+  {
+    "code": "notif-billing-open-title",
+    "th": "รอบบิลยังไม่ปิด",
+    "en": "Billing period still open",
+    "cn": "账单周期尚未关闭"
+  },
+  {
+    "code": "notif-billing-open-desc",
+    "th": "มีรอบบิลที่ยังเปิดอยู่ {count} รอบ",
+    "en": "{count} billing periods are still open",
+    "cn": "有 {count} 个账单周期仍处于开放状态"
+  },
+  {
+    "code": "nav-reports",
+    "th": "รายงาน",
+    "en": "Reports",
+    "cn": "报表"
+  },
+  {
+    "code": "link-reports-desc",
+    "th": "ดูรายรับ-รายจ่าย",
+    "en": "View income & expenses",
+    "cn": "查看收支"
   }
 ]

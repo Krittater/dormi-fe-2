@@ -75,11 +75,11 @@ export default function RoomTypesPage() {
     try {
       const res = await api.get(
         endpoints.roomTypes.list(apartmentId) +
-          buildQuery({ page, limit: LIMIT, keyword: keyword || undefined })
+          buildQuery({ page, limit: LIMIT, keyword: keyword || undefined }),
       );
       const { items, meta } = toList<RoomType>(res);
       setItems(
-        items.map((rt) => ({ ...rt, id: rt.id ?? rt.roomTypeId ?? "" }))
+        items.map((rt) => ({ ...rt, id: rt.id ?? rt.roomTypeId ?? "" })),
       );
       setMeta(meta);
     } catch (err) {
@@ -125,7 +125,7 @@ export default function RoomTypesPage() {
       if (editing) {
         await api.patch(
           endpoints.roomTypes.update(apartmentId, editing.id),
-          values
+          values,
         );
         toast.success(t("room-type-updated"));
       } else {
@@ -235,7 +235,10 @@ export default function RoomTypesPage() {
         onPageChange={setPage}
       />
 
-      <Dialog open={formOpen} onOpenChange={(o) => !submitting && setFormOpen(o)}>
+      <Dialog
+        open={formOpen}
+        onOpenChange={(o) => !submitting && setFormOpen(o)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -309,7 +312,9 @@ export default function RoomTypesPage() {
         open={Boolean(deleting)}
         onOpenChange={(o) => !o && setDeleting(null)}
         title={t("delete-room-type")}
-        description={t("delete-confirm-description", { name: deleting?.name ?? "" })}
+        description={t("delete-confirm-description", {
+          name: deleting?.name ?? "",
+        })}
         confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}

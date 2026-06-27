@@ -4,13 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
-  Droplet,
+  DoorOpen,
   MapPin,
   MoreVertical,
   Pencil,
   Plus,
   Trash2,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,9 +29,9 @@ import { ApartmentFormDialog } from "@/components/apartments/apartment-form-dial
 import { useApartmentStore } from "@/stores/apartment.store";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import { formatCurrency, getApiErrorMessage } from "@/lib/format";
+import { getApiErrorMessage } from "@/lib/format";
 import { useT } from "@/i18n";
-import type { Apartment } from "@/types";
+import type { ApartmentOverview } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -44,15 +43,15 @@ export default function DashboardPage() {
   const setCurrent = useApartmentStore((s) => s.setCurrent);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Apartment | null>(null);
-  const [deleting, setDeleting] = useState<Apartment | null>(null);
+  const [editing, setEditing] = useState<ApartmentOverview | null>(null);
+  const [deleting, setDeleting] = useState<ApartmentOverview | null>(null);
 
   const openCreate = () => {
     setEditing(null);
     setFormOpen(true);
   };
 
-  const openEdit = (apt: Apartment) => {
+  const openEdit = (apt: ApartmentOverview) => {
     setEditing(apt);
     setFormOpen(true);
   };
@@ -74,7 +73,7 @@ export default function DashboardPage() {
     }
   };
 
-  const enterApartment = (apt: Apartment) => {
+  const enterApartment = (apt: ApartmentOverview) => {
     setCurrent(apt.id);
     router.push(`/apartments/${apt.id}`);
   };
@@ -132,7 +131,7 @@ export default function DashboardPage() {
                       <p className="flex items-center gap-1 text-xs text-gray-500">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">
-                          {apt.district}, {apt.province}
+                          {apt.address ?? ""}
                         </span>
                       </p>
                     </div>
@@ -159,28 +158,36 @@ export default function DashboardPage() {
                   </DropdownMenu>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                    <Zap className="h-4 w-4 text-warning" />
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("electricity-rate-per-unit")}
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {formatCurrency(apt.electricityRatePerUnit)}
-                      </p>
-                    </div>
+                <div className="mt-4 flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                  <DoorOpen className="h-4 w-4 text-primary-hover" />
+                  <div>
+                    <p className="text-xs text-gray-500">{t("rooms-total")}</p>
+                    <p className="font-medium text-gray-900">
+                      {apt.totalRooms}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                    <Droplet className="h-4 w-4 text-info" />
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        {t("water-rate-per-unit")}
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {formatCurrency(apt.waterRatePerUnit)}
-                      </p>
-                    </div>
+                </div>
+
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="rounded-lg bg-gray-50 px-2 py-2">
+                    <p className="text-xs text-gray-500">
+                      {t("rooms-available")}
+                    </p>
+                    <p className="font-medium text-gray-900">
+                      {apt.availableRooms}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-2 py-2">
+                    <p className="text-xs text-gray-500">{t("rooms-rented")}</p>
+                    <p className="font-medium text-success">
+                      {apt.rentedRooms}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-2 py-2">
+                    <p className="text-xs text-gray-500">{t("rooms-overdue")}</p>
+                    <p className="font-medium text-danger">
+                      {apt.overdueRooms}
+                    </p>
                   </div>
                 </div>
 
