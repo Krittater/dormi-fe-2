@@ -218,7 +218,6 @@ export default function ApartmentOverviewPage() {
           className="flex items-center gap-2 text-2xl font-bold tracking-tight text-gray-900"
         >
           {t(greetingCode(now.getHours()))}, {firstName}
-          {/* <span aria-hidden>👋</span> */} 
         </h1>
         <p suppressHydrationWarning className="text-sm text-gray-500">
           {apartment?.name ? `${apartment.name} · ` : ""}
