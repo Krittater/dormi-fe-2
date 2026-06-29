@@ -249,10 +249,16 @@ export interface Invoice {
   issueDate?: string | null;
   dueDate?: string | null;
   subtotal?: number;
+  /** ค่าจริงจาก API (decimal มาเป็น string) — ใช้ normalize เป็น total */
+  totalAmount?: number | string;
   total: number;
   paidAt?: string | null;
   items?: InvoiceItem[];
   createdAt?: string;
+  updatedAt?: string;
+  /** ชื่อผู้สร้าง/แก้ไข (backend แปลงจาก userId มาให้ใน findOne) */
+  createdByName?: string | null;
+  updatedByName?: string | null;
 }
 
 export interface BillTypeDropdownItem {

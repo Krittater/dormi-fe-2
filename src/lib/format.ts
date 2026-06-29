@@ -1,13 +1,16 @@
 import { getIntlLocale, translate } from "@/i18n/runtime";
 
-export function formatCurrency(value: number | null | undefined): string {
-  const n = typeof value === "number" ? value : 0;
+export function formatCurrency(
+  value: number | string | null | undefined
+): string {
+  const n = typeof value === "number" ? value : Number(value);
+  const safe = Number.isFinite(n) ? n : 0;
   return new Intl.NumberFormat(getIntlLocale(), {
     style: "currency",
     currency: "THB",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(n);
+  }).format(safe);
 }
 
 export function formatNumber(value: number | null | undefined): string {
@@ -52,4 +55,21 @@ export function getApiErrorMessage(err: unknown): string {
     return String((err as { message: unknown }).message);
   }
   return translate("generic-error");
+}
+
+/**
+ * จำนวนวันจาก "วันนี้" ถึง "วันครบกำหนด" (ตัดเวลาออก นับเป็นวันเต็ม)
+ *  > 0  = เหลืออีกกี่วัน
+ *  = 0  = ครบกำหนดวันนี้
+ *  < 0  = เลยกำหนดมาแล้ว (ค่าสัมบูรณ์ = เลยมากี่วัน)
+ *  null = ไม่มีวันที่ / วันที่ไม่ถูกต้อง
+ */
+export function daysUntil(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  const due = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((due - today) / 86400000);
 }
