@@ -1,0 +1,71 @@
+export const qk = {
+  apartments: {
+    all: ["apartments"] as const,
+    list: () => [...qk.apartments.all, "list"] as const,
+    detail: (id: string) => [...qk.apartments.all, "detail", id] as const,
+  },
+  rooms: {
+    all: (apartmentId: string) => ["rooms", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.rooms.all(apartmentId), "list", params] as const,
+    overview: (apartmentId: string) =>
+      [...qk.rooms.all(apartmentId), "overview"] as const,
+    dropdown: (apartmentId: string) =>
+      [...qk.rooms.all(apartmentId), "dropdown"] as const,
+    detail: (apartmentId: string, roomId: string) =>
+      [...qk.rooms.all(apartmentId), "detail", roomId] as const,
+  },
+  roomTypes: {
+    all: (apartmentId: string) => ["roomTypes", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.roomTypes.all(apartmentId), "list", params] as const,
+  },
+  roomCharges: {
+    all: (apartmentId: string) => ["roomCharges", apartmentId] as const,
+    setup: (apartmentId: string) =>
+      [...qk.roomCharges.all(apartmentId), "setup"] as const,
+  },
+  chargeTypes: {
+    all: (apartmentId: string) => ["chargeTypes", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.chargeTypes.all(apartmentId), "list"] as const,
+  },
+  tenants: {
+    all: (apartmentId: string) => ["tenants", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.tenants.all(apartmentId), "list", params] as const,
+  },
+  meters: {
+    all: (apartmentId: string) => ["meters", apartmentId] as const,
+    list: (apartmentId: string) => [...qk.meters.all(apartmentId), "list"] as const,
+    readings: (apartmentId: string, meterId: string) =>
+      [...qk.meters.all(apartmentId), "readings", meterId] as const,
+    byBillingPeriod: (apartmentId: string, billingPeriodId: string) =>
+      [...qk.meters.all(apartmentId), "byBillingPeriod", billingPeriodId] as const,
+  },
+  billingPeriods: {
+    all: (apartmentId: string) => ["billingPeriods", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.billingPeriods.all(apartmentId), "list"] as const,
+    dropdown: (apartmentId: string) =>
+      [...qk.billingPeriods.all(apartmentId), "dropdown"] as const,
+    detail: (apartmentId: string, billingPeriodId: string) =>
+      [...qk.billingPeriods.all(apartmentId), "detail", billingPeriodId] as const,
+  },
+  invoices: {
+    all: (apartmentId: string) => ["invoices", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.invoices.all(apartmentId), "list", params] as const,
+    detail: (apartmentId: string, invoiceId: string) =>
+      [...qk.invoices.all(apartmentId), "detail", invoiceId] as const,
+    billTypes: (apartmentId: string) =>
+      [...qk.invoices.all(apartmentId), "billTypes"] as const,
+    formDropdowns: (apartmentId: string) =>
+      [...qk.invoices.all(apartmentId), "formDropdowns"] as const,
+  },
+  invoiceSetups: {
+    all: (apartmentId: string) => ["invoiceSetups", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.invoiceSetups.all(apartmentId), "list"] as const,
+  },
+} as const;

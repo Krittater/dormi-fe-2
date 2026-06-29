@@ -1,3 +1,13 @@
+export enum MeterType {
+  ELECTRICITY = "electricity",
+  WATER = "water",
+}
+
+export const METER_TYPE_CODES: Record<MeterType, string> = {
+  [MeterType.ELECTRICITY]: "meter-type-electricity",
+  [MeterType.WATER]: "meter-type-water",
+};
+
 export enum UserRole {
   USER = "USER",
   ADMIN = "ADMIN",

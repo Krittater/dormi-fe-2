@@ -2890,5 +2890,11 @@
     "th": "พบ {count} มิเตอร์",
     "en": "{count} meters found",
     "cn": "找到 {count} 个电表"
+  },
+  {
+    "code": "enter-description",
+    "th": "กรุณากรอกรายละเอียด",
+    "en": "Please enter a description",
+    "cn": "请输入详情"
   }
 ]
