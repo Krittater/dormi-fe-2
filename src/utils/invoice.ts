@@ -33,12 +33,12 @@ export function mergeInvoiceDetail(
     [];
 
   const items = normalizeInvoiceItems(rawItems);
-  const total = computeInvoiceTotal(items);
 
   return {
     ...merged,
     items,
-    totalAmount: Number(merged.totalAmount ?? total),
+    totalAmount: Number(merged.totalAmount ?? 0),
+    total: Number(merged.total ?? merged.totalAmount ?? 0),
   } as Invoice;
 }
 
