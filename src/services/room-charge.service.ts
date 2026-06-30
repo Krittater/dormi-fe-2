@@ -1,34 +1,14 @@
 import { http } from "@/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
-import type { ChargeType } from "@/types";
+import { normalizeChargeTypes, type RawChargeType } from "@/utils/charge-type";
+import {
+  normalizeSetupRows,
+  type SetupRow,
+} from "@/utils/room-charge";
 import { normalizeRoomOptions } from "@/utils/room";
 
-export interface SetupRow {
-  room: {
-    id: string;
-    name: string;
-    isCalWater: boolean;
-    isCalElectric: boolean;
-    waterRatePerUnit: number;
-    electricityRatePerUnit: number;
-    charges: Array<{
-      id: string;
-      chargeTypeId: string;
-      chargeTypeName?: string;
-      amount: number;
-      unit?: number | null;
-      description?: string | null;
-    }>;
-  };
-}
-
-function normalizeSetupRows(res: unknown): SetupRow[] {
-  const arr = Array.isArray(res)
-    ? res
-    : ((res as { data?: unknown[] })?.data ?? []);
-  return arr as SetupRow[];
-}
+export type { SetupRow, SetupCharge } from "@/utils/room-charge";
 
 export const roomChargeService = {
   async getSetup(apartmentId: string): Promise<SetupRow[]> {
@@ -67,7 +47,7 @@ export const roomChargeService = {
       rooms: normalizeRoomOptions(
         toList<{ roomId?: string; id?: string; name: string }>(rooms).items
       ),
-      chargeTypes: toList<ChargeType>(chargeTypes).items,
+      chargeTypes: normalizeChargeTypes(toList<RawChargeType>(chargeTypes).items),
     };
   },
 };

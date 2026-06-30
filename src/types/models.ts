@@ -164,9 +164,15 @@ export interface ChargeType {
   apartmentId: string;
   name: string;
   description?: string | null;
-  category?: ChargeTypeCategory;
+  category: ChargeTypeCategory;
   defaultAmount?: number | null;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  deletedBy?: string | null;
+  deletedAt?: string | null;
 }
 
 export interface RoomCharge {

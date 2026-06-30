@@ -22,7 +22,7 @@ import {
 } from "@/hooks/useChargeTypes";
 import { useT } from "@/i18n";
 import { formatCurrency } from "@/lib/format";
-import type { SetupRow } from "@/services/room-charge.service";
+import type { SetupRow } from "@/utils/room-charge";
 import type { RoomCharge } from "@/types";
 
 export function RoomChargesPage() {
