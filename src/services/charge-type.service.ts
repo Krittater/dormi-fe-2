@@ -2,18 +2,24 @@ import { http } from "@/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import type { ChargeType } from "@/types";
+import {
+  normalizeChargeType,
+  normalizeChargeTypes,
+  type RawChargeType,
+} from "@/utils/charge-type";
 
 export const chargeTypeService = {
   async list(apartmentId: string): Promise<ChargeType[]> {
     const res = await http.get(endpoints.chargeTypes.list(apartmentId));
-    return toList<ChargeType>(res).items;
+    return normalizeChargeTypes(toList<RawChargeType>(res).items);
   },
 
   async create(apartmentId: string, payload: unknown): Promise<ChargeType> {
-    return http.post<ChargeType>(
+    const res = await http.post<RawChargeType>(
       endpoints.chargeTypes.create(apartmentId),
       payload
     );
+    return normalizeChargeType(res);
   },
 
   async update(
@@ -21,10 +27,11 @@ export const chargeTypeService = {
     chargeTypeId: string,
     payload: unknown
   ): Promise<ChargeType> {
-    return http.patch<ChargeType>(
+    const res = await http.patch<RawChargeType>(
       endpoints.chargeTypes.update(apartmentId, chargeTypeId),
       payload
     );
+    return normalizeChargeType(res);
   },
 
   async remove(apartmentId: string, chargeTypeId: string): Promise<void> {

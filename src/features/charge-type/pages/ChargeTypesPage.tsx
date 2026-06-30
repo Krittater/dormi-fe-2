@@ -94,8 +94,9 @@ export function ChargeTypesPage() {
       form.reset({
         name: ct.name,
         description: ct.description ?? "",
-        category: ct.category ?? ChargeTypeCategory.OTHER,
-        defaultAmount: ct.defaultAmount != null ? String(ct.defaultAmount) : "",
+        category: ct.category,
+        defaultAmount:
+          ct.defaultAmount != null ? String(ct.defaultAmount) : "",
         isActive: ct.isActive,
       });
       setFormOpen(true);
@@ -147,7 +148,7 @@ export function ChargeTypesPage() {
         header: t("category"),
         cell: (c) => (
           <Badge variant="secondary">
-            {t(CHARGE_TYPE_CATEGORY_CODES[c.category ?? ChargeTypeCategory.OTHER])}
+            {t(CHARGE_TYPE_CATEGORY_CODES[c.category])}
           </Badge>
         ),
       },
