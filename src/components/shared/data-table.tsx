@@ -33,6 +33,7 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptyDescription?: string;
   skeletonRows?: number;
+  tableClassName?: string;
 }
 
 export function DataTable<T>({
@@ -44,6 +45,7 @@ export function DataTable<T>({
   emptyTitle,
   emptyDescription,
   skeletonRows = 5,
+  tableClassName,
 }: DataTableProps<T>) {
   const t = useT();
   if (loading) {
@@ -69,7 +71,7 @@ export function DataTable<T>({
     <>
       {/* Desktop / tablet table */}
       <div className="hidden rounded-xl border border-gray-200 bg-white md:block">
-        <Table>
+        <Table className={tableClassName}>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               {columns.map((col) => (

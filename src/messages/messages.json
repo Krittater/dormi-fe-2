@@ -1,5 +1,143 @@
 [
   {
+    "code": "not-issued",
+    "th": "ยังไม่ออกบิล",
+    "en": "Not issued",
+    "cn": "未出账单"
+  },
+  {
+    "code": "created-at",
+    "th": "สร้างเมื่อ",
+    "en": "Created",
+    "cn": "创建于"
+  },
+  {
+    "code": "search",
+    "th": "ค้นหา",
+    "en": "Search",
+    "cn": "搜索"
+  },
+  {
+    "code": "billing-period",
+    "th": "รอบบิล",
+    "en": "Billing period",
+    "cn": "账单周期"
+  },
+  {
+    "code": "created-by",
+    "th": "สร้างโดย",
+    "en": "Created by",
+    "cn": "创建者"
+  },
+  {
+    "code": "updated-by",
+    "th": "แก้ไขล่าสุดโดย",
+    "en": "Last edited by",
+    "cn": "最后修改者"
+  },
+  {
+    "code": "updated-by-col",
+    "th": "แก้ไขโดย",
+    "en": "Edited by",
+    "cn": "修改者"
+  },
+  {
+    "code": "audit-info",
+    "th": "ข้อมูลระบบ",
+    "en": "System info",
+    "cn": "系统信息"
+  },
+  {
+    "code": "column-issued",
+    "th": "ออกบิล",
+    "en": "Issued",
+    "cn": "出账"
+  },
+  {
+    "code": "issued",
+    "th": "ออกบิลแล้ว",
+    "en": "Issued",
+    "cn": "已出账"
+  },
+  {
+    "code": "confirm-issue-title",
+    "th": "ยืนยันเปลี่ยนเป็นยังไม่ชำระ",
+    "en": "Confirm mark as unpaid",
+    "cn": "确认改为未付款"
+  },
+  {
+    "code": "confirm-issue-description",
+    "th": "ต้องการเปลี่ยน {n} รายการเป็นยังไม่ชำระหรือไม่?",
+    "en": "Mark {n} invoice(s) as unpaid?",
+    "cn": "将 {n} 张账单改为未付款？"
+  },
+  {
+    "code": "select",
+    "th": "เลือก",
+    "en": "Select",
+    "cn": "选择"
+  },
+  {
+    "code": "selected-count",
+    "th": "เลือกแล้ว {n} รายการ",
+    "en": "{n} selected",
+    "cn": "已选 {n} 项"
+  },
+  {
+    "code": "publish-to-unpaid",
+    "th": "เปลี่ยนเป็นยังไม่ชำระ",
+    "en": "Mark as unpaid",
+    "cn": "改为未付款"
+  },
+  {
+    "code": "publish-success",
+    "th": "เปลี่ยนเป็นยังไม่ชำระแล้ว {n} รายการ",
+    "en": "{n} invoice(s) marked unpaid",
+    "cn": "已将 {n} 张账单改为未付款"
+  },
+  {
+    "code": "no-draft-selected",
+    "th": "กรุณาเลือกเฉพาะบิลร่าง (DRAFT)",
+    "en": "Select draft invoices only",
+    "cn": "请仅选择草稿账单"
+  },
+  {
+    "code": "export-pdf",
+    "th": "ออก PDF",
+    "en": "Export PDF",
+    "cn": "导出 PDF"
+  },
+  {
+    "code": "pdf-coming-soon",
+    "th": "ฟีเจอร์ออก PDF กำลังพัฒนา",
+    "en": "PDF export coming soon",
+    "cn": "PDF 导出功能开发中"
+  },
+  {
+    "code": "clear-selection",
+    "th": "ล้างการเลือก",
+    "en": "Clear",
+    "cn": "清除选择"
+  },
+  {
+    "code": "due-in-days",
+    "th": "เหลือ {n} วัน",
+    "en": "{n} days left",
+    "cn": "还剩 {n} 天"
+  },
+  {
+    "code": "overdue-by-days",
+    "th": "เลยกำหนด {n} วัน",
+    "en": "{n} days overdue",
+    "cn": "逾期 {n} 天"
+  },
+  {
+    "code": "due-today",
+    "th": "ครบกำหนดวันนี้",
+    "en": "Due today",
+    "cn": "今天到期"
+  },
+  {
     "code": "hello",
     "th": "สวัสดี",
     "en": "Hello",

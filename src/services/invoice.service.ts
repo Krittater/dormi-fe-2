@@ -1,6 +1,7 @@
 import { buildQuery, http } from "@/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
+import { billingService } from "@/services/billing.service";
 import type {
   Apartment,
   Invoice,
@@ -112,7 +113,6 @@ export const apartmentOverviewService = {
   },
 
   async getBillingPeriods(apartmentId: string) {
-    const res = await http.get(endpoints.billingPeriods.list(apartmentId));
-    return toList<import("@/types").BillingPeriod>(res).items;
+    return billingService.list(apartmentId);
   },
 };
