@@ -41,7 +41,7 @@ import {
   useInvoiceDetail,
 } from "@/hooks/useInvoices";
 import { useT } from "@/i18n";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { computeInvoiceTotal } from "@/utils/invoice";
 import {
   INVOICE_ITEM_TYPE_CODES,
@@ -206,6 +206,33 @@ export function InvoiceDetailPage() {
                 <p className="font-medium text-gray-900">
                   {formatDate(invoice.dueDate)}
                 </p>
+                {(() => {
+                  const d = daysUntil(invoice.dueDate);
+                  if (
+                    d == null ||
+                    (invoice.status !== InvoiceStatus.UNPAID &&
+                      invoice.status !== InvoiceStatus.OVERDUE)
+                  ) {
+                    return null;
+                  }
+                  return (
+                    <p
+                      className={
+                        d < 0
+                          ? "text-xs text-destructive"
+                          : d <= 3
+                            ? "text-xs text-warning"
+                            : "text-xs text-gray-400"
+                      }
+                    >
+                      {d < 0
+                        ? t("overdue-by-days", { n: Math.abs(d) })
+                        : d === 0
+                          ? t("due-today")
+                          : t("due-in-days", { n: d })}
+                    </p>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -420,6 +447,35 @@ export function InvoiceDetailPage() {
                   </TableBody>
                 </Table>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="grid grid-cols-1 gap-3 p-5 text-sm sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-gray-500">{t("created-by")}</p>
+                <p className="text-gray-900">
+                  {invoice.createdByName ?? "-"}
+                  {invoice.createdAt && (
+                    <span className="text-gray-400">
+                      {" · "}
+                      {formatDate(invoice.createdAt)}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">{t("updated-by")}</p>
+                <p className="text-gray-900">
+                  {invoice.updatedByName ?? "-"}
+                  {invoice.updatedAt && (
+                    <span className="text-gray-400">
+                      {" · "}
+                      {formatDate(invoice.updatedAt)}
+                    </span>
+                  )}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </>

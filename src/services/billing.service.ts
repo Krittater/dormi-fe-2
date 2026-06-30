@@ -16,9 +16,12 @@ export const billingService = {
   },
 
   async dropdown(
-    apartmentId: string
+    apartmentId: string,
+    params?: { type?: string; limit?: number }
   ): Promise<Array<{ id: string; name?: string; periodYear?: number; periodMonth?: number }>> {
-    const res = await http.get(endpoints.billingPeriods.dropdown(apartmentId));
+    const res = await http.get(
+      endpoints.billingPeriods.dropdown(apartmentId) + buildQuery(params)
+    );
     return toList<{ id: string; name?: string; periodYear?: number; periodMonth?: number }>(
       res
     ).items;
@@ -80,10 +83,12 @@ export const billingService = {
 
   async publishInvoices(
     apartmentId: string,
-    billingPeriodId: string
+    billingPeriodId: string,
+    body?: { invoiceIds?: string[] }
   ): Promise<unknown> {
     return http.post(
-      endpoints.billingPeriods.publishInvoices(apartmentId, billingPeriodId)
+      endpoints.billingPeriods.publishInvoices(apartmentId, billingPeriodId),
+      body ?? {}
     );
   },
 };

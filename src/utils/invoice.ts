@@ -48,3 +48,10 @@ export function countInvoicesByStatus(
 ): number {
   return invoices.filter((i) => i.status === status).length;
 }
+
+export function normalizeInvoice(inv: Invoice): Invoice {
+  return {
+    ...inv,
+    total: Number(inv.totalAmount ?? inv.total ?? 0),
+  };
+}

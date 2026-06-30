@@ -12,10 +12,13 @@ export const billingQueries = {
       enabled: Boolean(apartmentId),
     }),
 
-  dropdown: (apartmentId: string) =>
+  dropdown: (
+    apartmentId: string,
+    params?: { type?: string; limit?: number }
+  ) =>
     queryOptions({
-      queryKey: qk.billingPeriods.dropdown(apartmentId),
-      queryFn: () => billingService.dropdown(apartmentId),
+      queryKey: [...qk.billingPeriods.dropdown(apartmentId), params] as const,
+      queryFn: () => billingService.dropdown(apartmentId, params),
       enabled: Boolean(apartmentId),
     }),
 

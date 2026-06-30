@@ -19,8 +19,11 @@ export function useBillingPeriodSetups(apartmentId: string) {
   return useQuery(billingQueries.setups(apartmentId));
 }
 
-export function useBillingPeriodDropdown(apartmentId: string) {
-  return useQuery(billingQueries.dropdown(apartmentId));
+export function useBillingPeriodDropdown(
+  apartmentId: string,
+  params?: { type?: string; limit?: number }
+) {
+  return useQuery(billingQueries.dropdown(apartmentId, params));
 }
 
 export function useBillingPeriod(apartmentId: string, billingPeriodId: string) {
@@ -111,6 +114,23 @@ export function useBillingActions(apartmentId: string) {
     },
   });
 
+  const publishSelectedInvoices = useMutation({
+    mutationFn: async (
+      groups: Array<{ billingPeriodId: string; invoiceIds: string[] }>
+    ) => {
+      for (const group of groups) {
+        await billingService.publishInvoices(
+          apartmentId,
+          group.billingPeriodId,
+          { invoiceIds: group.invoiceIds }
+        );
+      }
+    },
+    onSuccess: () => {
+      invalidate();
+    },
+  });
+
   return {
     generate,
     updateStatus,
@@ -118,5 +138,6 @@ export function useBillingActions(apartmentId: string) {
     generateInvoices,
     regenerateInvoices,
     publishInvoices,
+    publishSelectedInvoices,
   };
 }

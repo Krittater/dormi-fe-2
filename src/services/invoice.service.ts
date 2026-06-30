@@ -9,7 +9,7 @@ import type {
   PaginationMeta,
   RoomOverview,
 } from "@/types";
-import { mergeInvoiceDetail } from "@/utils/invoice";
+import { mergeInvoiceDetail, normalizeInvoice } from "@/utils/invoice";
 
 export interface InvoiceListParams {
   page?: number;
@@ -28,7 +28,7 @@ export const invoiceService = {
       endpoints.invoices.list(apartmentId) + buildQuery(params)
     );
     const norm = toList<Invoice>(res);
-    return { items: norm.items, meta: norm.meta };
+    return { items: norm.items.map(normalizeInvoice), meta: norm.meta };
   },
 
   async getById(apartmentId: string, invoiceId: string): Promise<Invoice> {
