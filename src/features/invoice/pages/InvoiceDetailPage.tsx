@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  BadgeCheck,
+  HandCoins,
   Loader2,
   Pencil,
   Plus,
@@ -36,6 +36,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { RecordTransactionDialog } from "@/features/finance/components/record-transaction-dialog";
 import {
   useInvoiceActions,
   useInvoiceDetail,
@@ -66,14 +67,12 @@ export function InvoiceDetailPage() {
   const router = useRouter();
 
   const { data: invoice, isLoading } = useInvoiceDetail(apartmentId, invoiceId);
-  const { updateItems, markPaid, cancel } = useInvoiceActions(
-    apartmentId,
-    invoiceId
-  );
+  const { updateItems, cancel } = useInvoiceActions(apartmentId, invoiceId);
 
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<EditItem[]>([]);
-  const [confirm, setConfirm] = useState<null | "paid" | "cancel">(null);
+  const [confirm, setConfirm] = useState<null | "cancel">(null);
+  const [payOpen, setPayOpen] = useState(false);
 
   const items = useMemo(
     () =>
@@ -131,23 +130,23 @@ export function InvoiceDetailPage() {
     );
   }, [editItems, t, updateItems]);
 
-  const handleMarkPaid = useCallback(() => {
-    markPaid.mutate(undefined, { onSuccess: () => setConfirm(null) });
-  }, [markPaid]);
-
   const handleCancel = useCallback(() => {
     cancel.mutate(undefined, { onSuccess: () => setConfirm(null) });
   }, [cancel]);
 
-  const busy =
-    updateItems.isPending || markPaid.isPending || cancel.isPending;
+  const busy = updateItems.isPending || cancel.isPending;
 
   const status = invoice?.status;
   const isDraft = status === InvoiceStatus.DRAFT;
   const canPay =
-    status === InvoiceStatus.UNPAID || status === InvoiceStatus.OVERDUE;
+    status === InvoiceStatus.UNPAID ||
+    status === InvoiceStatus.OVERDUE ||
+    status === InvoiceStatus.PARTIAL;
   const canCancel =
     status !== InvoiceStatus.PAID && status !== InvoiceStatus.CANCELLED;
+
+  const paidAmount = Number(invoice?.paidAmount ?? 0);
+  const outstanding = Math.max(0, invoiceTotal - paidAmount);
 
   const editTotal = useMemo(
     () =>
@@ -234,6 +233,18 @@ export function InvoiceDetailPage() {
                   );
                 })()}
               </div>
+              <div>
+                <p className="text-xs text-gray-500">{t("paid-amount")}</p>
+                <p className="font-medium text-emerald-600">
+                  {formatCurrency(paidAmount)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">{t("outstanding")}</p>
+                <p className="font-medium text-gray-900">
+                  {formatCurrency(outstanding)}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -245,12 +256,9 @@ export function InvoiceDetailPage() {
               </Button>
             )}
             {canPay && (
-              <Button
-                onClick={() => setConfirm("paid")}
-                disabled={busy}
-              >
-                <BadgeCheck className="h-4 w-4" />
-                {t("mark-as-paid")}
+              <Button onClick={() => setPayOpen(true)} disabled={busy}>
+                <HandCoins className="h-4 w-4" />
+                {t("receive-payment")}
               </Button>
             )}
             {canCancel && (
@@ -481,14 +489,14 @@ export function InvoiceDetailPage() {
         </>
       )}
 
-      <ConfirmDialog
-        open={confirm === "paid"}
-        onOpenChange={(o) => !o && setConfirm(null)}
-        title={t("confirm-payment")}
-        description={t("confirm-payment-description")}
-        confirmLabel={t("confirm")}
-        onConfirm={handleMarkPaid}
-      />
+      {invoice && (
+        <RecordTransactionDialog
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          apartmentId={apartmentId}
+          presetInvoice={invoice}
+        />
+      )}
       <ConfirmDialog
         open={confirm === "cancel"}
         onOpenChange={(o) => !o && setConfirm(null)}

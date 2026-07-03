@@ -54,6 +54,7 @@ export enum InvoiceStatus {
   DRAFT = "DRAFT",
   PAID = "PAID",
   UNPAID = "UNPAID",
+  PARTIAL = "PARTIAL",
   OVERDUE = "OVERDUE",
   CANCELLED = "CANCELLED",
 }
@@ -117,6 +118,7 @@ export const INVOICE_STATUS_CODES: Record<InvoiceStatus, string> = {
   [InvoiceStatus.DRAFT]: "invoice-status-draft",
   [InvoiceStatus.UNPAID]: "invoice-status-unpaid",
   [InvoiceStatus.PAID]: "invoice-status-paid",
+  [InvoiceStatus.PARTIAL]: "invoice-status-partial",
   [InvoiceStatus.OVERDUE]: "invoice-status-overdue",
   [InvoiceStatus.CANCELLED]: "invoice-status-cancelled",
 };
@@ -150,4 +152,80 @@ export const METER_READING_STATUS_CODES: Record<MeterReadingStatus, string> = {
   [MeterReadingStatus.NOT_RECORDED]: "meter-status-not-recorded",
   [MeterReadingStatus.RECORDED]: "meter-status-recorded",
   [MeterReadingStatus.BILLED]: "meter-status-billed",
+};
+
+// ─── Financial (รายรับ-รายจ่าย) ───
+
+export enum PaymentAccountType {
+  CASH = "CASH",
+  BANK = "BANK",
+  EWALLET = "EWALLET",
+}
+
+export const PAYMENT_ACCOUNT_TYPE_CODES: Record<PaymentAccountType, string> = {
+  [PaymentAccountType.CASH]: "account-type-cash",
+  [PaymentAccountType.BANK]: "account-type-bank",
+  [PaymentAccountType.EWALLET]: "account-type-ewallet",
+};
+
+export enum TransactionCategoryType {
+  INCOME = "INCOME",
+  EXPENSE = "EXPENSE",
+}
+
+export const TRANSACTION_CATEGORY_TYPE_CODES: Record<
+  TransactionCategoryType,
+  string
+> = {
+  [TransactionCategoryType.INCOME]: "category-type-income",
+  [TransactionCategoryType.EXPENSE]: "category-type-expense",
+};
+
+/** สถานะรายการเงิน (incomes/expenses) — VOID = ยกเลิก (แทนการลบ) */
+export enum MoneyEntryStatus {
+  POSTED = "POSTED",
+  VOID = "VOID",
+}
+
+export const MONEY_ENTRY_STATUS_CODES: Record<MoneyEntryStatus, string> = {
+  [MoneyEntryStatus.POSTED]: "money-status-posted",
+  [MoneyEntryStatus.VOID]: "money-status-void",
+};
+
+export enum TenantDepositStatus {
+  HELD = "HELD",
+  REFUNDED = "REFUNDED",
+  FORFEITED = "FORFEITED",
+  SETTLED = "SETTLED",
+}
+
+export const TENANT_DEPOSIT_STATUS_CODES: Record<TenantDepositStatus, string> =
+  {
+    [TenantDepositStatus.HELD]: "deposit-status-held",
+    [TenantDepositStatus.REFUNDED]: "deposit-status-refunded",
+    [TenantDepositStatus.FORFEITED]: "deposit-status-forfeited",
+    [TenantDepositStatus.SETTLED]: "deposit-status-settled",
+  };
+
+export enum AccountingPeriodStatus {
+  OPEN = "OPEN",
+  CLOSED = "CLOSED",
+}
+
+export enum AuditAction {
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  VOID = "VOID",
+  SETTLE = "SETTLE",
+  CLOSE_PERIOD = "CLOSE_PERIOD",
+  REOPEN_PERIOD = "REOPEN_PERIOD",
+}
+
+export const AUDIT_ACTION_CODES: Record<AuditAction, string> = {
+  [AuditAction.CREATE]: "audit-create",
+  [AuditAction.UPDATE]: "audit-update",
+  [AuditAction.VOID]: "audit-void",
+  [AuditAction.SETTLE]: "audit-settle",
+  [AuditAction.CLOSE_PERIOD]: "audit-close-period",
+  [AuditAction.REOPEN_PERIOD]: "audit-reopen-period",
 };

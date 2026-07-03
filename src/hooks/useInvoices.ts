@@ -57,14 +57,6 @@ export function useInvoiceActions(apartmentId: string, invoiceId?: string) {
     },
   });
 
-  const markPaid = useMutation({
-    mutationFn: () => invoiceService.markPaid(apartmentId, invoiceId!),
-    onSuccess: () => {
-      toast.success(t("invoice-marked-paid"));
-      invalidate();
-    },
-  });
-
   const cancel = useMutation({
     mutationFn: () => invoiceService.cancel(apartmentId, invoiceId!),
     onSuccess: () => {
@@ -73,7 +65,7 @@ export function useInvoiceActions(apartmentId: string, invoiceId?: string) {
     },
   });
 
-  return { create, updateItems, markPaid, cancel };
+  return { create, updateItems, cancel };
 }
 
 export function useInvoiceSetups(apartmentId: string) {

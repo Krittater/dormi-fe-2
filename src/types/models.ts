@@ -1,11 +1,17 @@
 import type {
+  AccountingPeriodStatus,
+  AuditAction,
   BillingPeriodStatus,
   BillingPeriodType,
   ChargeTypeCategory,
   InvoiceStatus,
   InvoiceType,
   MeterReadingStatus,
+  MoneyEntryStatus,
+  PaymentAccountType,
   RoomStatus,
+  TenantDepositStatus,
+  TransactionCategoryType,
 } from "./enums";
 
 export interface PaginationMeta {
@@ -258,6 +264,8 @@ export interface Invoice {
   /** ค่าจริงจาก API (decimal มาเป็น string) — ใช้ normalize เป็น total */
   totalAmount?: number | string;
   total: number;
+  /** ยอดที่รับชำระแล้ว (decimal มาเป็น string) */
+  paidAmount?: number | string;
   paidAt?: string | null;
   items?: InvoiceItem[];
   createdAt?: string;
@@ -271,4 +279,102 @@ export interface BillTypeDropdownItem {
   code: string;
   name: string;
   description?: string;
+}
+
+// ─── Financial (รายรับ-รายจ่าย) ───
+// หมายเหตุ: จำนวนเงิน (decimal) จาก API มาเป็น string
+
+export interface PaymentAccount {
+  id: string;
+  apartmentId: string;
+  name: string;
+  type: PaymentAccountType;
+  isActive: boolean;
+}
+
+export interface TransactionCategory {
+  id: string;
+  apartmentId: string | null; // null = หมวดกลาง (แก้/ลบไม่ได้ผ่าน UI)
+  name: string;
+  type: TransactionCategoryType;
+  isLiability: boolean;
+  isActive: boolean;
+}
+
+export interface Income {
+  id: string;
+  apartmentId: string;
+  invoiceId?: string | null;
+  tenantId?: string | null;
+  roomId?: string | null;
+  categoryId: string;
+  accountId: string;
+  amount: string;
+  paidDate: string;
+  postingPeriod: string;
+  method?: string | null;
+  reference?: string | null;
+  note?: string | null;
+  status: MoneyEntryStatus;
+  category?: TransactionCategory | null;
+  account?: PaymentAccount | null;
+  createdBy?: string | null;
+  createdAt?: string;
+}
+
+export interface Expense {
+  id: string;
+  apartmentId: string;
+  roomId?: string | null;
+  categoryId: string;
+  accountId: string;
+  amount: string;
+  expenseDate: string;
+  postingPeriod: string;
+  payee?: string | null;
+  reference?: string | null;
+  attachmentUrl?: string | null;
+  note?: string | null;
+  status: MoneyEntryStatus;
+  category?: TransactionCategory | null;
+  account?: PaymentAccount | null;
+  room?: Room | null;
+  createdBy?: string | null;
+  createdAt?: string;
+}
+
+export interface TenantDeposit {
+  id: string;
+  apartmentId: string;
+  tenantId: string;
+  roomId?: string | null;
+  amount: string;
+  receivedDate: string;
+  status: TenantDepositStatus;
+  refundedAmount?: string | null;
+  settledDate?: string | null;
+  settlementIncomeId?: string | null;
+  settlementExpenseId?: string | null;
+  note?: string | null;
+}
+
+export interface AccountingPeriod {
+  id: string;
+  apartmentId: string;
+  period: string; // YYYY-MM
+  status: AccountingPeriodStatus;
+  closedAt?: string | null;
+  reason?: string | null;
+}
+
+export interface AuditLog {
+  id: string;
+  apartmentId: string | null;
+  entityType: string;
+  entityId: string;
+  action: AuditAction;
+  changes?: Record<string, { from: unknown; to: unknown }> | null;
+  reason?: string | null;
+  userId?: string | null;
+  createdAt: string;
 }
