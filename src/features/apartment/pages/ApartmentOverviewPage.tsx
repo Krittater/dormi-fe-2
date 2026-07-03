@@ -29,6 +29,7 @@ import { getIntlLocale } from "@/i18n/runtime";
 import { useApartmentStore } from "@/stores/apartment.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useT, type TranslateFn } from "@/i18n";
+import { normalizeRoomOverviewCounts } from "@/utils/overview";
 import {
   BillingPeriodStatus,
   InvoiceStatus,
@@ -92,15 +93,19 @@ export function ApartmentOverviewPage() {
   const loadingOverview = overview.isLoading;
   const loadingInvoices = invoicesQuery.isLoading;
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const firstName =
     user?.firstNameTH?.trim() ||
     user?.email?.split("@")[0] ||
     t("user");
 
-  const total = numberOr(overviewData?.total);
-  const available = numberOr(overviewData?.available);
-  const rented = numberOr(overviewData?.rented);
+  const roomCounts = useMemo(
+    () => normalizeRoomOverviewCounts(overviewData),
+    [overviewData]
+  );
+  const total = roomCounts.total;
+  const available = roomCounts.available;
+  const rented = roomCounts.rented;
 
   const overdueInvoices = useMemo(
     () =>

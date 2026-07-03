@@ -2,7 +2,12 @@ import { buildQuery, http } from "@/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
 import type { Meter, MeterReading } from "@/types";
-import { normalizeMeters, type RawMeter } from "@/utils/meter";
+import {
+  normalizeMeters,
+  normalizeMeterReadings,
+  type BillingPeriodReadingsResponse,
+  type RawMeter,
+} from "@/utils/meter";
 
 export const meterService = {
   async list(apartmentId: string): Promise<Meter[]> {
@@ -14,11 +19,11 @@ export const meterService = {
     apartmentId: string,
     billingPeriodId: string
   ): Promise<MeterReading[]> {
-    const res = await http.get(
+    const res = await http.get<BillingPeriodReadingsResponse>(
       endpoints.meters.byBillingPeriod(apartmentId) +
         buildQuery({ billingPeriodId })
     );
-    return toList<MeterReading>(res).items;
+    return normalizeMeterReadings(res);
   },
 
   async getReadings(apartmentId: string, meterId: string): Promise<MeterReading[]> {

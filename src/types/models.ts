@@ -105,13 +105,40 @@ export interface Room {
   createdAt?: string;
 }
 
+export interface RoomOverviewSummary {
+  totalRooms: number;
+  availableRooms: number;
+  overdueRooms: number;
+  rentedRooms: number;
+  bookedRooms: number;
+}
+
+export interface RoomOverviewTenant {
+  tenantId: string;
+  userId: string;
+  fullName: string;
+  phone?: string | null;
+}
+
+export interface RoomOverviewRoom {
+  id: string;
+  roomNumber: string;
+  status: RoomStatus | string;
+  building?: string | null;
+  floor?: number | string | null;
+  tenant?: string | null;
+  phone?: string | null;
+  activeTenants: RoomOverviewTenant[];
+}
+
+export interface RoomOverviewAlert {
+  [key: string]: unknown;
+}
+
 export interface RoomOverview {
-  total: number;
-  available: number;
-  rented: number;
-  booked: number;
-  overdue: number;
-  [key: string]: number;
+  summary: RoomOverviewSummary;
+  alerts: RoomOverviewAlert[];
+  rooms: RoomOverviewRoom[];
 }
 
 export interface DropdownItem {
@@ -233,6 +260,13 @@ export interface BillingPeriod {
   dueDate?: string | null;
   invoiceCount?: number;
   createdAt?: string;
+}
+
+/** Shape returned by GET .../billing-periods: periods grouped by year/month. */
+export interface BillingPeriodGroup {
+  periodYear: number;
+  periodMonth: number;
+  periods: BillingPeriod[];
 }
 
 export interface InvoiceItem {

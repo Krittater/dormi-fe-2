@@ -5,14 +5,45 @@ import type {
   Apartment,
   ApartmentOverview,
   BillingPeriod,
+  BillingPeriodGroup,
   BillingPeriodStatus,
 } from "@/types";
+import { BillingPeriodType } from "@/types";
 import type { BillingPeriodGenerateValues } from "@/schemas/billing.schema";
+
+/** One row per month: prefer the RENT period (the one invoices/actions apply to), else the first available type. */
+function pickRepresentativePeriod(periods: BillingPeriod[]): BillingPeriod | undefined {
+  return (
+    periods.find((p) => p.type === BillingPeriodType.RENT) ?? periods[0]
+  );
+}
+
+/** One row per month for meter recording — only ELECTRICITY/WATER periods have meter readings linked to them. */
+function pickMeterPeriod(periods: BillingPeriod[]): BillingPeriod | undefined {
+  return (
+    periods.find((p) => p.type === BillingPeriodType.ELECTRICITY) ??
+    periods.find((p) => p.type === BillingPeriodType.WATER)
+  );
+}
 
 export const billingService = {
   async list(apartmentId: string): Promise<BillingPeriod[]> {
     const res = await http.get(endpoints.billingPeriods.list(apartmentId));
-    return toList<BillingPeriod>(res).items;
+    const groups = toList<BillingPeriodGroup>(res).items;
+    return groups
+      .map((group) => pickRepresentativePeriod(group.periods ?? []))
+      .filter((period): period is BillingPeriod => Boolean(period));
+  },
+
+  /** Periods for the meter-reading-by-period picker: one entry per month/year, never split by type. */
+  async meterPeriodDropdown(apartmentId: string): Promise<BillingPeriod[]> {
+    const res = await http.get(
+      `${endpoints.billingPeriods.list(apartmentId)}${buildQuery({ limit: 100 })}`
+    );
+    const groups = toList<BillingPeriodGroup>(res).items;
+    return groups
+      .map((group) => pickMeterPeriod(group.periods ?? []))
+      .filter((period): period is BillingPeriod => Boolean(period));
   },
 
   async dropdown(

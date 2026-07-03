@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
+import { useApartmentStore } from "@/stores/apartment.store";
 import type { User } from "@/types";
 
 interface LoginPayload {
@@ -27,7 +28,8 @@ interface AuthState {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-  bootstrap: () => Promise<boolean>;
+  markAuthenticated: () => void;
+  markUnauthenticated: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -59,17 +61,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       await api.post(endpoints.auth.logout());
     } finally {
       set({ user: null, isAuthenticated: false, isBootstrapping: false });
+      useApartmentStore.getState().reset();
     }
   },
 
-  bootstrap: async () => {
-    try {
-      await api.get(endpoints.apartments.list());
-      set({ isAuthenticated: true, isBootstrapping: false });
-      return true;
-    } catch {
-      set({ isAuthenticated: false, isBootstrapping: false });
-      return false;
-    }
-  },
+  markAuthenticated: () => set({ isAuthenticated: true, isBootstrapping: false }),
+
+  markUnauthenticated: () =>
+    set({ user: null, isAuthenticated: false, isBootstrapping: false }),
 }));

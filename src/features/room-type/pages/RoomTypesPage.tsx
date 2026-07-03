@@ -120,11 +120,10 @@ export function RoomTypesPage() {
     [create, editing, update]
   );
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSettled: () => setDeleting(null),
-    });
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const columns = useMemo<Column<RoomType>[]>(

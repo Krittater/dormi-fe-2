@@ -672,6 +672,12 @@
     "cn": "电话号码无效"
   },
   {
+    "code": "too-long",
+    "th": "ข้อความยาวเกินไป",
+    "en": "This value is too long",
+    "cn": "内容过长"
+  },
+  {
     "code": "password-min-6",
     "th": "รหัสผ่านอย่างน้อย 6 ตัวอักษร",
     "en": "Password must be at least 6 characters",
@@ -1392,6 +1398,12 @@
     "cn": "请先添加房间类型，然后才能创建房间"
   },
   {
+    "code": "add-invoice-setup-first",
+    "th": "กรุณาตั้งค่ารูปแบบใบแจ้งหนี้ (วันตัดรอบ/วันออกบิล/วันครบกำหนด) ก่อน จึงจะสร้างรอบบิลได้อย่างถูกต้อง",
+    "en": "Please configure an invoice setup (cutoff/issue/due dates) first so billing periods generate correctly",
+    "cn": "请先配置账单设置（截止日/开票日/到期日），账单周期才能正确生成"
+  },
+  {
     "code": "search-room-number",
     "th": "ค้นหาเลขห้อง...",
     "en": "Search room number...",
@@ -1570,6 +1582,12 @@
     "th": "ใช้เป็นรหัสผ่านชั่วคราวสำหรับผู้ใช้ใหม่",
     "en": "Used as a temporary password for new users",
     "cn": "用作新用户的临时密码"
+  },
+  {
+    "code": "tenant-added-new-account",
+    "th": "เพิ่มผู้เช่าสำเร็จ สร้างบัญชีใหม่แล้ว รหัสผ่านชั่วคราวคือเบอร์โทร {phone}",
+    "en": "Tenant added. A new account was created — temporary password is the phone number {phone}",
+    "cn": "租户添加成功，已创建新账户。临时密码是电话号码 {phone}"
   },
   {
     "code": "room-unit",
@@ -2370,12 +2388,6 @@
     "cn": "单价"
   },
   {
-    "code": "create-invoice",
-    "th": "สร้างใบแจ้งหนี้",
-    "en": "Create invoice",
-    "cn": "创建账单"
-  },
-  {
     "code": "create-invoice-description",
     "th": "ออกใบแจ้งหนี้เพิ่มเติมให้ผู้เช่าในรอบบิลที่เลือก",
     "en": "Issue an additional invoice for a tenant in the selected billing period",
@@ -2752,6 +2764,24 @@
     "th": "ระบบจะสร้างใบแจ้งหนี้ฉบับร่างใหม่สำหรับรอบบิลนี้ ต้องการดำเนินการต่อหรือไม่?",
     "en": "The system will generate new draft invoices for this billing period. Do you want to continue?",
     "cn": "系统将为此账单周期生成新的草稿账单。是否继续？"
+  },
+  {
+    "code": "create-invoice-alert",
+    "th": "ระบบจะสร้างใบแจ้งหนี้ฉบับร่างสำหรับผู้เช่าทุกคนในรอบบิลนี้ ต้องการดำเนินการต่อหรือไม่?",
+    "en": "The system will generate draft invoices for every tenant in this billing period. Do you want to continue?",
+    "cn": "系统将为此账单周期内的所有租户生成草稿账单。是否继续？"
+  },
+  {
+    "code": "create-invoice",
+    "th": "สร้างใบแจ้งหนี้",
+    "en": "Create invoice",
+    "cn": "创建账单"
+  },
+  {
+    "code": "publish-invoices-description",
+    "th": "ใบแจ้งหนี้ฉบับร่างทั้งหมดในรอบบิลนี้จะถูกเผยแพร่และแจ้งให้ผู้เช่าชำระเงิน ต้องการดำเนินการต่อหรือไม่?",
+    "en": "All draft invoices in this billing period will be published and tenants will be notified to pay. Do you want to continue?",
+    "cn": "此账单周期内的所有草稿账单将被发布，并通知租户付款。是否继续？"
   },
   {
     "code": "close",
@@ -3157,9 +3187,9 @@
   },
   {
     "code": "delete-meter-confirm",
-    "th": "ต้องการลบมิเตอร์ {name} ใช่หรือไม่? การจดทั้งหมดของมิเตอร์นี้จะถูกลบด้วย",
-    "en": "Delete meter {name}? All readings for this meter will be removed too.",
-    "cn": "确定删除电表 {name} 吗？该电表的所有抄表记录也将被删除。"
+    "th": "ต้องการลบมิเตอร์ {name} ใช่หรือไม่? การจดทั้งหมดของมิเตอร์นี้จะถูกลบด้วย และไม่สามารถกู้คืนได้จากหน้านี้",
+    "en": "Delete meter {name}? All readings for this meter will be removed too, and this cannot be undone from this screen.",
+    "cn": "确定删除电表 {name} 吗？该电表的所有抄表记录也将被删除，且无法在此页面恢复。"
   },
   {
     "code": "no-rooms-for-meter",

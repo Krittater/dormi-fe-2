@@ -9,6 +9,19 @@ export interface TenantListParams {
   limit?: number;
 }
 
+export interface CreateTenantResult {
+  tenantId: string;
+  apartmentId: string;
+  roomId?: string | null;
+  userId: string;
+  email?: string | null;
+  phone: string;
+  firstNameTH?: string | null;
+  lastNameTH?: string | null;
+  userCreated?: boolean;
+  temporaryPasswordHint?: string;
+}
+
 export const tenantService = {
   async list(
     apartmentId: string,
@@ -21,8 +34,8 @@ export const tenantService = {
     return { items: norm.items, meta: norm.meta };
   },
 
-  async create(payload: unknown) {
-    return http.post(endpoints.tenants.create(), payload);
+  async create(payload: unknown): Promise<CreateTenantResult> {
+    return http.post<CreateTenantResult>(endpoints.tenants.create(), payload);
   },
 
   async updateById(tenantId: string, payload: unknown) {

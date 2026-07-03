@@ -48,6 +48,7 @@ import {
   DEFAULT_PAGE_SIZE,
   DROPDOWN_LIMIT,
   INACTIVE,
+  ROOMS_FETCH_ALL_LIMIT,
   SKELETON_ROWS_ROOMS,
   VIEW_GRID,
   VIEW_TABLE,
@@ -62,7 +63,6 @@ import {
   formatPhone,
   getInitials,
 } from "@/lib/format";
-import { totalPagesOf } from "@/lib/list";
 import { cn } from "@/lib/utils";
 import { qk } from "@/queries/keys";
 import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
@@ -93,14 +93,13 @@ export function RoomsPage() {
 
   const listParams = useMemo(
     () => ({
-      page,
-      limit: DEFAULT_PAGE_SIZE,
+      limit: ROOMS_FETCH_ALL_LIMIT,
       search: search || undefined,
       status: status === ALL ? undefined : status,
       isActive:
         active === ALL ? undefined : active === ACTIVE ? true : false,
     }),
-    [page, search, status, active]
+    [search, status, active]
   );
 
   const { data, isLoading } = useRooms(apartmentId, listParams);
@@ -134,11 +133,10 @@ export function RoomsPage() {
     setTenantFormOpen(true);
   }, []);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    remove.mutate(deleting.id, {
-      onSettled: () => setDeleting(null),
-    });
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const invalidateRooms = useCallback(() => {
@@ -229,12 +227,27 @@ export function RoomsPage() {
     [items]
   );
 
-  const visibleItems = useMemo(
+  const filteredByFloor = useMemo(
     () =>
       floor === ALL
         ? items
         : items.filter((r) => (r.floor ?? "").trim() === floor),
     [items, floor]
+  );
+
+  const floorFilteredTotal = filteredByFloor.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(floorFilteredTotal / DEFAULT_PAGE_SIZE)
+  );
+  const safePage = Math.min(page, totalPages);
+  const visibleItems = useMemo(
+    () =>
+      filteredByFloor.slice(
+        (safePage - 1) * DEFAULT_PAGE_SIZE,
+        safePage * DEFAULT_PAGE_SIZE
+      ),
+    [filteredByFloor, safePage]
   );
 
   const totalRooms = meta?.total ?? items.length;
@@ -274,7 +287,13 @@ export function RoomsPage() {
           }}
           className="sm:max-w-xs"
         />
-        <Select value={floor} onValueChange={setFloor}>
+        <Select
+          value={floor}
+          onValueChange={(v) => {
+            setPage(1);
+            setFloor(v);
+          }}
+        >
           <SelectTrigger className="sm:w-40">
             <SelectValue placeholder={t("all-floors")} />
           </SelectTrigger>
@@ -579,8 +598,8 @@ export function RoomsPage() {
       )}
 
       <Pagination
-        page={page}
-        totalPages={totalPagesOf(meta, items.length, DEFAULT_PAGE_SIZE)}
+        page={safePage}
+        totalPages={totalPages}
         onPageChange={setPage}
       />
 

@@ -1,6 +1,7 @@
 export const DEFAULT_PAGE_SIZE = 20;
 export const ROOM_TYPES_PAGE_SIZE = 10;
 export const DROPDOWN_LIMIT = 100;
+export const ROOMS_FETCH_ALL_LIMIT = 1000;
 export const SEARCH_DEBOUNCE_MS = 400;
 
 export const PER_PAGE_OPTIONS = [10, 20, 50] as const;

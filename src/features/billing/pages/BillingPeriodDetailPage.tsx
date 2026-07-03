@@ -45,7 +45,7 @@ export function BillingPeriodDetailPage() {
   const router = useRouter();
 
   const [confirm, setConfirm] = useState<
-    null | "cancel" | "close" | "regenerate"
+    null | "cancel" | "close" | "regenerate" | "generate" | "publish"
   >(null);
 
   const { data: period, isLoading: loadingPeriod } = useBillingPeriod(
@@ -71,11 +71,15 @@ export function BillingPeriodDetailPage() {
     updateStatus.isPending;
 
   const handleGenerateInvoices = useCallback(() => {
-    generateInvoices.mutate(billingPeriodId);
+    generateInvoices.mutate(billingPeriodId, {
+      onSuccess: () => setConfirm(null),
+    });
   }, [billingPeriodId, generateInvoices]);
 
   const handlePublishInvoices = useCallback(() => {
-    publishInvoices.mutate(billingPeriodId);
+    publishInvoices.mutate(billingPeriodId, {
+      onSuccess: () => setConfirm(null),
+    });
   }, [billingPeriodId, publishInvoices]);
 
   const handleRegenerate = useCallback(() => {
@@ -224,7 +228,7 @@ export function BillingPeriodDetailPage() {
               </Button>
 
               {isOpen && (
-                <Button onClick={handleGenerateInvoices} disabled={isBusy}>
+                <Button onClick={() => setConfirm("generate")} disabled={isBusy}>
                   {generateInvoices.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -236,7 +240,7 @@ export function BillingPeriodDetailPage() {
 
               {isGenerated && (
                 <>
-                  <Button onClick={handlePublishInvoices} disabled={isBusy}>
+                  <Button onClick={() => setConfirm("publish")} disabled={isBusy}>
                     {publishInvoices.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
@@ -328,6 +332,22 @@ export function BillingPeriodDetailPage() {
         description={t("regenerate-invoices-description")}
         confirmLabel={t("regenerate")}
         onConfirm={handleRegenerate}
+      />
+      <ConfirmDialog
+        open={confirm === "generate"}
+        onOpenChange={(o) => !o && setConfirm(null)}
+        title={t("create-invoice")}
+        description={t("create-invoice-description")}
+        confirmLabel={t("create-invoice")}
+        onConfirm={handleGenerateInvoices}
+      />
+      <ConfirmDialog
+        open={confirm === "publish"}
+        onOpenChange={(o) => !o && setConfirm(null)}
+        title={t("publish-invoices")}
+        description={t("publish-invoices-description")}
+        confirmLabel={t("publish-invoices")}
+        onConfirm={handlePublishInvoices}
       />
     </div>
   );

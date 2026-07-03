@@ -129,9 +129,10 @@ export function ChargeTypesPage() {
     [create, update, editing]
   );
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const columns = useMemo<Column<ChargeType>[]>(

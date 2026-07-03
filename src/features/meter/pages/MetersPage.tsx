@@ -9,11 +9,11 @@ import {
   Gauge,
   Home,
   MoreVertical,
+  Plus,
   Search,
   Trash2,
   Zap,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,7 @@ import {
   useMeterReadingsByPeriod,
   useMeters,
 } from "@/hooks/useMeters";
-import { formatNumber, getApiErrorMessage } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useT, type TranslateFn } from "@/i18n";
 import { MeterReadingStatus, MeterType } from "@/types";
@@ -109,13 +109,42 @@ export function MetersPage() {
   const [readingDialogOpen, setReadingDialogOpen] = useState(false);
   const [activeReading, setActiveReading] = useState<MeterReading | null>(null);
   const [readingMode, setReadingMode] = useState<"record" | "edit">("record");
+  const [readingsPage, setReadingsPage] = useState(1);
+  const [readingsPerPage, setReadingsPerPage] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     if (!periodId && periods[0]) setPeriodId(periods[0].id);
   }, [periods, periodId]);
 
+  const changePeriodId = useCallback((value: string) => {
+    setPeriodId(value);
+    setReadingsPage(1);
+  }, []);
+
   const { data: periodReadings = [], isLoading: readingsLoading } =
     useMeterReadingsByPeriod(apartmentId, periodId);
+
+  const readingsTotal = periodReadings.length;
+  const readingsTotalPages = Math.max(
+    1,
+    Math.ceil(readingsTotal / readingsPerPage)
+  );
+  const readingsSafePage = Math.min(readingsPage, readingsTotalPages);
+  const readingsStartIndex = (readingsSafePage - 1) * readingsPerPage;
+  const pageReadings = periodReadings.slice(
+    readingsStartIndex,
+    readingsStartIndex + readingsPerPage
+  );
+  const readingsFrom = readingsTotal === 0 ? 0 : readingsStartIndex + 1;
+  const readingsTo = Math.min(
+    readingsStartIndex + readingsPerPage,
+    readingsTotal
+  );
+
+  const changeReadingsPerPage = useCallback((value: number) => {
+    setReadingsPerPage(value);
+    setReadingsPage(1);
+  }, []);
 
   const electricityCount = useMemo(
     () => countMetersByType(meters, MeterType.ELECTRICITY),
@@ -183,13 +212,8 @@ export function MetersPage() {
 
   const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    try {
-      await remove.mutateAsync(deleting.id);
-    } catch (err) {
-      toast.error(getApiErrorMessage(err));
-    } finally {
-      setDeleting(null);
-    }
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const readingColumns = useMemo<Column<MeterReading>[]>(
@@ -245,6 +269,12 @@ export function MetersPage() {
       <PageHeader
         title={t("nav-meters")}
         description={t("meters-page-subtitle")}
+        actions={
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {t("add-meter")}
+          </Button>
+        }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -417,7 +447,7 @@ export function MetersPage() {
             ) : (
               <>
                 <div className="max-w-xs">
-                  <Select value={periodId} onValueChange={setPeriodId}>
+                  <Select value={periodId} onValueChange={changePeriodId}>
                     <SelectTrigger>
                       <SelectValue placeholder={t("select-billing-period")} />
                     </SelectTrigger>
@@ -432,12 +462,73 @@ export function MetersPage() {
                 </div>
                 <DataTable
                   columns={readingColumns}
-                  data={periodReadings}
+                  data={pageReadings}
                   loading={readingsLoading}
                   getRowId={(r) => r.id}
                   emptyTitle={t("no-readings")}
                   emptyDescription={t("no-readings-description")}
                 />
+
+                {!readingsLoading && readingsTotal > 0 && (
+                  <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-4 sm:flex-row">
+                    <p className="text-sm text-gray-500">
+                      {t("showing-range", {
+                        from: readingsFrom,
+                        to: readingsTo,
+                        total: readingsTotal,
+                      })}
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          {t("per-page")}
+                        </span>
+                        <Select
+                          value={String(readingsPerPage)}
+                          onValueChange={(v) =>
+                            changeReadingsPerPage(Number(v))
+                          }
+                        >
+                          <SelectTrigger className="h-8 w-[72px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PER_PAGE_OPTIONS.map((n) => (
+                              <SelectItem key={n} value={String(n)}>
+                                {n}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={readingsSafePage <= 1}
+                          onClick={() => setReadingsPage(readingsSafePage - 1)}
+                          aria-label={t("previous")}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="min-w-8 rounded-md bg-primary px-3 py-1 text-center text-sm font-medium text-primary-foreground">
+                          {readingsSafePage}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={readingsSafePage >= readingsTotalPages}
+                          onClick={() => setReadingsPage(readingsSafePage + 1)}
+                          aria-label={t("next")}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

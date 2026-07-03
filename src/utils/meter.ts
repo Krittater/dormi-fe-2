@@ -1,5 +1,5 @@
 import { MeterType } from "@/types";
-import type { Meter, MeterReading } from "@/types";
+import type { Meter, MeterReading, MeterReadingStatus } from "@/types";
 
 interface RawMeter {
   id?: string;
@@ -39,6 +39,60 @@ export function normalizeMeters(raw: RawMeter[]): DisplayMeter[] {
 
 export function countMetersByType(meters: DisplayMeter[], type: MeterType): number {
   return meters.filter((m) => m.type === type).length;
+}
+
+interface RawMeterReading {
+  id?: string;
+  meterReadingId?: string;
+  meterId?: string;
+  billingPeriodId?: string | null;
+  billingPeriodName?: string | null;
+  billingPeriodType?: string | null;
+  room?: { roomId?: string; name?: string | null } | null;
+  roomName?: string | null;
+  previousValue: number | null;
+  currentValue: number | null;
+  unitsUsed: number | null;
+  readingStatus: MeterReadingStatus;
+  recordedAt?: string | null;
+  meterType?: string | null;
+}
+
+export interface BillingPeriodReadingsResponse {
+  billingPeriodName?: string | null;
+  billingPeriodType?: string | null;
+  data: RawMeterReading[];
+}
+
+export function normalizeMeterReading(
+  raw: RawMeterReading,
+  context?: { billingPeriodName?: string | null; billingPeriodType?: string | null }
+): MeterReading {
+  return {
+    id: raw.id ?? raw.meterReadingId ?? "",
+    meterId: raw.meterId ?? raw.room?.roomId ?? "",
+    billingPeriodId: raw.billingPeriodId ?? null,
+    billingPeriodName: raw.billingPeriodName ?? context?.billingPeriodName ?? null,
+    billingPeriodType: raw.billingPeriodType ?? context?.billingPeriodType ?? null,
+    previousValue: raw.previousValue ?? null,
+    currentValue: raw.currentValue ?? null,
+    unitsUsed: raw.unitsUsed ?? null,
+    readingStatus: raw.readingStatus,
+    recordedAt: raw.recordedAt ?? null,
+    roomName: raw.room?.name ?? raw.roomName ?? null,
+    meterType: raw.meterType ?? context?.billingPeriodType ?? null,
+  };
+}
+
+export function normalizeMeterReadings(
+  res: BillingPeriodReadingsResponse | RawMeterReading[]
+): MeterReading[] {
+  if (Array.isArray(res)) return res.map((r) => normalizeMeterReading(r));
+  const context = {
+    billingPeriodName: res.billingPeriodName,
+    billingPeriodType: res.billingPeriodType,
+  };
+  return (res.data ?? []).map((r) => normalizeMeterReading(r, context));
 }
 
 export interface PeriodOption {

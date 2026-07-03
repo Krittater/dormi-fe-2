@@ -14,7 +14,7 @@ export function useMeters(apartmentId: string) {
 }
 
 export function useMeterPeriodDropdown(apartmentId: string) {
-  return useQuery(billingQueries.dropdown(apartmentId));
+  return useQuery(billingQueries.meterDropdown(apartmentId));
 }
 
 export function useMeterReadingsByPeriod(

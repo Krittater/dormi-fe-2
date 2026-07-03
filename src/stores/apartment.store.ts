@@ -15,6 +15,7 @@ interface ApartmentState {
   upsertLocal: (apartment: ApartmentOverview) => void;
   removeLocal: (id: string) => void;
   getCurrent: () => ApartmentOverview | undefined;
+  reset: () => void;
 }
 
 export const useApartmentStore = create<ApartmentState>()(
@@ -80,6 +81,14 @@ export const useApartmentStore = create<ApartmentState>()(
 
       getCurrent: () =>
         get().apartments.find((a) => a.id === get().currentApartmentId),
+
+      reset: () =>
+        set({
+          apartments: [],
+          currentApartmentId: null,
+          isLoading: false,
+          hasLoaded: false,
+        }),
     }),
     {
       name: "dormi-apartment",
