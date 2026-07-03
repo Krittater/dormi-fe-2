@@ -136,9 +136,10 @@ export function InvoiceSetupsPage() {
     [create, editing, needsRate, update]
   );
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const columns = useMemo<Column<InvoiceSetup>[]>(

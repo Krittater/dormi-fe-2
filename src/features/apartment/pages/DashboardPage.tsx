@@ -53,9 +53,10 @@ export function DashboardPage() {
     setFormOpen(true);
   }, []);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     if (!deleting) return;
-    remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+    await remove.mutateAsync(deleting.id);
+    setDeleting(null);
   }, [deleting, remove]);
 
   const enterApartment = useCallback(

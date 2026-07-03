@@ -6,9 +6,9 @@ import { RoomStatus } from "@/types";
 export const makeRoomSchema = (t: TranslateFn) =>
   z.object({
     roomTypeId: z.string().min(1, t("please-select-room-type")),
-    name: z.string().min(1, t("enter-room-name-number")),
-    floor: z.string().optional(),
-    description: z.string().optional(),
+    name: z.string().min(1, t("enter-room-name-number")).max(100, t("too-long")),
+    floor: z.string().max(50, t("too-long")).optional(),
+    description: z.string().max(500, t("too-long")).optional(),
     status: z.nativeEnum(RoomStatus),
     isActive: z.boolean(),
     currentWaterMeterReading: z.coerce

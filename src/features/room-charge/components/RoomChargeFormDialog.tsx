@@ -59,6 +59,7 @@ interface Props {
   charge?: RoomCharge | null;
   rooms: RoomOption[];
   chargeTypes: ChargeType[];
+  defaultRoomId?: string;
   onSuccess?: () => void;
 }
 
@@ -69,10 +70,12 @@ export function RoomChargeFormDialog({
   charge,
   rooms,
   chargeTypes,
+  defaultRoomId,
   onSuccess,
 }: Props) {
   const t = useT();
   const isEdit = Boolean(charge);
+  const lockRoom = isEdit || Boolean(defaultRoomId);
   const { create, update } = useRoomChargeActions(apartmentId);
   const submitting = create.isPending || update.isPending;
 
@@ -90,14 +93,22 @@ export function RoomChargeFormDialog({
   useEffect(() => {
     if (!open) return;
     form.reset({
-      roomId: charge?.roomId ?? "",
+      roomId: charge?.roomId ?? defaultRoomId ?? "",
       chargeTypeId: charge?.chargeTypeId ?? "",
       amount: charge?.amount ?? 0,
       unit: charge?.unit != null ? String(charge.unit) : "",
       description: charge?.description ?? "",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, charge]);
+  }, [open, charge, defaultRoomId]);
+
+  const handleChargeTypeChange = (value: string) => {
+    form.setValue("chargeTypeId", value, { shouldValidate: true });
+    const selected = chargeTypes.find((c) => c.id === value);
+    if (selected?.defaultAmount != null) {
+      form.setValue("amount", selected.defaultAmount, { shouldValidate: true });
+    }
+  };
 
   const onSubmit = (values: FormValues) => {
     if (isEdit && charge) {
@@ -157,7 +168,7 @@ export function RoomChargeFormDialog({
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
-                    disabled={isEdit}
+                    disabled={lockRoom}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -184,7 +195,7 @@ export function RoomChargeFormDialog({
                   <FormLabel>{t("nav-charge-types")}</FormLabel>
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={handleChargeTypeChange}
                     disabled={isEdit}
                   >
                     <FormControl>

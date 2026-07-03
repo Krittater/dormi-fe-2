@@ -11,6 +11,28 @@ interface StandardApiResponse<T> {
   message: string;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Backend single-resource endpoints add a redundant `{ data }` or
+ * `{ message, data }` layer on top of the global `{success,data,timestamp}`
+ * envelope (already stripped by the caller). List endpoints return
+ * `{ data: [...], meta }`, which must be left intact for `toList()`. This
+ * strips only the redundant single-resource wrapper, recursing in case of
+ * further nesting (e.g. login's `{message, data: {userId}}`).
+ */
+function unwrapNestedData(value: unknown, depth = 0): unknown {
+  if (depth > 5 || !isPlainObject(value) || !("data" in value)) return value;
+  if (Array.isArray(value.data)) return value;
+  const extraKeys = Object.keys(value).filter(
+    (key) => key !== "data" && key !== "message"
+  );
+  if (extraKeys.length > 0) return value;
+  return unwrapNestedData(value.data, depth + 1);
+}
+
 export function setupResponseInterceptor(instance: AxiosInstance): void {
   instance.interceptors.response.use(
     (response: AxiosResponse<StandardApiResponse<unknown>>) => {
@@ -23,7 +45,9 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
       }
 
       if (payload && typeof payload === "object" && "data" in payload) {
-        response.data = (payload.data ?? null) as typeof response.data;
+        response.data = unwrapNestedData(
+          payload.data ?? null
+        ) as typeof response.data;
       }
 
       return response;

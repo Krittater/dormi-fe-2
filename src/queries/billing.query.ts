@@ -19,6 +19,13 @@ export const billingQueries = {
       enabled: Boolean(apartmentId),
     }),
 
+  meterDropdown: (apartmentId: string) =>
+    queryOptions({
+      queryKey: qk.billingPeriods.meterDropdown(apartmentId),
+      queryFn: () => billingService.meterPeriodDropdown(apartmentId),
+      enabled: Boolean(apartmentId),
+    }),
+
   detail: (apartmentId: string, billingPeriodId: string) =>
     queryOptions({
       queryKey: qk.billingPeriods.detail(apartmentId, billingPeriodId),

@@ -31,8 +31,12 @@ export function useTenantActions(apartmentId: string) {
 
   const create = useMutation({
     mutationFn: (payload: unknown) => tenantService.create(payload),
-    onSuccess: () => {
-      toast.success(t("tenant-added"));
+    onSuccess: (result) => {
+      if (result?.userCreated) {
+        toast.success(t("tenant-added-new-account", { phone: result.phone }));
+      } else {
+        toast.success(t("tenant-added"));
+      }
       invalidate();
     },
   });

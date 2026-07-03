@@ -92,7 +92,10 @@ export function TenantFormDialog({
       email: tenant?.user.email ?? "",
       phone: tenant?.user.phone ?? "",
       roomId: tenant?.roomId ?? defaultRoomId ?? NO_ROOM,
-      monthlyRentOverride: "",
+      monthlyRentOverride:
+        tenant?.monthlyRentOverride != null
+          ? String(tenant.monthlyRentOverride)
+          : "",
       depositAmount:
         tenant?.depositAmount != null ? String(tenant.depositAmount) : "",
       contractStartDate: tenant?.contractStartDate?.slice(0, 10) ?? "",

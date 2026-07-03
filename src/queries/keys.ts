@@ -49,6 +49,8 @@ export const qk = {
       [...qk.billingPeriods.all(apartmentId), "list"] as const,
     dropdown: (apartmentId: string) =>
       [...qk.billingPeriods.all(apartmentId), "dropdown"] as const,
+    meterDropdown: (apartmentId: string) =>
+      [...qk.billingPeriods.all(apartmentId), "meterDropdown"] as const,
     detail: (apartmentId: string, billingPeriodId: string) =>
       [...qk.billingPeriods.all(apartmentId), "detail", billingPeriodId] as const,
   },

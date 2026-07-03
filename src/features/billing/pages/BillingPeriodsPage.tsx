@@ -65,7 +65,8 @@ export function BillingPeriodsPage() {
   const [formOpen, setFormOpen] = useState(false);
 
   const { data: items = [], isLoading } = useBillingPeriods(apartmentId);
-  const { data: setups = [] } = useBillingPeriodSetups(apartmentId);
+  const { data: setups = [], isLoading: setupsLoading } =
+    useBillingPeriodSetups(apartmentId);
   const { generate } = useBillingActions(apartmentId);
 
   const now = new Date();
@@ -155,12 +156,21 @@ export function BillingPeriodsPage() {
         title={t("nav-billing-periods")}
         description={t("billing-periods-page-description")}
         actions={
-          <Button onClick={() => setFormOpen(true)}>
+          <Button
+            onClick={() => setFormOpen(true)}
+            disabled={setups.length === 0}
+          >
             <Plus className="h-4 w-4" />
             {t("create-billing-period")}
           </Button>
         }
       />
+
+      {setups.length === 0 && !setupsLoading && (
+        <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">
+          {t("add-invoice-setup-first")}
+        </p>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
