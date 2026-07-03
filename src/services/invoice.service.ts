@@ -67,12 +67,6 @@ export const invoiceService = {
     );
   },
 
-  async markPaid(apartmentId: string, invoiceId: string): Promise<Invoice> {
-    return http.patch<Invoice>(
-      endpoints.invoices.markPaid(apartmentId, invoiceId)
-    );
-  },
-
   async cancel(apartmentId: string, invoiceId: string): Promise<void> {
     await http.delete(endpoints.invoices.cancel(apartmentId, invoiceId));
   },

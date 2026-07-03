@@ -31,6 +31,7 @@ const invoiceVariant: Record<InvoiceStatus, Variant> = {
   [InvoiceStatus.DRAFT]: "secondary",
   [InvoiceStatus.UNPAID]: "warning",
   [InvoiceStatus.PAID]: "success",
+  [InvoiceStatus.PARTIAL]: "info",
   [InvoiceStatus.OVERDUE]: "danger",
   [InvoiceStatus.CANCELLED]: "outline",
 };

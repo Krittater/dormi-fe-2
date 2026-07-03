@@ -128,9 +128,72 @@ export const endpoints = {
       `${a(apartmentId)}/invoices/${invoiceId}/details`,
     updateItems: (apartmentId: string, invoiceId: string) =>
       `${a(apartmentId)}/invoices/${invoiceId}/items`,
-    markPaid: (apartmentId: string, invoiceId: string) =>
-      `${a(apartmentId)}/invoices/${invoiceId}/mark-paid`,
     cancel: (apartmentId: string, invoiceId: string) =>
       `${a(apartmentId)}/invoices/${invoiceId}`,
+  },
+  paymentAccounts: {
+    list: (apartmentId: string) => `${a(apartmentId)}/payment-accounts`,
+    create: (apartmentId: string) => `${a(apartmentId)}/payment-accounts`,
+    detail: (apartmentId: string, accountId: string) =>
+      `${a(apartmentId)}/payment-accounts/${accountId}`,
+    update: (apartmentId: string, accountId: string) =>
+      `${a(apartmentId)}/payment-accounts/${accountId}`,
+    remove: (apartmentId: string, accountId: string) =>
+      `${a(apartmentId)}/payment-accounts/${accountId}`,
+  },
+  finance: {
+    summary: (apartmentId: string) => `${a(apartmentId)}/finance/summary`,
+  },
+  accountingPeriods: {
+    list: (apartmentId: string) => `${a(apartmentId)}/accounting-periods`,
+    close: (apartmentId: string, period: string) =>
+      `${a(apartmentId)}/accounting-periods/${period}/close`,
+    reopen: (apartmentId: string, period: string) =>
+      `${a(apartmentId)}/accounting-periods/${period}/reopen`,
+  },
+  auditLogs: {
+    list: (apartmentId: string) => `${a(apartmentId)}/audit-logs`,
+  },
+  transactionCategories: {
+    list: (apartmentId: string) => `${a(apartmentId)}/transaction-categories`,
+    create: (apartmentId: string) => `${a(apartmentId)}/transaction-categories`,
+    detail: (apartmentId: string, categoryId: string) =>
+      `${a(apartmentId)}/transaction-categories/${categoryId}`,
+    update: (apartmentId: string, categoryId: string) =>
+      `${a(apartmentId)}/transaction-categories/${categoryId}`,
+    remove: (apartmentId: string, categoryId: string) =>
+      `${a(apartmentId)}/transaction-categories/${categoryId}`,
+  },
+  incomes: {
+    list: (apartmentId: string) => `${a(apartmentId)}/incomes`,
+    create: (apartmentId: string) => `${a(apartmentId)}/incomes`,
+    detail: (apartmentId: string, incomeId: string) =>
+      `${a(apartmentId)}/incomes/${incomeId}`,
+    update: (apartmentId: string, incomeId: string) =>
+      `${a(apartmentId)}/incomes/${incomeId}`,
+    void: (apartmentId: string, incomeId: string) =>
+      `${a(apartmentId)}/incomes/${incomeId}/void`,
+  },
+  expenses: {
+    list: (apartmentId: string) => `${a(apartmentId)}/expenses`,
+    create: (apartmentId: string) => `${a(apartmentId)}/expenses`,
+    detail: (apartmentId: string, expenseId: string) =>
+      `${a(apartmentId)}/expenses/${expenseId}`,
+    update: (apartmentId: string, expenseId: string) =>
+      `${a(apartmentId)}/expenses/${expenseId}`,
+    void: (apartmentId: string, expenseId: string) =>
+      `${a(apartmentId)}/expenses/${expenseId}/void`,
+  },
+  tenantDeposits: {
+    list: (apartmentId: string) => `${a(apartmentId)}/tenant-deposits`,
+    create: (apartmentId: string) => `${a(apartmentId)}/tenant-deposits`,
+    detail: (apartmentId: string, depositId: string) =>
+      `${a(apartmentId)}/tenant-deposits/${depositId}`,
+    update: (apartmentId: string, depositId: string) =>
+      `${a(apartmentId)}/tenant-deposits/${depositId}`,
+    remove: (apartmentId: string, depositId: string) =>
+      `${a(apartmentId)}/tenant-deposits/${depositId}`,
+    settle: (apartmentId: string, depositId: string) =>
+      `${a(apartmentId)}/tenant-deposits/${depositId}/settle`,
   },
 };

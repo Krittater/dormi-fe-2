@@ -68,4 +68,45 @@ export const qk = {
     list: (apartmentId: string) =>
       [...qk.invoiceSetups.all(apartmentId), "list"] as const,
   },
+  paymentAccounts: {
+    all: (apartmentId: string) => ["paymentAccounts", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.paymentAccounts.all(apartmentId), "list"] as const,
+  },
+  transactionCategories: {
+    all: (apartmentId: string) =>
+      ["transactionCategories", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.transactionCategories.all(apartmentId), "list"] as const,
+  },
+  finance: {
+    all: (apartmentId: string) => ["finance", apartmentId] as const,
+    summary: (apartmentId: string, params?: unknown) =>
+      [...qk.finance.all(apartmentId), "summary", params] as const,
+  },
+  accountingPeriods: {
+    all: (apartmentId: string) => ["accountingPeriods", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.accountingPeriods.all(apartmentId), "list"] as const,
+  },
+  auditLogs: {
+    all: (apartmentId: string) => ["auditLogs", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.auditLogs.all(apartmentId), "list", params] as const,
+  },
+  incomes: {
+    all: (apartmentId: string) => ["incomes", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.incomes.all(apartmentId), "list", params] as const,
+  },
+  expenses: {
+    all: (apartmentId: string) => ["expenses", apartmentId] as const,
+    list: (apartmentId: string, params?: unknown) =>
+      [...qk.expenses.all(apartmentId), "list", params] as const,
+  },
+  tenantDeposits: {
+    all: (apartmentId: string) => ["tenantDeposits", apartmentId] as const,
+    list: (apartmentId: string) =>
+      [...qk.tenantDeposits.all(apartmentId), "list"] as const,
+  },
 } as const;

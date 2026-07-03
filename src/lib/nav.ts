@@ -3,11 +3,14 @@ import {
   DoorOpen,
   FileText,
   Gauge,
+  Landmark,
   LayoutGrid,
   ListTree,
+  PiggyBank,
   Receipt,
   Settings2,
   Tags,
+  TrendingUp,
   Users,
   Wallet,
 } from "lucide-react";
@@ -51,6 +54,27 @@ export const apartmentNav: NavSection[] = [
     items: [
       { label: "nav-billing-periods", segment: "billing-periods", icon: FileText },
       { label: "nav-invoices", segment: "invoices", icon: Receipt },
+    ],
+  },
+  {
+    title: "nav-section-finance",
+    items: [
+      { label: "nav-finance", segment: "finance", icon: TrendingUp },
+      {
+        label: "nav-payment-accounts",
+        segment: "payment-accounts",
+        icon: Landmark,
+      },
+      {
+        label: "nav-transaction-categories",
+        segment: "transaction-categories",
+        icon: Tags,
+      },
+      {
+        label: "nav-tenant-deposits",
+        segment: "tenant-deposits",
+        icon: PiggyBank,
+      },
     ],
   },
 ];
