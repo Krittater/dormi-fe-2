@@ -2952,6 +2952,18 @@
     "cn": "搜索房间或电表号..."
   },
   {
+    "code": "search-room-placeholder",
+    "th": "ค้นหาห้อง...",
+    "en": "Search room...",
+    "cn": "搜索房间..."
+  },
+  {
+    "code": "reading-progress",
+    "th": "จดแล้ว {done} / {total} ห้อง",
+    "en": "Recorded {done} of {total} rooms",
+    "cn": "已抄 {done}/{total} 间"
+  },
+  {
     "code": "meter-active",
     "th": "ใช้งานอยู่",
     "en": "Active",

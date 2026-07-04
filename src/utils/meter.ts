@@ -50,6 +50,8 @@ interface RawMeterReading {
   billingPeriodType?: string | null;
   room?: { roomId?: string; name?: string | null } | null;
   roomName?: string | null;
+  /** ชนิดมิเตอร์ของแถว — electricity | water (จาก meters.type) */
+  type?: string | null;
   previousValue: number | null;
   currentValue: number | null;
   unitsUsed: number | null;
@@ -80,7 +82,7 @@ export function normalizeMeterReading(
     readingStatus: raw.readingStatus,
     recordedAt: raw.recordedAt ?? null,
     roomName: raw.room?.name ?? raw.roomName ?? null,
-    meterType: raw.meterType ?? context?.billingPeriodType ?? null,
+    meterType: raw.type ?? raw.meterType ?? context?.billingPeriodType ?? null,
   };
 }
 
