@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Droplets,
-  Gauge,
   Home,
   MoreVertical,
   Plus,
@@ -39,7 +38,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MeterReadingsSheet } from "@/features/meter/components/meter-readings-sheet";
 import { MeterFormDialog } from "@/features/meter/components/meter-form-dialog";
 import { ReadingDialog } from "@/features/meter/components/reading-dialog";
-import { ALL, DEFAULT_PAGE_SIZE, PER_PAGE_OPTIONS } from "@/constants/config";
+import { DEFAULT_PAGE_SIZE, PER_PAGE_OPTIONS } from "@/constants/config";
 import {
   useMeterActions,
   useMeterPeriodDropdown,
@@ -51,35 +50,34 @@ import { cn } from "@/lib/utils";
 import { useT, type TranslateFn } from "@/i18n";
 import { MeterReadingStatus, MeterType } from "@/types";
 import type { Meter, MeterReading } from "@/types";
-import { countMetersByType, normalizePeriodOptions, type DisplayMeter } from "@/utils/meter";
+import {
+  countMetersByType,
+  normalizePeriodOptions,
+  type DisplayMeter,
+} from "@/utils/meter";
 
-type TypeFilter = typeof ALL | MeterType;
 type TopTab = "meters" | "by-period";
 
 const TYPE_META = {
   [MeterType.ELECTRICITY]: {
     Icon: Zap,
-    labelKey: "electricity-meters",
-    shortKey: "meter-type-electricity",
+    labelKey: "meter-type-electricity",
     iconWrap: "bg-primary-tint text-primary",
-    chip: "bg-primary-tint text-primary",
-    badge: "bg-[#FEF3C7] text-[#B45309]",
+    progressBar: "bg-[#FEF3C7]",
+    progressFill: "bg-[#B45309]",
+    progressText: "text-[#B45309]",
+    activeBorder: "border-primary",
   },
   [MeterType.WATER]: {
     Icon: Droplets,
-    labelKey: "water-meters",
-    shortKey: "meter-type-water",
+    labelKey: "meter-type-water",
     iconWrap: "bg-[#EFF6FF] text-[#2563EB]",
-    chip: "bg-[#EFF6FF] text-[#2563EB]",
-    badge: "bg-[#DBEAFE] text-[#1D4ED8]",
+    progressBar: "bg-[#DBEAFE]",
+    progressFill: "bg-[#1D4ED8]",
+    progressText: "text-[#1D4ED8]",
+    activeBorder: "border-[#2563EB]",
   },
 } as const;
-
-function metaFor(type: string) {
-  return type === MeterType.WATER
-    ? TYPE_META[MeterType.WATER]
-    : TYPE_META[MeterType.ELECTRICITY];
-}
 
 export function MetersPage() {
   const t = useT();
@@ -95,7 +93,7 @@ export function MetersPage() {
   );
 
   const [topTab, setTopTab] = useState<TopTab>("meters");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>(ALL);
+  const [pageType, setPageType] = useState<MeterType>(MeterType.ELECTRICITY);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
@@ -109,6 +107,7 @@ export function MetersPage() {
   const [readingDialogOpen, setReadingDialogOpen] = useState(false);
   const [activeReading, setActiveReading] = useState<MeterReading | null>(null);
   const [readingMode, setReadingMode] = useState<"record" | "edit">("record");
+  const [readingsSearch, setReadingsSearch] = useState("");
   const [readingsPage, setReadingsPage] = useState(1);
   const [readingsPerPage, setReadingsPerPage] = useState(DEFAULT_PAGE_SIZE);
 
@@ -121,17 +120,45 @@ export function MetersPage() {
     setReadingsPage(1);
   }, []);
 
+  const changePageType = useCallback((value: MeterType) => {
+    setPageType(value);
+    setPage(1);
+    setReadingsPage(1);
+  }, []);
+
   const { data: periodReadings = [], isLoading: readingsLoading } =
     useMeterReadingsByPeriod(apartmentId, periodId);
 
-  const readingsTotal = periodReadings.length;
+  // Readings for the selected meter type only — the whole page is scoped to one type.
+  const typeReadings = useMemo(
+    () => periodReadings.filter((r) => r.meterType === pageType),
+    [periodReadings, pageType]
+  );
+
+  const recordedCount = useMemo(
+    () =>
+      typeReadings.filter(
+        (r) => r.readingStatus !== MeterReadingStatus.NOT_RECORDED
+      ).length,
+    [typeReadings]
+  );
+
+  const filteredReadings = useMemo(() => {
+    const q = readingsSearch.trim().toLowerCase();
+    if (!q) return typeReadings;
+    return typeReadings.filter((r) =>
+      (r.roomName ?? "").toLowerCase().includes(q)
+    );
+  }, [typeReadings, readingsSearch]);
+
+  const readingsTotal = filteredReadings.length;
   const readingsTotalPages = Math.max(
     1,
     Math.ceil(readingsTotal / readingsPerPage)
   );
   const readingsSafePage = Math.min(readingsPage, readingsTotalPages);
   const readingsStartIndex = (readingsSafePage - 1) * readingsPerPage;
-  const pageReadings = periodReadings.slice(
+  const pageReadings = filteredReadings.slice(
     readingsStartIndex,
     readingsStartIndex + readingsPerPage
   );
@@ -140,6 +167,11 @@ export function MetersPage() {
     readingsStartIndex + readingsPerPage,
     readingsTotal
   );
+
+  const changeReadingsSearch = useCallback((value: string) => {
+    setReadingsSearch(value);
+    setReadingsPage(1);
+  }, []);
 
   const changeReadingsPerPage = useCallback((value: number) => {
     setReadingsPerPage(value);
@@ -158,19 +190,14 @@ export function MetersPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return meters.filter((m) => {
-      if (typeFilter !== ALL && m.type !== typeFilter) return false;
+      if (m.type !== pageType) return false;
       if (!q) return true;
       return (
         (m.roomName ?? "").toLowerCase().includes(q) ||
         (m.meterNumber ?? "").toLowerCase().includes(q)
       );
     });
-  }, [meters, typeFilter, search]);
-
-  const changeTypeFilter = useCallback((value: TypeFilter) => {
-    setTypeFilter(value);
-    setPage(1);
-  }, []);
+  }, [meters, pageType, search]);
 
   const changeSearch = useCallback((value: string) => {
     setSearch(value);
@@ -225,21 +252,35 @@ export function MetersPage() {
           <span className="font-medium text-gray-900">{r.roomName ?? "-"}</span>
         ),
       },
-      { key: "type", header: t("type"), cell: (r) => r.meterType ?? "-" },
       {
         key: "previous",
         header: t("previous"),
+        className: "text-right",
         cell: (r) => formatNumber(r.previousValue ?? 0),
       },
       {
         key: "current",
         header: t("current"),
-        cell: (r) => formatNumber(r.currentValue ?? 0),
+        className: "text-right",
+        cell: (r) =>
+          r.currentValue != null ? (
+            formatNumber(r.currentValue)
+          ) : (
+            <span className="text-gray-400">—</span>
+          ),
       },
       {
         key: "units",
         header: t("units-used"),
-        cell: (r) => formatNumber(r.unitsUsed ?? 0),
+        className: "text-right",
+        cell: (r) =>
+          r.unitsUsed != null ? (
+            <span className="font-medium text-gray-900">
+              {formatNumber(r.unitsUsed)}
+            </span>
+          ) : (
+            <span className="text-gray-400">—</span>
+          ),
       },
       {
         key: "status",
@@ -253,9 +294,17 @@ export function MetersPage() {
         hideOnMobile: true,
         cell: (r) =>
           r.readingStatus !== MeterReadingStatus.BILLED ? (
-            <Button variant="outline" size="sm" onClick={() => openReading(r)}>
+            <Button
+              variant={
+                r.readingStatus === MeterReadingStatus.NOT_RECORDED
+                  ? "default"
+                  : "outline"
+              }
+              size="sm"
+              onClick={() => openReading(r)}
+            >
               {r.readingStatus === MeterReadingStatus.NOT_RECORDED
-                ? t("save")
+                ? t("record-value")
                 : t("edit")}
             </Button>
           ) : null,
@@ -277,47 +326,14 @@ export function MetersPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          t={t}
-          loading={isLoading}
-          icon={<Zap className="h-5 w-5" />}
-          iconWrap={TYPE_META[MeterType.ELECTRICITY].iconWrap}
-          label={t("electricity-meters")}
-          value={electricityCount}
-          active={topTab === "meters" && typeFilter === MeterType.ELECTRICITY}
-          onClick={() => {
-            setTopTab("meters");
-            changeTypeFilter(MeterType.ELECTRICITY);
-          }}
-        />
-        <StatCard
-          t={t}
-          loading={isLoading}
-          icon={<Droplets className="h-5 w-5" />}
-          iconWrap={TYPE_META[MeterType.WATER].iconWrap}
-          label={t("water-meters")}
-          value={waterCount}
-          active={topTab === "meters" && typeFilter === MeterType.WATER}
-          onClick={() => {
-            setTopTab("meters");
-            changeTypeFilter(MeterType.WATER);
-          }}
-        />
-        <StatCard
-          t={t}
-          loading={isLoading}
-          icon={<Gauge className="h-5 w-5" />}
-          iconWrap="bg-[#FEF3C7] text-[#B45309]"
-          label={t("all-meters")}
-          value={meters.length}
-          active={topTab === "meters" && typeFilter === ALL}
-          onClick={() => {
-            setTopTab("meters");
-            changeTypeFilter(ALL);
-          }}
-        />
-      </div>
+      <TypeToggle
+        t={t}
+        value={pageType}
+        electricityCount={electricityCount}
+        waterCount={waterCount}
+        loading={isLoading}
+        onChange={changePageType}
+      />
 
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="flex gap-6 border-b border-gray-200 px-4">
@@ -337,40 +353,15 @@ export function MetersPage() {
 
         {topTab === "meters" ? (
           <div className="space-y-4 p-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="inline-flex w-fit items-center gap-1 rounded-lg bg-gray-100 p-1">
-                <FilterPill
-                  active={typeFilter === ALL}
-                  onClick={() => changeTypeFilter(ALL)}
-                >
-                  {t("all")}
-                </FilterPill>
-                <FilterPill
-                  active={typeFilter === MeterType.ELECTRICITY}
-                  onClick={() => changeTypeFilter(MeterType.ELECTRICITY)}
-                >
-                  <Zap className="h-3.5 w-3.5" />
-                  {t("meter-type-electricity")}
-                </FilterPill>
-                <FilterPill
-                  active={typeFilter === MeterType.WATER}
-                  onClick={() => changeTypeFilter(MeterType.WATER)}
-                >
-                  <Droplets className="h-3.5 w-3.5" />
-                  {t("meter-type-water")}
-                </FilterPill>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 lg:w-72">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder={t("search-meter-placeholder")}
-                    value={search}
-                    onChange={(e) => changeSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+            <div className="flex items-center justify-end">
+              <div className="relative w-full lg:w-72">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder={t("search-meter-placeholder")}
+                  value={search}
+                  onChange={(e) => changeSearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
             </div>
 
@@ -383,58 +374,17 @@ export function MetersPage() {
             />
 
             {!isLoading && total > 0 && (
-              <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-4 sm:flex-row">
-                <p className="text-sm text-gray-500">
-                  {t("showing-range", { from, to, total })}
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
-                      {t("per-page")}
-                    </span>
-                    <Select
-                      value={String(perPage)}
-                      onValueChange={(v) => changePerPage(Number(v))}
-                    >
-                      <SelectTrigger className="h-8 w-[72px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PER_PAGE_OPTIONS.map((n) => (
-                          <SelectItem key={n} value={String(n)}>
-                            {n}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={safePage <= 1}
-                      onClick={() => setPage(safePage - 1)}
-                      aria-label={t("previous")}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="min-w-8 rounded-md bg-primary px-3 py-1 text-center text-sm font-medium text-primary-foreground">
-                      {safePage}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      disabled={safePage >= totalPages}
-                      onClick={() => setPage(safePage + 1)}
-                      aria-label={t("next")}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <Pagination
+                t={t}
+                from={from}
+                to={to}
+                total={total}
+                perPage={perPage}
+                onPerPageChange={changePerPage}
+                page={safePage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
             )}
           </div>
         ) : (
@@ -446,20 +396,41 @@ export function MetersPage() {
               />
             ) : (
               <>
-                <div className="max-w-xs">
-                  <Select value={periodId} onValueChange={changePeriodId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("select-billing-period")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {periods.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="w-full max-w-xs">
+                    <Select value={periodId} onValueChange={changePeriodId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("select-billing-period")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {periods.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative w-full lg:w-72">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      placeholder={t("search-room-placeholder")}
+                      value={readingsSearch}
+                      onChange={(e) => changeReadingsSearch(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
                 </div>
+
+                {!readingsLoading && typeReadings.length > 0 && (
+                  <ReadingProgress
+                    t={t}
+                    type={pageType}
+                    done={recordedCount}
+                    total={typeReadings.length}
+                  />
+                )}
+
                 <DataTable
                   columns={readingColumns}
                   data={pageReadings}
@@ -470,64 +441,17 @@ export function MetersPage() {
                 />
 
                 {!readingsLoading && readingsTotal > 0 && (
-                  <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-4 sm:flex-row">
-                    <p className="text-sm text-gray-500">
-                      {t("showing-range", {
-                        from: readingsFrom,
-                        to: readingsTo,
-                        total: readingsTotal,
-                      })}
-                    </p>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">
-                          {t("per-page")}
-                        </span>
-                        <Select
-                          value={String(readingsPerPage)}
-                          onValueChange={(v) =>
-                            changeReadingsPerPage(Number(v))
-                          }
-                        >
-                          <SelectTrigger className="h-8 w-[72px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PER_PAGE_OPTIONS.map((n) => (
-                              <SelectItem key={n} value={String(n)}>
-                                {n}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          disabled={readingsSafePage <= 1}
-                          onClick={() => setReadingsPage(readingsSafePage - 1)}
-                          aria-label={t("previous")}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <span className="min-w-8 rounded-md bg-primary px-3 py-1 text-center text-sm font-medium text-primary-foreground">
-                          {readingsSafePage}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          disabled={readingsSafePage >= readingsTotalPages}
-                          onClick={() => setReadingsPage(readingsSafePage + 1)}
-                          aria-label={t("next")}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  <Pagination
+                    t={t}
+                    from={readingsFrom}
+                    to={readingsTo}
+                    total={readingsTotal}
+                    perPage={readingsPerPage}
+                    onPerPageChange={changeReadingsPerPage}
+                    page={readingsSafePage}
+                    totalPages={readingsTotalPages}
+                    onPageChange={setReadingsPage}
+                  />
                 )}
               </>
             )}
@@ -571,63 +495,210 @@ export function MetersPage() {
   );
 }
 
-function StatCard({
+function TypeToggle({
   t,
-  loading,
-  icon,
-  iconWrap,
-  label,
   value,
+  electricityCount,
+  waterCount,
+  loading,
+  onChange,
+}: {
+  t: TranslateFn;
+  value: MeterType;
+  electricityCount: number;
+  waterCount: number;
+  loading: boolean;
+  onChange: (value: MeterType) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:inline-grid sm:auto-cols-fr sm:grid-flow-col">
+      <TypeToggleButton
+        t={t}
+        type={MeterType.ELECTRICITY}
+        active={value === MeterType.ELECTRICITY}
+        count={electricityCount}
+        loading={loading}
+        onClick={() => onChange(MeterType.ELECTRICITY)}
+      />
+      <TypeToggleButton
+        t={t}
+        type={MeterType.WATER}
+        active={value === MeterType.WATER}
+        count={waterCount}
+        loading={loading}
+        onClick={() => onChange(MeterType.WATER)}
+      />
+    </div>
+  );
+}
+
+function TypeToggleButton({
+  t,
+  type,
   active,
+  count,
+  loading,
   onClick,
 }: {
   t: TranslateFn;
-  loading: boolean;
-  icon: React.ReactNode;
-  iconWrap: string;
-  label: string;
-  value: number;
+  type: MeterType;
   active: boolean;
+  count: number;
+  loading: boolean;
   onClick: () => void;
 }) {
+  const meta = TYPE_META[type];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border bg-white p-4 text-left transition-colors sm:min-w-[220px]",
+        active
+          ? cn(meta.activeBorder, "ring-1 ring-primary/10")
+          : "border-gray-200 hover:border-gray-300"
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg",
+          meta.iconWrap
+        )}
+      >
+        <meta.Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "truncate text-sm font-medium",
+            active ? "text-gray-900" : "text-gray-600"
+          )}
+        >
+          {t(meta.labelKey)}
+        </p>
+        {loading ? (
+          <Skeleton className="mt-1 h-6 w-14" />
+        ) : (
+          <p className="mt-0.5 flex items-baseline gap-1">
+            <span className="text-xl font-semibold text-gray-900">{count}</span>
+            <span className="text-xs text-gray-500">{t("meters-unit")}</span>
+          </p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+function ReadingProgress({
+  t,
+  type,
+  done,
+  total,
+}: {
+  t: TranslateFn;
+  type: MeterType;
+  done: number;
+  total: number;
+}) {
+  const meta = TYPE_META[type];
+  const percent = total === 0 ? 0 : Math.round((done / total) * 100);
   return (
     <div
       className={cn(
-        "rounded-xl border bg-white p-4 transition-colors",
-        active ? "border-primary ring-1 ring-primary/20" : "border-gray-200"
+        "flex flex-col gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center",
+        meta.progressBar
       )}
     >
-      <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-            iconWrap
-          )}
-        >
-          {icon}
+      <p className={cn("text-sm font-medium", meta.progressText)}>
+        {t("reading-progress", { done, total })}
+      </p>
+      <div className="flex flex-1 items-center gap-3">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/60">
+          <div
+            className={cn("h-full rounded-full", meta.progressFill)}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <span className={cn("text-xs font-semibold", meta.progressText)}>
+          {percent}%
         </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm text-gray-500">{label}</p>
-          {loading ? (
-            <Skeleton className="mt-1 h-7 w-12" />
-          ) : (
-            <p className="mt-0.5 flex items-baseline gap-1">
-              <span className="text-2xl font-semibold text-gray-900">
-                {value}
-              </span>
-              <span className="text-xs text-gray-500">{t("meters-unit")}</span>
-            </p>
-          )}
+      </div>
+    </div>
+  );
+}
+
+function Pagination({
+  t,
+  from,
+  to,
+  total,
+  perPage,
+  onPerPageChange,
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  t: TranslateFn;
+  from: number;
+  to: number;
+  total: number;
+  perPage: number;
+  onPerPageChange: (value: number) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-4 sm:flex-row">
+      <p className="text-sm text-gray-500">
+        {t("showing-range", { from, to, total })}
+      </p>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">{t("per-page")}</span>
+          <Select
+            value={String(perPage)}
+            onValueChange={(v) => onPerPageChange(Number(v))}
+          >
+            <SelectTrigger className="h-8 w-[72px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PER_PAGE_OPTIONS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            aria-label={t("previous")}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="min-w-8 rounded-md bg-primary px-3 py-1 text-center text-sm font-medium text-primary-foreground">
+            {page}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            aria-label={t("next")}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onClick}
-        className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-      >
-        {t("view-details")}
-        <ChevronRight className="h-3.5 w-3.5" />
-      </button>
     </div>
   );
 }
@@ -650,32 +721,6 @@ function TabButton({
         active
           ? "border-primary text-primary"
           : "border-transparent text-gray-500 hover:text-gray-700"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function FilterPill({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-        active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-gray-600 hover:text-gray-900"
       )}
     >
       {children}
@@ -723,7 +768,6 @@ function MetersTable({
             <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500">
               <th className="px-4 py-3">{t("room")}</th>
               <th className="px-4 py-3">{t("meter-number")}</th>
-              <th className="px-4 py-3">{t("type")}</th>
               <th className="px-4 py-3">{t("status")}</th>
               <th className="px-4 py-3">{t("last-usage")}</th>
               <th className="px-4 py-3 text-right">{t("manage-column")}</th>
@@ -745,7 +789,6 @@ function MetersTable({
 
       <div className="space-y-3 md:hidden">
         {meters.map((m) => {
-          const meta = metaFor(m.type);
           const active = (m.status ?? "active") !== "inactive";
           return (
             <div
@@ -775,23 +818,9 @@ function MetersTable({
               </div>
               <dl className="mt-3 space-y-2 text-sm">
                 <Row label={t("meter-number")}>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="font-medium text-gray-900">
-                      {m.meterNumber || "-"}
-                    </span>
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium",
-                        meta.chip
-                      )}
-                    >
-                      <meta.Icon className="h-3 w-3" />
-                      {t(meta.labelKey)}
-                    </span>
-                  </div>
-                </Row>
-                <Row label={t("type")}>
-                  <TypeBadge t={t} type={m.type} />
+                  <span className="font-medium text-gray-900">
+                    {m.meterNumber || "-"}
+                  </span>
                 </Row>
                 <Row label={t("status")}>
                   <StatusDot active={active}>
@@ -829,7 +858,6 @@ function MeterRow({
   onView: (m: DisplayMeter) => void;
   onDelete: (m: DisplayMeter) => void;
 }) {
-  const meta = metaFor(meter.type);
   const active = (meter.status ?? "active") !== "inactive";
   return (
     <tr className="bg-white hover:bg-gray-50">
@@ -848,18 +876,6 @@ function MeterRow({
       </td>
       <td className="px-4 py-3">
         <p className="font-medium text-gray-900">{meter.meterNumber || "-"}</p>
-        <span
-          className={cn(
-            "mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium",
-            meta.chip
-          )}
-        >
-          <meta.Icon className="h-3 w-3" />
-          {t(meta.labelKey)}
-        </span>
-      </td>
-      <td className="px-4 py-3">
-        <TypeBadge t={t} type={meter.type} />
       </td>
       <td className="px-4 py-3">
         <StatusDot active={active}>
@@ -924,20 +940,6 @@ function RoomIcon() {
   return (
     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
       <Home className="h-4 w-4" />
-    </span>
-  );
-}
-
-function TypeBadge({ t, type }: { t: TranslateFn; type: string }) {
-  const meta = metaFor(type);
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        meta.badge
-      )}
-    >
-      {t(meta.shortKey)}
     </span>
   );
 }
