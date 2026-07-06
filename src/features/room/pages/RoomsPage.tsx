@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -71,7 +71,7 @@ import { useT } from "@/i18n";
 
 export function RoomsPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");

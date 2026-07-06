@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { Droplet, Pencil, Plus, Trash2, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import type { RoomCharge } from "@/types";
 
 export function RoomChargesPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const { data: setupRows = [], isLoading } = useRoomChargeSetup(apartmentId);
   const { data: dropdowns } = useRoomChargeDropdowns(apartmentId);

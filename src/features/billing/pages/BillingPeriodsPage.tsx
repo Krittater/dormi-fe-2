@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
 import { ChevronRight, Loader2, Plus } from "lucide-react";
 
@@ -58,7 +59,7 @@ import type { BillingPeriod } from "@/types";
 
 export function BillingPeriodsPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
   const router = useRouter();
 
   const [tab, setTab] = useState<string>(ALL);

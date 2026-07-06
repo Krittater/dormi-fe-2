@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import {
   AlertTriangle,
   ArrowRight,
@@ -74,8 +75,7 @@ interface Kpi {
 }
 
 export function ApartmentOverviewPage() {
-  const params = useParams<{ apartmentId: string }>();
-  const apartmentId = params.apartmentId;
+  const apartmentId = useApartmentId();
   const router = useRouter();
   const t = useT();
 

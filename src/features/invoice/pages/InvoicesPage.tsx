@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useQueries } from "@tanstack/react-query";
 import { Plus, Send, FileDown, X, Check, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -59,7 +60,7 @@ const EMPTY_PERIODS: Array<{ id: string; name?: string }> = [];
 
 export function InvoicesPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
   const router = useRouter();
 
   const [status, setStatus] = useState<string>(ALL);

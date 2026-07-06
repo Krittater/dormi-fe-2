@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import {
   ChevronLeft,
   ChevronRight,
@@ -81,7 +81,7 @@ const TYPE_META = {
 
 export function MetersPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const { data: meters = [], isLoading } = useMeters(apartmentId);
   const { data: periodItems = [] } = useMeterPeriodDropdown(apartmentId);
