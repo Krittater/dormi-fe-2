@@ -1,0 +1,31 @@
+# Render Blueprint — static site + SPA rewrite สำหรับ dynamic route
+# หน้าบ้าน build เป็น static export (placeholder "_" ที่ dynamic route)
+# → ต้อง rewrite path ที่มี id จริง ให้ชี้ shell "_" (client อ่าน id จริงจาก URL)
+#
+# ⚠️ ถ้า service เดิมสร้างจาก dashboard (ไม่ใช่ Blueprint) → ไฟล์นี้จะไม่ถูกใช้อัตโนมัติ
+#    ต้องไปเพิ่ม Rewrite Rules ใน dashboard เอง (ดู DEPLOY.md) หรือ deploy ใหม่แบบ Blueprint
+services:
+  - type: web
+    name: dormi-web
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./out
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://dormi-api.dormi-linkandrent.com
+    routes:
+      # nested (2 dynamic segment) — ต้องมาก่อน single (match ตามลำดับ)
+      - type: rewrite
+        source: /apartments/:aid/invoices/:iid
+        destination: /apartments/_/invoices/_/index.html
+      - type: rewrite
+        source: /apartments/:aid/billing-periods/:bid
+        destination: /apartments/_/billing-periods/_/index.html
+      # single dynamic subpage: /apartments/<id>/<page>
+      - type: rewrite
+        source: /apartments/:aid/:page
+        destination: /apartments/_/:page/index.html
+      # apartment root: /apartments/<id>
+      - type: rewrite
+        source: /apartments/:aid
+        destination: /apartments/_/index.html
