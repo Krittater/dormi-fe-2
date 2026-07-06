@@ -39,6 +39,7 @@ import type { Invoice } from "@/types";
 const STATUS_CARDS: InvoiceStatus[] = [
   InvoiceStatus.DRAFT,
   InvoiceStatus.UNPAID,
+  InvoiceStatus.PARTIAL,
   InvoiceStatus.OVERDUE,
   InvoiceStatus.PAID,
   InvoiceStatus.CANCELLED,
@@ -47,6 +48,7 @@ const STATUS_CARDS: InvoiceStatus[] = [
 const STATUS_TEXT: Record<InvoiceStatus, string> = {
   [InvoiceStatus.DRAFT]: "text-gray-600",
   [InvoiceStatus.UNPAID]: "text-amber-600",
+  [InvoiceStatus.PARTIAL]: "text-blue-600",
   [InvoiceStatus.OVERDUE]: "text-red-600",
   [InvoiceStatus.PAID]: "text-green-600",
   [InvoiceStatus.CANCELLED]: "text-gray-400",

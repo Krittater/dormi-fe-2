@@ -59,6 +59,16 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
         payload?.message ||
         translate("api-error-with-status", { status: String(status) });
 
+      // client-side auth guard (static export ไม่มี proxy/middleware ฝั่ง server แล้ว)
+      // 401 = ยังไม่ login / session หมด → เด้งไปหน้า login (กัน loop ถ้าอยู่หน้า login อยู่แล้ว)
+      if (typeof window !== "undefined" && status === 401) {
+        const { pathname, search } = window.location;
+        if (!pathname.startsWith("/login")) {
+          const redirect = encodeURIComponent(pathname + search);
+          window.location.href = `/login?redirect=${redirect}`;
+        }
+      }
+
       return Promise.reject(
         new ApiError(message, payload?.code ?? status, payload?.data)
       );
