@@ -17,7 +17,7 @@ import { ReadingDialog } from "@/features/meter/components/reading-dialog";
 import { useMeterReadings } from "@/hooks/useMeters";
 import { formatDate, formatNumber } from "@/lib/format";
 import { useT } from "@/i18n";
-import { MeterReadingStatus } from "@/types";
+import { MeterReadingStatus, METER_TYPE_CODES, MeterType } from "@/types";
 import type { Meter, MeterReading } from "@/types";
 
 interface Props {
@@ -50,6 +50,10 @@ export function MeterReadingsSheet({
     }));
   }, [rawReadings, meter]);
 
+  const meterTypeKey = meter
+    ? METER_TYPE_CODES[meter.type.toLowerCase() as MeterType]
+    : undefined;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [active, setActive] = useState<MeterReading | null>(null);
   const [mode, setMode] = useState<"record" | "edit">("record");
@@ -75,7 +79,8 @@ export function MeterReadingsSheet({
               : ""}
           </SheetTitle>
           <SheetDescription>
-            {meter?.type} {meter?.meterNumber ? `· ${meter.meterNumber}` : ""}
+            {meterTypeKey ? t(meterTypeKey) : ""}
+            {meter?.meterNumber ? ` · ${meter.meterNumber}` : ""}
           </SheetDescription>
         </SheetHeader>
 

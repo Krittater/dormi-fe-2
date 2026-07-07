@@ -1,17 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
-import { Droplet, Pencil, Plus, Trash2, Zap } from "lucide-react";
+import { Check, Droplet, Loader2, Pencil, X, Zap } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
-import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { RoomChargeFormDialog } from "@/features/room-charge/components/RoomChargeFormDialog";
 import { SKELETON_ROWS_CARDS } from "@/constants/config";
 import {
   useRoomChargeActions,
@@ -19,93 +20,126 @@ import {
   useRoomChargeSetup,
 } from "@/hooks/useChargeTypes";
 import { useT } from "@/i18n";
-import { formatCurrency } from "@/lib/format";
-import type { SetupRow } from "@/utils/room-charge";
-import type { RoomCharge } from "@/types";
+import { formatCurrency, getApiErrorMessage } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { SetupCharge } from "@/utils/room-charge";
+import type { ChargeType } from "@/types";
 
 export function RoomChargesPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
-  const { data: setupRows = [], isLoading } = useRoomChargeSetup(apartmentId);
+  const { data: setupRows, isLoading } = useRoomChargeSetup(apartmentId);
   const { data: dropdowns } = useRoomChargeDropdowns(apartmentId);
-  const { saveSetup, remove } = useRoomChargeActions(apartmentId);
+  const { saveSetup, create, remove } = useRoomChargeActions(apartmentId);
 
-  const [rows, setRows] = useState<SetupRow[]>([]);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<RoomCharge | null>(null);
-  const [addRoomId, setAddRoomId] = useState<string | undefined>();
-  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(
-    null
+  const [editingChargeId, setEditingChargeId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ amount: "", unit: "" });
+  const [togglingKey, setTogglingKey] = useState<string | null>(null);
+
+  // อ่านจาก React Query cache ตรง ๆ — optimistic update จัดการใน useRoomChargeActions
+  const rows = setupRows ?? [];
+
+  const chargeTypes = useMemo(
+    () => (dropdowns?.chargeTypes ?? []).filter((c) => c.isActive),
+    [dropdowns]
   );
-
-  const rooms = dropdowns?.rooms ?? [];
-  const chargeTypes = dropdowns?.chargeTypes ?? [];
 
   useEffect(() => {
-    setRows(setupRows);
-  }, [setupRows]);
-
-  const persistFlags = useCallback(
-    (nextRows: SetupRow[]) => {
-      const charges = nextRows.flatMap((row) =>
-        row.room.charges.map((c) => ({
-          id: c.id,
-          amount: c.amount,
-          unit: c.unit,
-          isCalWater: row.room.isCalWater,
-          isCalElectric: row.room.isCalElectric,
-        }))
-      );
-      if (charges.length === 0) return;
-      saveSetup.mutate(charges);
-    },
-    [saveSetup]
-  );
+    if (!editingChargeId) return;
+    const stillExists = (setupRows ?? []).some((row) =>
+      row.room.charges.some((c) => c.id === editingChargeId)
+    );
+    if (!stillExists) setEditingChargeId(null);
+  }, [setupRows, editingChargeId]);
 
   const toggleRoomFlag = useCallback(
     (roomId: string, key: "isCalWater" | "isCalElectric", value: boolean) => {
-      const next = rows.map((row) =>
-        row.room.id !== roomId
-          ? row
-          : { room: { ...row.room, [key]: value } }
+      const row = (setupRows ?? []).find((r) => r.room.id === roomId);
+      if (!row || row.room.charges.length === 0) return;
+      const nextWater = key === "isCalWater" ? value : row.room.isCalWater;
+      const nextElectric =
+        key === "isCalElectric" ? value : row.room.isCalElectric;
+      // ส่งเฉพาะ charges ของห้องที่เปลี่ยน (delta) — ไม่ส่งทั้งหน้าเหมือนเดิม
+      saveSetup.mutate(
+        row.room.charges.map((c) => ({
+          id: c.id,
+          amount: c.amount,
+          unit: c.unit ?? null,
+          isCalWater: nextWater,
+          isCalElectric: nextElectric,
+        }))
       );
-      setRows(next);
-      persistFlags(next);
     },
-    [rows, persistFlags]
+    [setupRows, saveSetup]
   );
 
-  const handleDelete = useCallback(async () => {
-    if (!deleting) return;
-    await remove.mutateAsync(deleting.id);
-    setDeleting(null);
-  }, [deleting, remove]);
+  const toggleChargeType = useCallback(
+    async (roomId: string, chargeType: ChargeType, checked: boolean) => {
+      const key = `${roomId}:${chargeType.id}`;
+      setTogglingKey(key);
+      try {
+        const roomRow = (setupRows ?? []).find((r) => r.room.id === roomId);
+        const existing = roomRow?.room.charges.find(
+          (c) => c.chargeTypeId === chargeType.id
+        );
 
-  const openCreate = useCallback((roomId: string) => {
-    setEditing(null);
-    setAddRoomId(roomId);
-    setFormOpen(true);
+        if (checked) {
+          if (existing) return;
+          await create.mutateAsync({
+            roomId,
+            chargeTypeId: chargeType.id,
+            amount: chargeType.defaultAmount ?? 0,
+            unit: 1,
+          });
+        } else if (existing) {
+          if (editingChargeId === existing.id) setEditingChargeId(null);
+          await remove.mutateAsync(existing.id);
+        }
+      } catch (err) {
+        toast.error(getApiErrorMessage(err));
+      } finally {
+        setTogglingKey(null);
+      }
+    },
+    [setupRows, create, remove, editingChargeId]
+  );
+
+  const startEdit = useCallback((charge: SetupCharge) => {
+    setEditingChargeId(charge.id);
+    setEditDraft({
+      amount: String(charge.amount),
+      unit: charge.unit != null ? String(charge.unit) : "",
+    });
   }, []);
 
-  const openEdit = useCallback(
-    (
-      charge: SetupRow["room"]["charges"][number],
-      roomId: string
-    ) => {
-      setAddRoomId(undefined);
-      setEditing({
-        id: charge.id,
-        apartmentId,
-        roomId,
-        chargeTypeId: charge.chargeTypeId,
-        amount: charge.amount,
-        unit: charge.unit,
-        description: charge.description,
-      });
-      setFormOpen(true);
+  const cancelEdit = useCallback(() => {
+    setEditingChargeId(null);
+  }, []);
+
+  const saveEdit = useCallback(
+    async (chargeId: string) => {
+      const amount = Number(editDraft.amount);
+      if (!Number.isFinite(amount) || amount < 0) {
+        toast.error(t("enter-a-number"));
+        return;
+      }
+
+      const unit =
+        editDraft.unit.trim() === "" ? null : Number(editDraft.unit);
+      if (unit != null && (!Number.isFinite(unit) || unit < 0)) {
+        toast.error(t("enter-a-number"));
+        return;
+      }
+
+      try {
+        await saveSetup.mutateAsync([{ id: chargeId, amount, unit }]);
+        setEditingChargeId(null);
+      } catch (err) {
+        toast.error(getApiErrorMessage(err));
+      }
     },
-    [apartmentId]
+    [editDraft, saveSetup, t]
   );
 
   return (
@@ -125,6 +159,11 @@ export function RoomChargesPage() {
         <EmptyState
           title={t("no-rooms-to-setup")}
           description={t("add-rooms-first-description")}
+        />
+      ) : chargeTypes.length === 0 ? (
+        <EmptyState
+          title={t("no-charge-types")}
+          description={t("no-charge-types-description")}
         />
       ) : (
         <div className="space-y-4">
@@ -170,109 +209,155 @@ export function RoomChargesPage() {
                         }
                       />
                     </label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openCreate(room.id)}
-                      disabled={chargeTypes.length === 0}
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t("add-charge")}
-                    </Button>
                   </div>
                 </div>
 
-                {room.charges.length === 0 ? (
-                  <p className="mt-4 text-sm text-gray-500">
-                    {t("no-recurring-charges")}
-                  </p>
-                ) : (
-                  <div className="mt-4 space-y-2">
-                    {room.charges.map((c) => (
+                <div className="mt-4 space-y-2">
+                  {chargeTypes.map((chargeType) => {
+                    const charge = room.charges.find(
+                      (c) => c.chargeTypeId === chargeType.id
+                    );
+                    const isChecked = Boolean(charge);
+                    const isEditing =
+                      charge != null && editingChargeId === charge.id;
+                    const toggleKey = `${room.id}:${chargeType.id}`;
+                    const isToggling = togglingKey === toggleKey;
+
+                    return (
                       <div
-                        key={c.id}
-                        className="grid grid-cols-1 items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:grid-cols-12"
+                        key={chargeType.id}
+                        className={cn(
+                          "flex items-start gap-3 rounded-lg border p-3 transition-colors",
+                          isChecked
+                            ? "border-primary bg-primary-tint ring-1 ring-primary/10"
+                            : "border-gray-100 bg-gray-50"
+                        )}
                       >
-                        <div className="sm:col-span-5">
-                          <p className="text-sm font-medium text-gray-900">
-                            {c.chargeTypeName ?? t("charge")}
-                          </p>
-                          {c.description ? (
+                        <Checkbox
+                          id={`${room.id}-${chargeType.id}`}
+                          checked={isChecked}
+                          disabled={isToggling || create.isPending || remove.isPending}
+                          onCheckedChange={(v) =>
+                            void toggleChargeType(
+                              room.id,
+                              chargeType,
+                              v === true
+                            )
+                          }
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <label
+                            htmlFor={`${room.id}-${chargeType.id}`}
+                            className={cn(
+                              "cursor-pointer text-sm font-medium",
+                              isChecked ? "text-primary" : "text-gray-500"
+                            )}
+                          >
+                            {chargeType.name}
+                          </label>
+                          {!isChecked && chargeType.defaultAmount != null && (
                             <p className="mt-0.5 text-xs text-gray-500">
-                              {c.description}
+                              {formatCurrency(chargeType.defaultAmount)}
                             </p>
-                          ) : null}
+                          )}
                         </div>
-                        <div className="sm:col-span-3">
-                          <p className="text-xs text-gray-500">
-                            {t("charge-amount")}
-                          </p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {formatCurrency(c.amount)}
-                          </p>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <p className="text-xs text-gray-500">{t("unit")}</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {c.unit != null ? c.unit : "—"}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 sm:col-span-2 sm:justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            aria-label={t("edit")}
-                            onClick={() => openEdit(c, room.id)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive"
-                            aria-label={t("delete")}
-                            onClick={() =>
-                              setDeleting({
-                                id: c.id,
-                                name: c.chargeTypeName ?? t("charge"),
-                              })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+
+                        {isChecked && charge ? (
+                          isEditing ? (
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  value={editDraft.amount}
+                                  onChange={(e) =>
+                                    setEditDraft((d) => ({
+                                      ...d,
+                                      amount: e.target.value,
+                                    }))
+                                  }
+                                  className="h-8 w-28"
+                                  aria-label={t("charge-amount")}
+                                />
+                                <span className="text-sm text-gray-400">×</span>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  value={editDraft.unit}
+                                  onChange={(e) =>
+                                    setEditDraft((d) => ({
+                                      ...d,
+                                      unit: e.target.value,
+                                    }))
+                                  }
+                                  className="h-8 w-20"
+                                  placeholder="—"
+                                  aria-label={t("unit")}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-success"
+                                  aria-label={t("save")}
+                                  disabled={saveSetup.isPending}
+                                  onClick={() => void saveEdit(charge.id)}
+                                >
+                                  {saveSetup.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Check className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label={t("cancel")}
+                                  disabled={saveSetup.isPending}
+                                  onClick={cancelEdit}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                {formatCurrency(charge.amount)}
+                              </span>
+                              {charge.unit != null ? (
+                                <span className="text-sm text-gray-500">
+                                  × {charge.unit}
+                                </span>
+                              ) : null}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label={t("edit")}
+                                onClick={() => startEdit(charge)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )
+                        ) : isToggling ? (
+                          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-gray-400" />
+                        ) : null}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-
-      <RoomChargeFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        apartmentId={apartmentId}
-        charge={editing}
-        rooms={rooms}
-        chargeTypes={chargeTypes}
-        defaultRoomId={addRoomId}
-      />
-
-      <ConfirmDialog
-        open={Boolean(deleting)}
-        onOpenChange={(o) => !o && setDeleting(null)}
-        title={t("delete-charge")}
-        description={t("delete-charge-from-room-description", {
-          name: deleting?.name ?? "",
-        })}
-        confirmLabel={t("delete")}
-        destructive
-        onConfirm={handleDelete}
-      />
     </div>
   );
 }

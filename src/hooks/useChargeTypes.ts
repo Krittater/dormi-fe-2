@@ -11,6 +11,16 @@ import {
 } from "@/queries/room.query";
 import { chargeTypeService } from "@/services/charge-type.service";
 import { roomChargeService } from "@/services/room-charge.service";
+import type { SetupRow } from "@/utils/room-charge";
+
+/** Payload หนึ่งรายการที่ส่งเข้า saveSetup (charge เดี่ยว + flag ระดับห้อง) */
+export interface SaveSetupCharge {
+  id: string;
+  amount: number;
+  unit?: number | null;
+  isCalWater?: boolean;
+  isCalElectric?: boolean;
+}
 
 export function useChargeTypes(apartmentId: string) {
   return useQuery(chargeTypeQueries.list(apartmentId));
@@ -79,11 +89,49 @@ export function useRoomChargeActions(apartmentId: string) {
     });
   };
 
+  const setupKey = qk.roomCharges.setup(apartmentId);
+
   const saveSetup = useMutation({
-    mutationFn: (charges: unknown[]) =>
+    mutationFn: (charges: SaveSetupCharge[]) =>
       roomChargeService.saveSetup(apartmentId, charges),
+    // Optimistic update: สะท้อน amount/unit และ flag ระดับห้องลง cache ทันที
+    // เพื่อให้ switch/การแก้ค่าตอบสนองทันที โดยไม่ต้องรอ refetch.
+    onMutate: async (charges: SaveSetupCharge[]) => {
+      await queryClient.cancelQueries({ queryKey: setupKey });
+      const previous = queryClient.getQueryData<SetupRow[]>(setupKey);
+      if (previous) {
+        const byId = new Map(charges.map((c) => [c.id, c]));
+        const next = previous.map((row) => {
+          // ดึง flag ระดับห้องจาก charge ใดก็ได้ในห้องนี้ที่อยู่ใน payload
+          const flagSource = row.room.charges.find((c) => byId.has(c.id));
+          const flags = flagSource ? byId.get(flagSource.id) : undefined;
+          return {
+            room: {
+              ...row.room,
+              isCalWater: flags?.isCalWater ?? row.room.isCalWater,
+              isCalElectric: flags?.isCalElectric ?? row.room.isCalElectric,
+              charges: row.room.charges.map((c) => {
+                const upd = byId.get(c.id);
+                return upd
+                  ? { ...c, amount: upd.amount, unit: upd.unit ?? null }
+                  : c;
+              }),
+            },
+          };
+        });
+        queryClient.setQueryData(setupKey, next);
+      }
+      return { previous };
+    },
+    onError: (_err, _charges, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(setupKey, context.previous);
+      }
+    },
     onSuccess: () => {
       toast.success(t("room-charges-saved"));
+    },
+    onSettled: () => {
       invalidate();
     },
   });

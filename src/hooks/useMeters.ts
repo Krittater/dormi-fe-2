@@ -38,6 +38,19 @@ export function useMeterActions(apartmentId: string) {
     queryClient.invalidateQueries({ queryKey: qk.meters.all(apartmentId) });
   };
 
+  // Recording/updating a single reading only affects that billing period's
+  // readings — narrow the invalidation so we don't refetch the whole meter
+  // list and every other cached period on each row save during bulk entry.
+  const invalidateReadings = (billingPeriodId?: string) => {
+    if (billingPeriodId) {
+      queryClient.invalidateQueries({
+        queryKey: qk.meters.byBillingPeriod(apartmentId, billingPeriodId),
+      });
+    } else {
+      invalidate();
+    }
+  };
+
   const create = useMutation({
     mutationFn: (payload: unknown) =>
       meterService.create(apartmentId, payload),
@@ -72,10 +85,12 @@ export function useMeterActions(apartmentId: string) {
     }: {
       meterReadingId: string;
       body: { previousValue: number; currentValue: number };
+      /** เมื่อระบุ จะ invalidate เฉพาะ readings ของงวดนี้ (bulk entry) */
+      billingPeriodId?: string;
     }) => meterService.recordReading(meterReadingId, body),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success(t("meter-reading-saved"));
-      invalidate();
+      invalidateReadings(variables.billingPeriodId);
     },
   });
 
@@ -88,6 +103,8 @@ export function useMeterActions(apartmentId: string) {
       meterId: string;
       meterReadingId: string;
       body: { previousValue: number; currentValue: number };
+      /** เมื่อระบุ จะ invalidate เฉพาะ readings ของงวดนี้ (bulk entry) */
+      billingPeriodId?: string;
     }) =>
       meterService.updateReading(
         apartmentId,
@@ -95,9 +112,9 @@ export function useMeterActions(apartmentId: string) {
         meterReadingId,
         body
       ),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success(t("meter-reading-saved"));
-      invalidate();
+      invalidateReadings(variables.billingPeriodId);
     },
   });
 

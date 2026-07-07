@@ -3108,6 +3108,18 @@
     "cn": "已抄 {done}/{total} 间"
   },
   {
+    "code": "reading-progress-breakdown",
+    "th": "จดแล้ว {recorded} · ออกบิลแล้ว {billed} · ยังไม่จด {remaining}",
+    "en": "Recorded {recorded} · Billed {billed} · Not recorded {remaining}",
+    "cn": "已抄 {recorded} · 已出账 {billed} · 未抄 {remaining}"
+  },
+  {
+    "code": "press-enter-to-save",
+    "th": "กรอกค่าแล้วกด Enter เพื่อบันทึก",
+    "en": "Type a value and press Enter to save",
+    "cn": "输入数值后按 Enter 保存"
+  },
+  {
     "code": "meter-active",
     "th": "ใช้งานอยู่",
     "en": "Active",

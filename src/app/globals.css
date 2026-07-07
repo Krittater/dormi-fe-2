@@ -108,6 +108,18 @@
     background-color: var(--background);
     color: var(--foreground);
   }
+  /* Tailwind v4 no longer sets cursor:pointer on buttons by default.
+     Restore the pointer cursor for every interactive control that isn't
+     disabled. Disabled elements keep their own cursor (e.g. cursor-not-allowed
+     utilities, which live in a later layer and win over this base rule). */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  label[for] {
+    cursor: pointer;
+  }
   /* thin scrollbar for content areas */
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;

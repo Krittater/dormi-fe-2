@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useMeterActions } from "@/hooks/useMeters";
 import { formatNumber, getApiErrorMessage } from "@/lib/format";
 import { useT } from "@/i18n";
+import { METER_TYPE_CODES, MeterType } from "@/types";
 import type { MeterReading } from "@/types";
 
 interface Props {
@@ -52,6 +53,12 @@ export function ReadingDialog({
       );
     }
   }, [open, reading]);
+
+  const typeKey =
+    reading?.meterType != null
+      ? METER_TYPE_CODES[reading.meterType.toLowerCase() as MeterType]
+      : undefined;
+  const typeLabel = typeKey ? t(typeKey) : "";
 
   const prev = Number(previousValue);
   const curr = Number(currentValue);
@@ -103,19 +110,21 @@ export function ReadingDialog({
             {reading?.roomName
               ? `${t("room-with-name", { name: reading.roomName })} · `
               : ""}
-            {reading?.meterType ?? ""}
+            {typeLabel}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="prev">{t("previous-meter-value")}</Label>
+            {/* ค่าก่อนหน้ามาจากรอบที่แล้ว — read-only กันการแก้ที่ทำให้คำนวณหน่วยเพี้ยน */}
             <Input
               id="prev"
               type="number"
-              min={0}
-              step="0.01"
               value={previousValue}
-              onChange={(e) => setPreviousValue(e.target.value)}
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+              className="cursor-not-allowed bg-gray-50 text-gray-600"
             />
           </div>
           <div className="space-y-2">

@@ -3,16 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Droplets,
   Home,
+  Loader2,
   MoreVertical,
   Plus,
   Search,
   Trash2,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +40,6 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MeterReadingsSheet } from "@/features/meter/components/meter-readings-sheet";
 import { MeterFormDialog } from "@/features/meter/components/meter-form-dialog";
-import { ReadingDialog } from "@/features/meter/components/reading-dialog";
 import { DEFAULT_PAGE_SIZE, PER_PAGE_OPTIONS } from "@/constants/config";
 import {
   useMeterActions,
@@ -45,7 +47,7 @@ import {
   useMeterReadingsByPeriod,
   useMeters,
 } from "@/hooks/useMeters";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, getApiErrorMessage } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useT, type TranslateFn } from "@/i18n";
 import { MeterReadingStatus, MeterType } from "@/types";
@@ -85,14 +87,14 @@ export function MetersPage() {
 
   const { data: meters = [], isLoading } = useMeters(apartmentId);
   const { data: periodItems = [] } = useMeterPeriodDropdown(apartmentId);
-  const { remove } = useMeterActions(apartmentId);
+  const { remove, recordReading, updateReading } = useMeterActions(apartmentId);
 
   const periods = useMemo(
     () => normalizePeriodOptions(periodItems),
     [periodItems]
   );
 
-  const [topTab, setTopTab] = useState<TopTab>("meters");
+  const [topTab, setTopTab] = useState<TopTab>("by-period");
   const [pageType, setPageType] = useState<MeterType>(MeterType.ELECTRICITY);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -104,9 +106,8 @@ export function MetersPage() {
   const [deleting, setDeleting] = useState<DisplayMeter | null>(null);
 
   const [periodId, setPeriodId] = useState("");
-  const [readingDialogOpen, setReadingDialogOpen] = useState(false);
-  const [activeReading, setActiveReading] = useState<MeterReading | null>(null);
-  const [readingMode, setReadingMode] = useState<"record" | "edit">("record");
+  const [currentDrafts, setCurrentDrafts] = useState<Record<string, string>>({});
+  const [savingReadingId, setSavingReadingId] = useState<string | null>(null);
   const [readingsSearch, setReadingsSearch] = useState("");
   const [readingsPage, setReadingsPage] = useState(1);
   const [readingsPerPage, setReadingsPerPage] = useState(DEFAULT_PAGE_SIZE);
@@ -135,13 +136,16 @@ export function MetersPage() {
     [periodReadings, pageType]
   );
 
-  const recordedCount = useMemo(
-    () =>
-      typeReadings.filter(
-        (r) => r.readingStatus !== MeterReadingStatus.NOT_RECORDED
-      ).length,
-    [typeReadings]
-  );
+  // แยกนับ 3 สถานะ เพื่อให้เห็นว่าเหลือกี่ห้องที่ยัง action ได้จริง
+  const readingCounts = useMemo(() => {
+    let recorded = 0;
+    let billed = 0;
+    for (const r of typeReadings) {
+      if (r.readingStatus === MeterReadingStatus.BILLED) billed++;
+      else if (r.readingStatus !== MeterReadingStatus.NOT_RECORDED) recorded++;
+    }
+    return { recorded, billed };
+  }, [typeReadings]);
 
   const filteredReadings = useMemo(() => {
     const q = readingsSearch.trim().toLowerCase();
@@ -227,15 +231,73 @@ export function MetersPage() {
     if (!open) setActiveMeter(null);
   }, []);
 
-  const openReading = useCallback((reading: MeterReading) => {
-    setActiveReading(reading);
-    setReadingMode(
-      reading.readingStatus === MeterReadingStatus.NOT_RECORDED
-        ? "record"
-        : "edit"
-    );
-    setReadingDialogOpen(true);
+  useEffect(() => {
+    setCurrentDrafts({});
+  }, [periodId, pageType]);
+
+  const getReadingDraft = useCallback(
+    (reading: MeterReading) => {
+      if (reading.id in currentDrafts) {
+        return currentDrafts[reading.id];
+      }
+      return reading.currentValue != null ? String(reading.currentValue) : "";
+    },
+    [currentDrafts]
+  );
+
+  const setCurrentDraft = useCallback((readingId: string, value: string) => {
+    setCurrentDrafts((prev) => ({ ...prev, [readingId]: value }));
   }, []);
+
+  const saveReading = useCallback(
+    async (reading: MeterReading) => {
+      const draft = getReadingDraft(reading);
+      if (draft === "") {
+        toast.error(t("enter-meter-values"));
+        return;
+      }
+
+      const prev = reading.previousValue ?? 0;
+      const curr = Number(draft);
+      if (!Number.isFinite(curr)) {
+        toast.error(t("enter-a-number"));
+        return;
+      }
+      if (curr < prev) {
+        toast.error(t("current-not-less-than-previous"));
+        return;
+      }
+
+      const body = { previousValue: prev, currentValue: curr };
+      setSavingReadingId(reading.id);
+      try {
+        if (reading.readingStatus === MeterReadingStatus.NOT_RECORDED) {
+          await recordReading.mutateAsync({
+            meterReadingId: reading.id,
+            body,
+            billingPeriodId: periodId,
+          });
+        } else {
+          await updateReading.mutateAsync({
+            meterId: reading.meterId,
+            meterReadingId: reading.id,
+            body,
+            billingPeriodId: periodId,
+          });
+        }
+        setCurrentDrafts((prev) => {
+          const next = { ...prev };
+          delete next[reading.id];
+          return next;
+        });
+      } catch (err) {
+        toast.error(getApiErrorMessage(err));
+      } finally {
+        setSavingReadingId(null);
+      }
+    },
+    [getReadingDraft, recordReading, t, updateReading, periodId]
+  );
 
   const handleDelete = useCallback(async () => {
     if (!deleting) return;
@@ -262,25 +324,70 @@ export function MetersPage() {
         key: "current",
         header: t("current"),
         className: "text-right",
-        cell: (r) =>
-          r.currentValue != null ? (
-            formatNumber(r.currentValue)
-          ) : (
-            <span className="text-gray-400">—</span>
-          ),
+        cell: (r) => {
+          if (r.readingStatus === MeterReadingStatus.BILLED) {
+            return r.currentValue != null ? (
+              formatNumber(r.currentValue)
+            ) : (
+              <span className="text-gray-400">—</span>
+            );
+          }
+
+          const draft = getReadingDraft(r);
+
+          return (
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={draft}
+              onChange={(e) => setCurrentDraft(r.id, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void saveReading(r);
+                }
+              }}
+              className="ml-auto h-8 w-28 text-right"
+              placeholder="0"
+              aria-label={t("current")}
+              title={t("press-enter-to-save")}
+              disabled={savingReadingId === r.id}
+            />
+          );
+        },
       },
       {
         key: "units",
         header: t("units-used"),
         className: "text-right",
-        cell: (r) =>
-          r.unitsUsed != null ? (
+        cell: (r) => {
+          if (r.readingStatus === MeterReadingStatus.BILLED) {
+            return r.unitsUsed != null ? (
+              <span className="font-medium text-gray-900">
+                {formatNumber(r.unitsUsed)}
+              </span>
+            ) : (
+              <span className="text-gray-400">—</span>
+            );
+          }
+
+          const draft = getReadingDraft(r);
+          const prev = r.previousValue ?? 0;
+          const curr = draft !== "" ? Number(draft) : null;
+          const units =
+            curr != null && Number.isFinite(curr) && curr >= prev
+              ? curr - prev
+              : null;
+
+          return units != null ? (
             <span className="font-medium text-gray-900">
-              {formatNumber(r.unitsUsed)}
+              {formatNumber(units)}
             </span>
           ) : (
             <span className="text-gray-400">—</span>
-          ),
+          );
+        },
       },
       {
         key: "status",
@@ -291,9 +398,21 @@ export function MetersPage() {
         key: "actions",
         header: "",
         className: "text-right",
-        hideOnMobile: true,
-        cell: (r) =>
-          r.readingStatus !== MeterReadingStatus.BILLED ? (
+        cell: (r) => {
+          if (r.readingStatus === MeterReadingStatus.BILLED) return null;
+
+          const draft = getReadingDraft(r);
+          const saved =
+            r.currentValue != null ? String(r.currentValue) : "";
+          const hasChanges = draft !== saved;
+          const isSaving = savingReadingId === r.id;
+          const canSave =
+            draft !== "" &&
+            !isSaving &&
+            (r.readingStatus === MeterReadingStatus.NOT_RECORDED ||
+              hasChanges);
+
+          return (
             <Button
               variant={
                 r.readingStatus === MeterReadingStatus.NOT_RECORDED
@@ -301,16 +420,23 @@ export function MetersPage() {
                   : "outline"
               }
               size="sm"
-              onClick={() => openReading(r)}
+              disabled={!canSave}
+              onClick={() => void saveReading(r)}
             >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               {r.readingStatus === MeterReadingStatus.NOT_RECORDED
                 ? t("record-value")
-                : t("edit")}
+                : t("save")}
             </Button>
-          ) : null,
+          );
+        },
       },
     ],
-    [t, openReading]
+    [t, getReadingDraft, savingReadingId, setCurrentDraft, saveReading]
   );
 
   return (
@@ -399,7 +525,7 @@ export function MetersPage() {
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="w-full max-w-xs">
                     <Select value={periodId} onValueChange={changePeriodId}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t("select-billing-period")}>
                         <SelectValue placeholder={t("select-billing-period")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -426,7 +552,8 @@ export function MetersPage() {
                   <ReadingProgress
                     t={t}
                     type={pageType}
-                    done={recordedCount}
+                    recorded={readingCounts.recorded}
+                    billed={readingCounts.billed}
                     total={typeReadings.length}
                   />
                 )}
@@ -470,14 +597,6 @@ export function MetersPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         apartmentId={apartmentId}
-      />
-
-      <ReadingDialog
-        open={readingDialogOpen}
-        onOpenChange={setReadingDialogOpen}
-        apartmentId={apartmentId}
-        reading={activeReading}
-        mode={readingMode}
       />
 
       <ConfirmDialog
@@ -593,37 +712,43 @@ function TypeToggleButton({
 function ReadingProgress({
   t,
   type,
-  done,
+  recorded,
+  billed,
   total,
 }: {
   t: TranslateFn;
   type: MeterType;
-  done: number;
+  recorded: number;
+  billed: number;
   total: number;
 }) {
   const meta = TYPE_META[type];
+  const done = recorded + billed;
+  const remaining = Math.max(0, total - done);
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
   return (
     <div
-      className={cn(
-        "flex flex-col gap-3 rounded-lg px-4 py-3 sm:flex-row sm:items-center",
-        meta.progressBar
-      )}
+      className={cn("flex flex-col gap-2 rounded-lg px-4 py-3", meta.progressBar)}
     >
-      <p className={cn("text-sm font-medium", meta.progressText)}>
-        {t("reading-progress", { done, total })}
-      </p>
-      <div className="flex flex-1 items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/60">
-          <div
-            className={cn("h-full rounded-full", meta.progressFill)}
-            style={{ width: `${percent}%` }}
-          />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <p className={cn("text-sm font-medium", meta.progressText)}>
+          {t("reading-progress", { done, total })}
+        </p>
+        <div className="flex flex-1 items-center gap-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/60">
+            <div
+              className={cn("h-full rounded-full", meta.progressFill)}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className={cn("text-xs font-semibold", meta.progressText)}>
+            {percent}%
+          </span>
         </div>
-        <span className={cn("text-xs font-semibold", meta.progressText)}>
-          {percent}%
-        </span>
       </div>
+      <p className={cn("text-xs", meta.progressText)}>
+        {t("reading-progress-breakdown", { recorded, billed, remaining })}
+      </p>
     </div>
   );
 }
