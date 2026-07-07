@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentRouteParams } from "@/hooks/use-apartment-id";
 import {
   ArrowLeft,
   FileCheck2,
@@ -38,10 +39,7 @@ import { countInvoicesByStatus } from "@/utils/invoice";
 
 export function BillingPeriodDetailPage() {
   const t = useT();
-  const { apartmentId, billingPeriodId } = useParams<{
-    apartmentId: string;
-    billingPeriodId: string;
-  }>();
+  const { apartmentId, billingPeriodId } = useApartmentRouteParams();
   const router = useRouter();
 
   const [confirm, setConfirm] = useState<

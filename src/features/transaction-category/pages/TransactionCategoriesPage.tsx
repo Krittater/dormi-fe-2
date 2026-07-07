@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
 import { Loader2, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -53,7 +53,7 @@ import type { TransactionCategory } from "@/types";
 
 export function TransactionCategoriesPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TransactionCategory | null>(null);

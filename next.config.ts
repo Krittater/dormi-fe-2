@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // รันเป็น Node server (next start) — dynamic route + RSC ทำงานครบทุก param
+  // standalone = bundle server.js + deps ที่จำเป็น → docker image เล็ก
+  output: "standalone",
 };
 
 export default nextConfig;

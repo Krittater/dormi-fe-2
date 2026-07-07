@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentRouteParams } from "@/hooks/use-apartment-id";
 import {
   ArrowLeft,
   HandCoins,
@@ -60,10 +61,7 @@ interface EditItem {
 
 export function InvoiceDetailPage() {
   const t = useT();
-  const { apartmentId, invoiceId } = useParams<{
-    apartmentId: string;
-    invoiceId: string;
-  }>();
+  const { apartmentId, invoiceId } = useApartmentRouteParams();
   const router = useRouter();
 
   const { data: invoice, isLoading } = useInvoiceDetail(apartmentId, invoiceId);

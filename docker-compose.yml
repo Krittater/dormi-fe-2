@@ -1,0 +1,25 @@
+# Frontend — Next.js Node server (standalone) บน dormi_network
+# edge จะ proxy dormi-linkandrent.com → dormi-web:3000
+#
+# รัน:
+#   docker compose up -d --build
+# scale (edge กระจาย load ให้เอง):
+#   docker compose up -d --scale dormi-web=2
+services:
+  dormi-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - "3000"          # ไม่ publish ออก host — เข้าผ่าน edge เท่านั้น
+    networks:
+      - dormi_network
+    # ไม่ตั้ง container_name → scale ได้
+
+networks:
+  dormi_network:
+    external: true

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { LogOut, MoreVertical, Pencil, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import type { Tenant } from "@/types";
 
 export function TenantsPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);

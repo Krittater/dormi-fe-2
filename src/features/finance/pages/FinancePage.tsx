@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -51,7 +51,7 @@ interface Row {
 
 export function FinancePage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const [period, setPeriod] = useState<Period>("month");
   const [recordOpen, setRecordOpen] = useState(false);

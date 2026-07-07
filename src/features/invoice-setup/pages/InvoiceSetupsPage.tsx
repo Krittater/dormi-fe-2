@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -53,7 +53,7 @@ import type { InvoiceSetup } from "@/types";
 
 export function InvoiceSetupsPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<InvoiceSetup | null>(null);

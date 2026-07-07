@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useQueries } from "@tanstack/react-query";
 import { Plus, Send, FileDown, X, Check, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ import type { Invoice } from "@/types";
 const STATUS_CARDS: InvoiceStatus[] = [
   InvoiceStatus.DRAFT,
   InvoiceStatus.UNPAID,
+  InvoiceStatus.PARTIAL,
   InvoiceStatus.OVERDUE,
   InvoiceStatus.PAID,
   InvoiceStatus.CANCELLED,
@@ -47,6 +49,7 @@ const STATUS_CARDS: InvoiceStatus[] = [
 const STATUS_TEXT: Record<InvoiceStatus, string> = {
   [InvoiceStatus.DRAFT]: "text-gray-600",
   [InvoiceStatus.UNPAID]: "text-amber-600",
+  [InvoiceStatus.PARTIAL]: "text-blue-600",
   [InvoiceStatus.OVERDUE]: "text-red-600",
   [InvoiceStatus.PAID]: "text-green-600",
   [InvoiceStatus.CANCELLED]: "text-gray-400",
@@ -57,7 +60,7 @@ const EMPTY_PERIODS: Array<{ id: string; name?: string }> = [];
 
 export function InvoicesPage() {
   const t = useT();
-  const { apartmentId } = useParams<{ apartmentId: string }>();
+  const apartmentId = useApartmentId();
   const router = useRouter();
 
   const [status, setStatus] = useState<string>(ALL);
