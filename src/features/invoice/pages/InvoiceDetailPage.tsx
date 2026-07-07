@@ -241,7 +241,7 @@ export function InvoiceDetailPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">{t("outstanding")}</p>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-destructive">
                   {formatCurrency(outstanding)}
                 </p>
               </div>
