@@ -148,3 +148,6 @@ src/
 ```
 
 เอกสาร deploy ละเอียดเพิ่มเติม: [DEPLOY.md](DEPLOY.md)
+
+
+ทดสอบ ci cd 
