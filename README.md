@@ -49,7 +49,7 @@ git push origin main
 **2) 💻 ssh เข้า server**
 
 ```bash
-ssh -i C:\Users\Anuchit\.ssh\id_ed25519.txt root@<SERVER_IP>
+ssh -i C:\Users\Anuchit\.ssh\id_ed25519 root@188.166.228.210
 ```
 
 **3) 🖥️ clone (ครั้งแรก) หรือ pull (ครั้งถัดไป)**
@@ -67,7 +67,7 @@ cd ~/dormi-fe-2 && git pull origin main
 `.env.production` ถูก gitignore (ไม่ไปกับ git) ต้อง scp เอง:
 
 ```bash
-scp -i C:\Users\Anuchit\.ssh\id_ed25519.txt "C:\Users\Anuchit\Desktop\Private\dormi\dormi-fronend\.env.production" root@<SERVER_IP>:/root/dormi-fe-2/.env.production
+scp -i C:\Users\Anuchit\.ssh\id_ed25519 "C:\Users\Anuchit\Desktop\Private\dormi\dormi-fronend\.env.production" root@188.166.228.210:/root/dormi-fe-2/.env.production
 ```
 
 **5) 🖥️ build + รัน**
@@ -97,12 +97,28 @@ curl -s -o /dev/null -w "%{http_code}\n" https://dormi-linkandrent.com/login   #
 
 ### เมื่อมีการแก้โค้ด (deploy รอบถัดไป)
 
+**แบบอัตโนมัติ (แนะนำ)** — push ขึ้น `main` แล้ว GitHub Actions deploy ให้เอง:
+
+```
+💻 แก้โค้ด → git commit → git push origin main
+```
+
+workflow: `.github/workflows/deploy-production.yml` → SSH เข้า server → รัน `/root/dormi-edge/deploy/dormi-frontend/deploy.sh`
+
+**GitHub Secrets** (ตั้งครั้งเดียวที่ repo นี้ — Settings → Secrets and variables → Actions → environment `production`):
+
+| Secret | ค่า |
+|--------|-----|
+| `SERVER_USER` | `root` |
+| `PROD_SERVER` | IP ของ server (เช่น `188.166.228.210`) |
+| `SSH_KEY` | เนื้อหา private key (`~/.ssh/id_ed25519`) |
+
+**แบบมือ** (ถ้าไม่ใช้ CI):
+
 ```
 💻 แก้โค้ด → git commit → git push origin main
 🖥️ cd ~/dormi-fe-2 && git pull origin main && docker compose up -d --build
 ```
-
-จบ — แค่ 2 คำสั่งบน server
 
 ---
 

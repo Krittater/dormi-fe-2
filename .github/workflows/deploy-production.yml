@@ -1,0 +1,40 @@
+# Auto deploy เมื่อ push ขึ้น main
+# ยึด pattern จาก nst-mam-api-microservices/bitbucket-pipelines.yml
+#
+# GitHub Secrets ที่ต้องตั้ง (Settings → Secrets and variables → Actions):
+#   SERVER_USER  — user SSH บน server (เช่น root)
+#   PROD_SERVER  — IP หรือ hostname ของ server
+#   SSH_KEY      — private key สำหรับ SSH (เนื้อหาไฟล์ .pem / id_ed25519)
+#
+# บน server ต้องมี:
+#   /root/dormi-edge     (clone repo dormi-edge — เก็บ deploy scripts)
+#   /root/dormi-fe-2     (clone repo นี้ + .env.production)
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy dormi-fe-2
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SERVER }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /root/dormi-edge/deploy/dormi-frontend && bash deploy.sh
