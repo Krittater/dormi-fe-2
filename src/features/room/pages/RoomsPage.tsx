@@ -1,10 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
+import { useApartmentOverview } from "@/hooks/useApartments";
+import { useFilterParams } from "@/hooks/use-filter-params";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
+  ChevronDown,
+  Download,
   Droplets,
   LayoutGrid,
   List,
@@ -35,12 +40,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
-import { DataTable, type Column } from "@/components/shared/data-table";
+import { EmptyState } from "@/components/shared/empty-state";
+import { DataTable, type Column, sortTableData, type SortDirection } from "@/components/shared/data-table";
+import { exportTableCsv } from "@/lib/export";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { TenantFormDialog } from "@/features/tenant/components/tenant-form-dialog";
 import { RoomFormDialog } from "@/features/room/components/room-form-dialog";
+import { RoomBulkFormDialog } from "@/features/room/components/room-bulk-form-dialog";
 import { RoomDetailSheet } from "@/features/room/components/room-detail-sheet";
 import {
   ACTIVE,
@@ -48,7 +57,6 @@ import {
   DEFAULT_PAGE_SIZE,
   DROPDOWN_LIMIT,
   INACTIVE,
-  ROOMS_FETCH_ALL_LIMIT,
   SKELETON_ROWS_ROOMS,
   VIEW_GRID,
   VIEW_TABLE,
@@ -63,7 +71,9 @@ import {
   formatPhone,
   getInitials,
 } from "@/lib/format";
+import { totalPagesOf } from "@/lib/list";
 import { cn } from "@/lib/utils";
+import { normalizeRoomOverviewCounts } from "@/utils/overview";
 import { qk } from "@/queries/keys";
 import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
 import type { Room } from "@/types";
@@ -74,16 +84,29 @@ export function RoomsPage() {
   const apartmentId = useApartmentId();
   const queryClient = useQueryClient();
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>(ALL);
-  const [active, setActive] = useState<string>(ALL);
-  const [floor, setFloor] = useState<string>(ALL);
-  const [page, setPage] = useState(1);
-  const [view, setView] = useState<typeof VIEW_TABLE | typeof VIEW_GRID>(
-    VIEW_GRID
-  );
+  const { values, setValue, clearAll, hasActiveFilters } = useFilterParams({
+    defaults: {
+      search: "",
+      status: ALL,
+      active: ALL,
+      floor: ALL,
+      view: VIEW_GRID,
+      page: "1",
+    },
+    debounceKeys: ["search"],
+  });
+  const search = values.search;
+  const status = values.status;
+  const active = values.active;
+  const floor = values.floor;
+  const view = values.view === VIEW_TABLE ? VIEW_TABLE : VIEW_GRID;
+  const page = Math.max(1, Number(values.page) || 1);
+
+  const [sortKey, setSortKey] = useState<string | null>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const [formOpen, setFormOpen] = useState(false);
+  const [bulkFormOpen, setBulkFormOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [deleting, setDeleting] = useState<Room | null>(null);
   const [detailRoomId, setDetailRoomId] = useState<string | null>(null);
@@ -93,16 +116,18 @@ export function RoomsPage() {
 
   const listParams = useMemo(
     () => ({
-      limit: ROOMS_FETCH_ALL_LIMIT,
+      page,
+      limit: DEFAULT_PAGE_SIZE,
       search: search || undefined,
       status: status === ALL ? undefined : status,
       isActive:
         active === ALL ? undefined : active === ACTIVE ? true : false,
     }),
-    [search, status, active]
+    [page, search, status, active]
   );
 
   const { data, isLoading } = useRooms(apartmentId, listParams);
+  const { overview: overviewQuery } = useApartmentOverview(apartmentId);
   const { data: roomTypesData } = useRoomTypesDropdown(
     apartmentId,
     DROPDOWN_LIMIT
@@ -143,11 +168,25 @@ export function RoomsPage() {
     queryClient.invalidateQueries({ queryKey: qk.rooms.all(apartmentId) });
   }, [apartmentId, queryClient]);
 
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
+      }
+    },
+    [sortKey]
+  );
+
   const columns = useMemo<Column<Room>[]>(
     () => [
       {
         key: "name",
         header: t("room"),
+        sortable: true,
+        sortValue: (r) => r.name,
         cell: (r) => (
           <button
             onClick={(e) => {
@@ -163,20 +202,35 @@ export function RoomsPage() {
       {
         key: "roomType",
         header: t("type"),
+        sortable: true,
+        sortValue: (r) =>
+          r.roomType?.name ??
+          roomTypes.find((rt) => rt.id === r.roomTypeId)?.name ??
+          "",
         cell: (r) =>
           r.roomType?.name ??
           roomTypes.find((rt) => rt.id === r.roomTypeId)?.name ??
           "-",
       },
-      { key: "floor", header: t("floor"), cell: (r) => r.floor || "-" },
+      {
+        key: "floor",
+        header: t("floor"),
+        sortable: true,
+        sortValue: (r) => r.floor ?? "",
+        cell: (r) => r.floor || "-",
+      },
       {
         key: "status",
         header: t("status"),
+        sortable: true,
+        sortValue: (r) => r.status,
         cell: (r) => <StatusBadge kind="room" value={r.status} />,
       },
       {
         key: "active",
         header: t("active"),
+        sortable: true,
+        sortValue: (r) => (r.isActive ? 1 : 0),
         cell: (r) => (r.isActive ? t("on") : t("off")),
       },
       {
@@ -191,6 +245,7 @@ export function RoomsPage() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
+                aria-label={t("more-actions")}
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-4 w-4" />
@@ -235,28 +290,28 @@ export function RoomsPage() {
     [items, floor]
   );
 
-  const floorFilteredTotal = filteredByFloor.length;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(floorFilteredTotal / DEFAULT_PAGE_SIZE)
-  );
-  const safePage = Math.min(page, totalPages);
-  const visibleItems = useMemo(
-    () =>
-      filteredByFloor.slice(
-        (safePage - 1) * DEFAULT_PAGE_SIZE,
-        safePage * DEFAULT_PAGE_SIZE
-      ),
-    [filteredByFloor, safePage]
+  const sortedByFloor = useMemo(
+    () => sortTableData(filteredByFloor, columns, sortKey, sortDirection),
+    [filteredByFloor, columns, sortKey, sortDirection]
   );
 
-  const totalRooms = meta?.total ?? items.length;
-  const rentedCount = items.filter(
-    (r) => r.status === RoomStatus.RENTED || Boolean(r.currentTenant)
-  ).length;
-  const availableCount = items.filter(
-    (r) => r.status === RoomStatus.AVAILABLE && !r.currentTenant
-  ).length;
+  const visibleItems = sortedByFloor;
+
+  const apiTotalPages = totalPagesOf(meta, items.length, DEFAULT_PAGE_SIZE);
+  const totalPages = floor === ALL ? apiTotalPages : 1;
+  const safePage = floor === ALL ? Math.min(page, apiTotalPages) : page;
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("rooms.csv", columns, sortedByFloor);
+  }, [columns, sortedByFloor]);
+
+  const overviewCounts = useMemo(
+    () => normalizeRoomOverviewCounts(overviewQuery.data),
+    [overviewQuery.data]
+  );
+  const totalRooms = overviewCounts.total || meta?.total || items.length;
+  const rentedCount = overviewCounts.rented;
+  const availableCount = overviewCounts.available;
 
   return (
     <div className="space-y-6">
@@ -264,84 +319,155 @@ export function RoomsPage() {
         title={t("nav-rooms")}
         description={t("rooms-page-description")}
         actions={
-          <Button onClick={openCreate} disabled={roomTypes.length === 0}>
-            <Plus className="h-4 w-4" />
-            {t("add-room")}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={roomTypes.length === 0}>
+                <Plus className="h-4 w-4" />
+                {t("add-room")}
+                <ChevronDown className="h-4 w-4 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={openCreate}>
+                {t("add-single-room")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
+                {t("bulk-add-rooms")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
       {roomTypes.length === 0 && !isLoading && (
         <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">
-          {t("add-room-type-first")}
+          {t("add-room-type-first")}{" "}
+          <Link
+            href={`/apartments/${apartmentId}/room-types`}
+            className="font-medium text-primary hover:underline"
+          >
+            {t("nav-room-types")}
+          </Link>
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Input
-          placeholder={t("search-room-number")}
-          value={search}
-          onChange={(e) => {
-            setPage(1);
-            setSearch(e.target.value);
-          }}
-          className="sm:max-w-xs"
-        />
-        <Select
-          value={floor}
-          onValueChange={(v) => {
-            setPage(1);
-            setFloor(v);
-          }}
-        >
-          <SelectTrigger className="sm:w-40">
-            <SelectValue placeholder={t("all-floors")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("all-floors")}</SelectItem>
-            {floorOptions.map((f) => (
-              <SelectItem key={f} value={f}>
-                {t("floor-with-number", { floor: f })}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setPage(1);
-            setStatus(v);
-          }}
-        >
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder={t("status")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
-            {Object.values(RoomStatus).map((s) => (
-              <SelectItem key={s} value={s}>
-                {t(ROOM_STATUS_CODES[s])}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={active}
-          onValueChange={(v) => {
-            setPage(1);
-            setActive(v);
-          }}
-        >
-          <SelectTrigger className="sm:w-44">
-            <SelectValue placeholder={t("usage")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("all")}</SelectItem>
-            <SelectItem value={ACTIVE}>{t("enabled")}</SelectItem>
-            <SelectItem value={INACTIVE}>{t("disabled")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <FilterBar
+        search={{
+          value: search,
+          onChange: (v) => {
+            setValue("page", "1");
+            setValue("search", v);
+          },
+          placeholder: t("search-room-number"),
+        }}
+        filters={[
+          {
+            id: "floor",
+            node: (
+              <Select
+                value={floor}
+                onValueChange={(v) => {
+                  setValue("page", "1");
+                  setValue("floor", v);
+                }}
+              >
+                <SelectTrigger className="sm:w-40">
+                  <SelectValue placeholder={t("all-floors")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all-floors")}</SelectItem>
+                  {floorOptions.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {t("floor-with-number", { floor: f })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+          {
+            id: "status",
+            node: (
+              <Select
+                value={status}
+                onValueChange={(v) => {
+                  setValue("page", "1");
+                  setValue("status", v);
+                }}
+              >
+                <SelectTrigger className="sm:w-44">
+                  <SelectValue placeholder={t("status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
+                  {Object.values(RoomStatus).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {t(ROOM_STATUS_CODES[s])}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+          {
+            id: "active",
+            node: (
+              <Select
+                value={active}
+                onValueChange={(v) => {
+                  setValue("page", "1");
+                  setValue("active", v);
+                }}
+              >
+                <SelectTrigger className="sm:w-44">
+                  <SelectValue placeholder={t("usage")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all")}</SelectItem>
+                  <SelectItem value={ACTIVE}>{t("enabled")}</SelectItem>
+                  <SelectItem value={INACTIVE}>{t("disabled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        onClear={clearAll}
+        showClear={hasActiveFilters}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-1">
+              <Button
+                variant={view === VIEW_GRID ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                title={t("grid-view")}
+                aria-label={t("grid-view")}
+                aria-pressed={view === VIEW_GRID}
+                onClick={() => setValue("view", VIEW_GRID)}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === VIEW_TABLE ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                title={t("table-view")}
+                aria-label={t("table-view")}
+                aria-pressed={view === VIEW_TABLE}
+                onClick={() => setValue("view", VIEW_TABLE)}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            {view === VIEW_TABLE && (
+              <Button variant="outline" size="sm" onClick={handleExportCsv}>
+                <Download className="h-4 w-4" />
+                {t("export-csv")}
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
@@ -377,32 +503,13 @@ export function RoomsPage() {
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {t("showing-rooms-count", { count: visibleItems.length })}
-        </p>
-        <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-1">
-          <Button
-            variant={view === VIEW_GRID ? "secondary" : "ghost"}
-            size="icon"
-            className="h-8 w-8"
-            title={t("grid-view")}
-            aria-label={t("grid-view")}
-            aria-pressed={view === VIEW_GRID}
-            onClick={() => setView(VIEW_GRID)}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={view === VIEW_TABLE ? "secondary" : "ghost"}
-            size="icon"
-            className="h-8 w-8"
-            title={t("table-view")}
-            aria-label={t("table-view")}
-            aria-pressed={view === VIEW_TABLE}
-            onClick={() => setView(VIEW_TABLE)}
-          >
-            <List className="h-4 w-4" />
-          </Button>
+        <div>
+          <p className="text-sm text-muted-foreground">
+            {t("showing-rooms-count", { count: visibleItems.length })}
+          </p>
+          {floor !== ALL && (
+            <p className="text-xs text-gray-600">{t("floor-filter-hint")}</p>
+          )}
         </div>
       </div>
 
@@ -415,6 +522,10 @@ export function RoomsPage() {
           onRowClick={openDetail}
           emptyTitle={t("no-rooms")}
           emptyDescription={t("add-first-room")}
+          stickyHeader
+          sortKey={sortKey}
+          sortDirection={sortDirection}
+          onSortChange={handleSortChange}
         />
       ) : isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -423,12 +534,18 @@ export function RoomsPage() {
           ))}
         </div>
       ) : visibleItems.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 py-16 text-center">
-          <p className="font-medium text-gray-900">{t("no-rooms")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("add-first-room")}
-          </p>
-        </div>
+        <EmptyState
+          title={t("no-rooms")}
+          description={t("add-first-room")}
+          action={
+            roomTypes.length > 0 ? (
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t("add-room")}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visibleItems.map((r) => {
@@ -477,6 +594,7 @@ export function RoomsPage() {
                           variant="ghost"
                           size="icon"
                           className="-mr-2 -mt-1 h-8 w-8 shrink-0"
+                          aria-label={t("more-actions")}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -600,7 +718,7 @@ export function RoomsPage() {
       <Pagination
         page={safePage}
         totalPages={totalPages}
-        onPageChange={setPage}
+        onPageChange={(p) => setValue("page", String(p))}
       />
 
       <RoomFormDialog
@@ -608,6 +726,13 @@ export function RoomsPage() {
         onOpenChange={setFormOpen}
         apartmentId={apartmentId}
         room={editing}
+        roomTypes={roomTypes}
+      />
+
+      <RoomBulkFormDialog
+        open={bulkFormOpen}
+        onOpenChange={setBulkFormOpen}
+        apartmentId={apartmentId}
         roomTypes={roomTypes}
       />
 

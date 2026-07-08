@@ -7,6 +7,7 @@ import { useT } from "@/i18n";
 import { qk } from "@/queries/keys";
 import { roomQueries, roomTypeQueries } from "@/queries/room.query";
 import { roomService, type RoomListParams } from "@/services/room.service";
+import type { BulkCreateRoomsPayload } from "@/types";
 
 export function useRooms(apartmentId: string, params?: RoomListParams) {
   return useQuery(roomQueries.list(apartmentId, params));
@@ -41,11 +42,27 @@ export function useRoomActions(apartmentId: string) {
     queryClient.invalidateQueries({ queryKey: qk.rooms.all(apartmentId) });
   };
 
+  const invalidateMeters = () => {
+    queryClient.invalidateQueries({ queryKey: qk.meters.all(apartmentId) });
+  };
+
   const create = useMutation({
     mutationFn: (payload: unknown) => roomService.create(apartmentId, payload),
     onSuccess: () => {
       toast.success(t("room-created-with-meters"));
       invalidate();
+      invalidateMeters();
+    },
+  });
+
+  const bulkCreate = useMutation({
+    mutationFn: (payload: BulkCreateRoomsPayload) =>
+      roomService.bulkCreate(apartmentId, payload),
+    onSuccess: (result) => {
+      if (result.summary.succeeded > 0) {
+        invalidate();
+        invalidateMeters();
+      }
     },
   });
 
@@ -71,5 +88,5 @@ export function useRoomActions(apartmentId: string) {
     },
   });
 
-  return { create, update, remove };
+  return { create, bulkCreate, update, remove };
 }

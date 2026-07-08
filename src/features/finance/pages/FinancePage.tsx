@@ -12,12 +12,14 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { exportTableCsv } from "@/lib/export";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
@@ -225,28 +227,31 @@ export function FinancePage() {
         cell: (r) =>
           r.status === MoneyEntryStatus.POSTED ? (
             <div className="flex justify-end gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
+              <IconActionButton
+                label={t("edit")}
                 className="h-8 w-8"
                 onClick={() => openEdit(r)}
               >
                 <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive"
+              </IconActionButton>
+              <IconActionButton
+                label={t("void-transaction")}
+                destructive
+                className="h-8 w-8"
                 onClick={() => setVoiding(r)}
               >
                 <Ban className="h-4 w-4" />
-              </Button>
+              </IconActionButton>
             </div>
           ) : null,
       },
     ],
     [t, openEdit]
   );
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("finance-transactions.csv", columns, rows);
+  }, [columns, rows]);
 
   return (
     <div className="space-y-6">
@@ -255,10 +260,7 @@ export function FinancePage() {
         description={t("finance-page-description")}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => toast.info(t("export-demo"))}
-            >
+            <Button variant="outline" onClick={handleExportCsv}>
               <Download className="h-4 w-4" />
               {t("export-excel")}
             </Button>
@@ -270,24 +272,27 @@ export function FinancePage() {
         }
       />
 
-      {/* Period toggle */}
-      <div className="inline-flex gap-1 rounded-lg bg-gray-100 p-1">
-        {(["month", "year", "custom"] as Period[]).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setPeriod(p)}
-            className={cn(
-              "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-              period === p
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            {periodLabel[p]}
-          </button>
-        ))}
-      </div>
+      <FilterBar
+        actions={
+          <div className="inline-flex gap-1 rounded-lg bg-gray-100 p-1">
+            {(["month", "year", "custom"] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={cn(
+                  "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+                  period === p
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-700"
+                )}
+              >
+                {periodLabel[p]}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {/* Summary cards — ยอดรวมจริงจาก API (aggregate ใน DB) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

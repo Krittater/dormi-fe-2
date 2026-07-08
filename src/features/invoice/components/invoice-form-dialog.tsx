@@ -5,6 +5,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import {
   Dialog,
   DialogContent,
@@ -384,16 +385,15 @@ export function InvoiceFormDialog({
                       )}
                     />
                     <div className="flex items-end sm:col-span-1">
-                      <Button
+                      <IconActionButton
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive"
+                        label={t("remove-row")}
+                        destructive
                         disabled={fields.length <= 1}
                         onClick={() => remove(index)}
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </IconActionButton>
                     </div>
                   </div>
                 ))}

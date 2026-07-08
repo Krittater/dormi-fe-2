@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Download, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -26,7 +27,14 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/shared/page-header";
-import { DataTable, type Column } from "@/components/shared/data-table";
+import { FilterBar } from "@/components/shared/filter-bar";
+import {
+  DataTable,
+  type Column,
+  sortTableData,
+  type SortDirection,
+} from "@/components/shared/data-table";
+import { exportTableCsv } from "@/lib/export";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { ROOM_TYPES_PAGE_SIZE, SEARCH_DEBOUNCE_MS } from "@/constants/config";
@@ -52,6 +60,8 @@ export function RoomTypesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<RoomType | null>(null);
   const [deleting, setDeleting] = useState<RoomType | null>(null);
+  const [sortKey, setSortKey] = useState<string | null>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -126,11 +136,25 @@ export function RoomTypesPage() {
     setDeleting(null);
   }, [deleting, remove]);
 
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
+      }
+    },
+    [sortKey]
+  );
+
   const columns = useMemo<Column<RoomType>[]>(
     () => [
       {
         key: "name",
         header: t("type-name"),
+        sortable: true,
+        sortValue: (r) => r.name,
         cell: (r) => (
           <span className="font-medium text-gray-900">{r.name}</span>
         ),
@@ -138,6 +162,8 @@ export function RoomTypesPage() {
       {
         key: "price",
         header: t("price-per-month"),
+        sortable: true,
+        sortValue: (r) => r.price,
         cell: (r) => formatCurrency(r.price),
       },
       {
@@ -153,28 +179,36 @@ export function RoomTypesPage() {
         className: "text-right",
         cell: (r) => (
           <div className="flex justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconActionButton
+              label={t("edit")}
               className="h-8 w-8"
               onClick={() => openEdit(r)}
             >
               <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive"
+            </IconActionButton>
+            <IconActionButton
+              label={t("delete")}
+              destructive
+              className="h-8 w-8"
               onClick={() => setDeleting(r)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconActionButton>
           </div>
         ),
       },
     ],
     [t, openEdit]
   );
+
+  const sorted = useMemo(
+    () => sortTableData(items, columns, sortKey, sortDirection),
+    [items, columns, sortKey, sortDirection]
+  );
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("room-types.csv", columns, sorted);
+  }, [columns, sorted]);
 
   return (
     <div className="space-y-6">
@@ -189,21 +223,33 @@ export function RoomTypesPage() {
         }
       />
 
-      <div className="max-w-sm">
-        <Input
-          placeholder={t("search-room-type")}
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
-      </div>
+      <FilterBar
+        search={{
+          value: keyword,
+          onChange: setKeyword,
+          placeholder: t("search-room-type"),
+        }}
+        onClear={() => setKeyword("")}
+        showClear={Boolean(keyword)}
+        actions={
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <Download className="h-4 w-4" />
+            {t("export-csv")}
+          </Button>
+        }
+      />
 
       <DataTable
         columns={columns}
-        data={items}
+        data={sorted}
         loading={isLoading}
         getRowId={(r) => r.id}
         emptyTitle={t("no-room-types")}
         emptyDescription={t("add-room-type-to-create-rooms")}
+        stickyHeader
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={handleSortChange}
       />
 
       <Pagination

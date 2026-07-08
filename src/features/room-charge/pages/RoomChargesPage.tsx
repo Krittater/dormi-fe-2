@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SKELETON_ROWS_CARDS } from "@/constants/config";
 import {
@@ -33,6 +34,7 @@ export function RoomChargesPage() {
   const { data: dropdowns } = useRoomChargeDropdowns(apartmentId);
   const { saveSetup, create, remove } = useRoomChargeActions(apartmentId);
 
+  const [search, setSearch] = useState("");
   const [editingChargeId, setEditingChargeId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState({ amount: "", unit: "" });
   const [togglingKey, setTogglingKey] = useState<string | null>(null);
@@ -40,15 +42,21 @@ export function RoomChargesPage() {
   // อ่านจาก React Query cache ตรง ๆ — optimistic update จัดการใน useRoomChargeActions
   const rows = setupRows ?? [];
 
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(({ room }) => room.name.toLowerCase().includes(q));
+  }, [rows, search]);
+
   const chargeTypes = useMemo(
     () => (dropdowns?.chargeTypes ?? []).filter((c) => c.isActive),
-    [dropdowns]
+    [dropdowns],
   );
 
   useEffect(() => {
     if (!editingChargeId) return;
     const stillExists = (setupRows ?? []).some((row) =>
-      row.room.charges.some((c) => c.id === editingChargeId)
+      row.room.charges.some((c) => c.id === editingChargeId),
     );
     if (!stillExists) setEditingChargeId(null);
   }, [setupRows, editingChargeId]);
@@ -68,10 +76,10 @@ export function RoomChargesPage() {
           unit: c.unit ?? null,
           isCalWater: nextWater,
           isCalElectric: nextElectric,
-        }))
+        })),
       );
     },
-    [setupRows, saveSetup]
+    [setupRows, saveSetup],
   );
 
   const toggleChargeType = useCallback(
@@ -81,7 +89,7 @@ export function RoomChargesPage() {
       try {
         const roomRow = (setupRows ?? []).find((r) => r.room.id === roomId);
         const existing = roomRow?.room.charges.find(
-          (c) => c.chargeTypeId === chargeType.id
+          (c) => c.chargeTypeId === chargeType.id,
         );
 
         if (checked) {
@@ -102,7 +110,7 @@ export function RoomChargesPage() {
         setTogglingKey(null);
       }
     },
-    [setupRows, create, remove, editingChargeId]
+    [setupRows, create, remove, editingChargeId],
   );
 
   const startEdit = useCallback((charge: SetupCharge) => {
@@ -125,8 +133,7 @@ export function RoomChargesPage() {
         return;
       }
 
-      const unit =
-        editDraft.unit.trim() === "" ? null : Number(editDraft.unit);
+      const unit = editDraft.unit.trim() === "" ? null : Number(editDraft.unit);
       if (unit != null && (!Number.isFinite(unit) || unit < 0)) {
         toast.error(t("enter-a-number"));
         return;
@@ -139,7 +146,7 @@ export function RoomChargesPage() {
         toast.error(getApiErrorMessage(err));
       }
     },
-    [editDraft, saveSetup, t]
+    [editDraft, saveSetup, t],
   );
 
   return (
@@ -167,7 +174,17 @@ export function RoomChargesPage() {
         />
       ) : (
         <div className="space-y-4">
-          {rows.map(({ room }) => (
+          <FilterBar
+            search={{
+              value: search,
+              onChange: setSearch,
+              placeholder: t("search"),
+            }}
+            onClear={() => setSearch("")}
+            showClear={search !== ""}
+          />
+
+          {filteredRows.map(({ room }) => (
             <Card key={room.id}>
               <CardContent className="p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -215,7 +232,7 @@ export function RoomChargesPage() {
                 <div className="mt-4 space-y-2">
                   {chargeTypes.map((chargeType) => {
                     const charge = room.charges.find(
-                      (c) => c.chargeTypeId === chargeType.id
+                      (c) => c.chargeTypeId === chargeType.id,
                     );
                     const isChecked = Boolean(charge);
                     const isEditing =
@@ -227,31 +244,33 @@ export function RoomChargesPage() {
                       <div
                         key={chargeType.id}
                         className={cn(
-                          "flex items-start gap-3 rounded-lg border p-3 transition-colors",
+                          "flex items-center gap-3 rounded-lg border p-3 transition-colors",
                           isChecked
                             ? "border-primary bg-primary-tint ring-1 ring-primary/10"
-                            : "border-gray-100 bg-gray-50"
+                            : "border-gray-100 bg-gray-50",
                         )}
                       >
                         <Checkbox
                           id={`${room.id}-${chargeType.id}`}
                           checked={isChecked}
-                          disabled={isToggling || create.isPending || remove.isPending}
+                          disabled={
+                            isToggling || create.isPending || remove.isPending
+                          }
                           onCheckedChange={(v) =>
                             void toggleChargeType(
                               room.id,
                               chargeType,
-                              v === true
+                              v === true,
                             )
                           }
-                          className="mt-0.5"
+                          // className="mt-0.5"
                         />
                         <div className="min-w-0 flex-1">
                           <label
                             htmlFor={`${room.id}-${chargeType.id}`}
                             className={cn(
                               "cursor-pointer text-sm font-medium",
-                              isChecked ? "text-primary" : "text-gray-500"
+                              isChecked ? "text-primary" : "text-gray-500",
                             )}
                           >
                             {chargeType.name}

@@ -3232,5 +3232,449 @@
     "th": "กรุณากรอกรายละเอียด",
     "en": "Please enter a description",
     "cn": "请输入详情"
+  },
+  {
+    "code": "add-single-room",
+    "th": "เพิ่มห้องทีละห้อง",
+    "en": "Add single room",
+    "cn": "添加单个房间"
+  },
+  {
+    "code": "bulk-add-rooms",
+    "th": "เพิ่มห้องหลายห้อง",
+    "en": "Bulk add rooms",
+    "cn": "批量添加房间"
+  },
+  {
+    "code": "bulk-add-rooms-description",
+    "th": "สร้างหลายห้องพร้อมกัน ระบบจะสร้างมิเตอร์น้ำและไฟให้แต่ละห้องอัตโนมัติ",
+    "en": "Create multiple rooms at once. Water and electric meters are created automatically for each room.",
+    "cn": "一次创建多个房间。系统将自动为每个房间创建水表和电表。"
+  },
+  {
+    "code": "quick-generate-rooms",
+    "th": "สร้างรายการห้องอัตโนมัติ",
+    "en": "Quick generate rooms",
+    "cn": "快速生成房间"
+  },
+  {
+    "code": "generate-rooms",
+    "th": "สร้างรายการ",
+    "en": "Generate rows",
+    "cn": "生成列表"
+  },
+  {
+    "code": "replace-rows",
+    "th": "แทนที่รายการเดิม",
+    "en": "Replace existing rows",
+    "cn": "替换现有行"
+  },
+  {
+    "code": "append-rows",
+    "th": "เพิ่มต่อท้าย",
+    "en": "Append to table",
+    "cn": "追加到表格"
+  },
+  {
+    "code": "apply-to-all-rows",
+    "th": "ใช้กับทุกแถว",
+    "en": "Apply to all rows",
+    "cn": "应用到所有行"
+  },
+  {
+    "code": "rooms-ready-to-create",
+    "th": "พร้อมสร้าง {count} ห้อง",
+    "en": "Ready to create {count} rooms",
+    "cn": "准备创建 {count} 个房间"
+  },
+  {
+    "code": "rooms-bulk-created-summary",
+    "th": "สร้างสำเร็จ {succeeded} ห้อง, ล้มเหลว {failed} ห้อง",
+    "en": "Created {succeeded} rooms, {failed} failed",
+    "cn": "成功创建 {succeeded} 个房间，失败 {failed} 个"
+  },
+  {
+    "code": "duplicate-room-name-in-table",
+    "th": "ชื่อห้องซ้ำในตาราง",
+    "en": "Duplicate room name in table",
+    "cn": "表格中房间名称重复"
+  },
+  {
+    "code": "max-rooms-per-batch",
+    "th": "สร้างได้ไม่เกิน 50 ห้องต่อครั้ง",
+    "en": "Maximum 50 rooms per batch",
+    "cn": "每批最多 50 个房间"
+  },
+  {
+    "code": "room-name-prefix",
+    "th": "คำนำหน้าเลขห้อง",
+    "en": "Room name prefix",
+    "cn": "房间编号前缀"
+  },
+  {
+    "code": "generate-mode",
+    "th": "โหมดการสร้าง",
+    "en": "Generate mode",
+    "cn": "生成模式"
+  },
+  {
+    "code": "room-range-start",
+    "th": "เลขห้องเริ่มต้น",
+    "en": "Start room number",
+    "cn": "起始房间号"
+  },
+  {
+    "code": "room-range-end",
+    "th": "เลขห้องสิ้นสุด",
+    "en": "End room number",
+    "cn": "结束房间号"
+  },
+  {
+    "code": "meter-readings",
+    "th": "ค่ามิเตอร์",
+    "en": "Meter readings",
+    "cn": "表读数"
+  },
+  {
+    "code": "remove-row",
+    "th": "ลบแถว",
+    "en": "Remove row",
+    "cn": "删除行"
+  },
+  {
+    "code": "add-row",
+    "th": "เพิ่มแถว",
+    "en": "Add row",
+    "cn": "添加行"
+  },
+  {
+    "code": "create-n-rooms",
+    "th": "สร้าง {count} ห้อง",
+    "en": "Create {count} rooms",
+    "cn": "创建 {count} 个房间"
+  },
+  {
+    "code": "rooms-generated",
+    "th": "สร้างรายการ {count} ห้องแล้ว",
+    "en": "Generated {count} room rows",
+    "cn": "已生成 {count} 个房间行"
+  },
+  {
+    "code": "rooms-bulk-all-failed",
+    "th": "ไม่สามารถสร้างห้องได้ กรุณาตรวจสอบรายการที่มีข้อผิดพลาด",
+    "en": "No rooms were created. Please fix the rows with errors.",
+    "cn": "未能创建任何房间。请修正有错误的行。"
+  },
+  {
+    "code": "room-range-start-must-be-lte-end",
+    "th": "เลขห้องเริ่มต้นต้องไม่มากกว่าเลขห้องสิ้นสุด",
+    "en": "Start room number must not be greater than end room number",
+    "cn": "起始房间号不能大于结束房间号"
+  },
+  {
+    "code": "at-least-one-room",
+    "th": "ต้องมีอย่างน้อย 1 ห้อง",
+    "en": "At least one room is required",
+    "cn": "至少需要 1 个房间"
+  },
+  {
+    "code": "breadcrumb-home",
+    "th": "หน้าหลัก",
+    "en": "Home",
+    "cn": "首页"
+  },
+  {
+    "code": "breadcrumb-detail",
+    "th": "รายละเอียด",
+    "en": "Detail",
+    "cn": "详情"
+  },
+  {
+    "code": "more-actions",
+    "th": "ตัวเลือกเพิ่มเติม",
+    "en": "More actions",
+    "cn": "更多操作"
+  },
+  {
+    "code": "clear-filters",
+    "th": "ล้างตัวกรอง",
+    "en": "Clear filters",
+    "cn": "清除筛选"
+  },
+  {
+    "code": "export-csv",
+    "th": "ส่งออก CSV",
+    "en": "Export CSV",
+    "cn": "导出 CSV"
+  },
+  {
+    "code": "command-palette-title",
+    "th": "ค้นหาและไปยัง...",
+    "en": "Search and go to...",
+    "cn": "搜索并跳转..."
+  },
+  {
+    "code": "command-palette-placeholder",
+    "th": "พิมพ์คำสั่งหรือหน้า...",
+    "en": "Type a command or page...",
+    "cn": "输入命令或页面..."
+  },
+  {
+    "code": "command-navigate",
+    "th": "ไปยัง",
+    "en": "Navigate",
+    "cn": "导航"
+  },
+  {
+    "code": "command-create",
+    "th": "สร้าง",
+    "en": "Create",
+    "cn": "创建"
+  },
+  {
+    "code": "command-add-room",
+    "th": "เพิ่มห้อง",
+    "en": "Add room",
+    "cn": "添加房间"
+  },
+  {
+    "code": "command-add-tenant",
+    "th": "เพิ่มผู้เช่า",
+    "en": "Add tenant",
+    "cn": "添加租户"
+  },
+  {
+    "code": "command-record-transaction",
+    "th": "บันทึกรายการ",
+    "en": "Record transaction",
+    "cn": "记录交易"
+  },
+  {
+    "code": "setup-wizard-title",
+    "th": "ตั้งค่าหอพักครั้งแรก",
+    "en": "Initial apartment setup",
+    "cn": "首次公寓设置"
+  },
+  {
+    "code": "setup-step-room-types",
+    "th": "ประเภทห้อง",
+    "en": "Room types",
+    "cn": "房间类型"
+  },
+  {
+    "code": "setup-step-rooms",
+    "th": "ห้องพัก",
+    "en": "Rooms",
+    "cn": "房间"
+  },
+  {
+    "code": "setup-step-charges",
+    "th": "ประเภทค่าใช้จ่าย",
+    "en": "Charge types",
+    "cn": "费用类型"
+  },
+  {
+    "code": "setup-step-billing",
+    "th": "รอบบิล",
+    "en": "Billing period",
+    "cn": "账单周期"
+  },
+  {
+    "code": "setup-wizard-desc",
+    "th": "ทำตามขั้นตอนเพื่อเริ่มใช้งานหอพักของคุณ",
+    "en": "Follow these steps to get your apartment ready",
+    "cn": "按照以下步骤完成公寓设置"
+  },
+  {
+    "code": "billing-step-open",
+    "th": "เปิดรอบ",
+    "en": "Open",
+    "cn": "开放"
+  },
+  {
+    "code": "billing-step-generated",
+    "th": "สร้างบิลแล้ว",
+    "en": "Generated",
+    "cn": "已生成"
+  },
+  {
+    "code": "billing-step-closed",
+    "th": "ปิดรอบ",
+    "en": "Closed",
+    "cn": "已关闭"
+  },
+  {
+    "code": "print-invoice",
+    "th": "พิมพ์ใบแจ้งหนี้",
+    "en": "Print invoice",
+    "cn": "打印发票"
+  },
+  {
+    "code": "payment-history",
+    "th": "ประวัติการชำระ",
+    "en": "Payment history",
+    "cn": "付款历史"
+  },
+  {
+    "code": "paid-at",
+    "th": "ชำระเมื่อ",
+    "en": "Paid at",
+    "cn": "付款时间"
+  },
+  {
+    "code": "forgot-password-unavailable",
+    "th": "การรีเซ็ตรหัสผ่านจะเปิดให้ใช้งานเร็วๆ นี้",
+    "en": "Password reset will be available soon",
+    "cn": "密码重置即将开放"
+  },
+  {
+    "code": "back-to-login",
+    "th": "กลับไปเข้าสู่ระบบ",
+    "en": "Back to login",
+    "cn": "返回登录"
+  },
+  {
+    "code": "table-density-comfortable",
+    "th": "ปกติ",
+    "en": "Comfortable",
+    "cn": "舒适"
+  },
+  {
+    "code": "table-density-compact",
+    "th": "กระชับ",
+    "en": "Compact",
+    "cn": "紧凑"
+  },
+  {
+    "code": "sort-asc",
+    "th": "เรียงจากน้อยไปมาก",
+    "en": "Sort ascending",
+    "cn": "升序"
+  },
+  {
+    "code": "sort-desc",
+    "th": "เรียงจากมากไปน้อย",
+    "en": "Sort descending",
+    "cn": "降序"
+  },
+  {
+    "code": "nav-overdue-count",
+    "th": "ค้างชำระ {count}",
+    "en": "{count} overdue",
+    "cn": "{count} 逾期"
+  },
+  {
+    "code": "setup-step-invoice-setups",
+    "th": "ตั้งค่าใบแจ้งหนี้",
+    "en": "Invoice setups",
+    "cn": "发票设置"
+  },
+  {
+    "code": "invoice-setup-wizard-title",
+    "th": "สร้างการตั้งค่าใบแจ้งหนี้แรก",
+    "en": "Create your first invoice setup",
+    "cn": "创建首个发票设置"
+  },
+  {
+    "code": "invoice-setup-wizard-desc",
+    "th": "กำหนดประเภทบิลและรอบวันที่สำหรับออกใบแจ้งหนี้",
+    "en": "Define bill types and billing dates for your invoices",
+    "cn": "定义账单类型和开票日期"
+  },
+  {
+    "code": "invoice-setup-wizard-step-type",
+    "th": "ประเภท",
+    "en": "Type",
+    "cn": "类型"
+  },
+  {
+    "code": "invoice-setup-wizard-step-schedule",
+    "th": "กำหนดวัน",
+    "en": "Schedule",
+    "cn": "日程"
+  },
+  {
+    "code": "invoice-setup-wizard-step-rate",
+    "th": "อัตรา",
+    "en": "Rate",
+    "cn": "费率"
+  },
+  {
+    "code": "invoice-setup-wizard-step-preview",
+    "th": "ตรวจสอบ",
+    "en": "Preview",
+    "cn": "预览"
+  },
+  {
+    "code": "invoice-setup-wizard-schedule-hint",
+    "th": "วันที่ 1–31 ของเดือน: ตัดรอบ → ออกบิล → ครบกำหนดชำระ",
+    "en": "Day of month (1–31): cutoff → issue → due",
+    "cn": "每月日期（1–31）：截止 → 开票 → 到期"
+  },
+  {
+    "code": "invoice-setup-wizard-rate-hint",
+    "th": "อัตราต่อหน่วยสำหรับค่าไฟหรือค่าน้ำ",
+    "en": "Rate per unit for electricity or water",
+    "cn": "电/水每单位费率"
+  },
+  {
+    "code": "invoice-setup-wizard-preview-title",
+    "th": "สรุปการตั้งค่า",
+    "en": "Setup summary",
+    "cn": "设置摘要"
+  },
+  {
+    "code": "invoice-setup-wizard-preview-timeline",
+    "th": "วันที่ {cutoff} ตัดรอบ → วันที่ {issue} ออกบิล → วันที่ {due} ครบกำหนด",
+    "en": "Day {cutoff} cutoff → day {issue} issue → day {due} due",
+    "cn": "第{cutoff}日截止 → 第{issue}日开票 → 第{due}日到期"
+  },
+  {
+    "code": "invoice-setup-type-hint-rent",
+    "th": "ค่าเช่ารายเดือนตามประเภทห้อง",
+    "en": "Monthly rent by room type",
+    "cn": "按房型收取月租"
+  },
+  {
+    "code": "invoice-setup-type-hint-electricity",
+    "th": "ค่าไฟตามมิเตอร์",
+    "en": "Electricity from meter readings",
+    "cn": "按电表读数计费"
+  },
+  {
+    "code": "invoice-setup-type-hint-water",
+    "th": "ค่าน้ำตามมิเตอร์",
+    "en": "Water from meter readings",
+    "cn": "按水表读数计费"
+  },
+  {
+    "code": "back-step",
+    "th": "ย้อนกลับ",
+    "en": "Back",
+    "cn": "返回"
+  },
+  {
+    "code": "create-setup",
+    "th": "สร้างการตั้งค่า",
+    "en": "Create setup",
+    "cn": "创建设置"
+  },
+  {
+    "code": "baht",
+    "th": "บาท",
+    "en": "THB",
+    "cn": "泰铢"
+  },
+  {
+    "code": "search-apartment",
+    "th": "ค้นหาหอพัก",
+    "en": "Search apartments",
+    "cn": "搜索公寓"
+  },
+  {
+    "code": "floor-filter-hint",
+    "th": "กรองชั้นจากรายการในหน้านี้เท่านั้น",
+    "en": "Floor filter applies to the current page only",
+    "cn": "楼层筛选仅适用于当前页"
   }
 ]

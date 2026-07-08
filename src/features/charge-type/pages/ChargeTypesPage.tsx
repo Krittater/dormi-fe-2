@@ -3,9 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -34,7 +35,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
-import { DataTable, type Column } from "@/components/shared/data-table";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { DataTable, type Column, sortTableData, type SortDirection } from "@/components/shared/data-table";
+import { exportTableCsv } from "@/lib/export";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   useChargeTypeActions,
@@ -60,6 +63,9 @@ export function ChargeTypesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ChargeType | null>(null);
   const [deleting, setDeleting] = useState<ChargeType | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<string | null>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const { data: items = [], isLoading } = useChargeTypes(apartmentId);
   const { create, update, remove } = useChargeTypeActions(apartmentId);
@@ -135,11 +141,31 @@ export function ChargeTypesPage() {
     setDeleting(null);
   }, [deleting, remove]);
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((c) => c.name.toLowerCase().includes(q));
+  }, [items, search]);
+
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
+      }
+    },
+    [sortKey]
+  );
+
   const columns = useMemo<Column<ChargeType>[]>(
     () => [
       {
         key: "name",
         header: t("name"),
+        sortable: true,
+        sortValue: (c) => c.name,
         cell: (c) => (
           <span className="font-medium text-gray-900">{c.name}</span>
         ),
@@ -147,6 +173,8 @@ export function ChargeTypesPage() {
       {
         key: "category",
         header: t("category"),
+        sortable: true,
+        sortValue: (c) => c.category,
         cell: (c) => (
           <Badge variant="secondary">
             {t(CHARGE_TYPE_CATEGORY_CODES[c.category])}
@@ -175,28 +203,36 @@ export function ChargeTypesPage() {
         className: "text-right",
         cell: (c) => (
           <div className="flex justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconActionButton
+              label={t("edit")}
               className="h-8 w-8"
               onClick={() => openEdit(c)}
             >
               <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive"
+            </IconActionButton>
+            <IconActionButton
+              label={t("delete")}
+              destructive
+              className="h-8 w-8"
               onClick={() => setDeleting(c)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconActionButton>
           </div>
         ),
       },
     ],
     [t, openEdit]
   );
+
+  const sorted = useMemo(
+    () => sortTableData(filtered, columns, sortKey, sortDirection),
+    [filtered, columns, sortKey, sortDirection]
+  );
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("charge-types.csv", columns, sorted);
+  }, [columns, sorted]);
 
   return (
     <div className="space-y-6">
@@ -211,11 +247,31 @@ export function ChargeTypesPage() {
         }
       />
 
+      <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("search"),
+        }}
+        onClear={() => setSearch("")}
+        showClear={Boolean(search)}
+        actions={
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <Download className="h-4 w-4" />
+            {t("export-csv")}
+          </Button>
+        }
+      />
+
       <DataTable
         columns={columns}
-        data={items}
+        data={sorted}
         loading={isLoading}
         getRowId={(c) => c.id}
+        stickyHeader
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={handleSortChange}
         emptyTitle={t("no-charge-types")}
         emptyDescription={t("no-charge-types-description")}
       />

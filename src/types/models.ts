@@ -105,6 +105,39 @@ export interface Room {
   createdAt?: string;
 }
 
+export interface BulkCreateRoomLinePayload {
+  clientIndex: number;
+  roomTypeId: string;
+  name: string;
+  floor?: string;
+  description?: string;
+  status?: RoomStatus;
+  isActive?: boolean;
+  currentWaterMeterReading: number;
+  currentElectricMeterReading: number;
+}
+
+export interface BulkCreateRoomsPayload {
+  rooms: BulkCreateRoomLinePayload[];
+}
+
+export interface BulkCreateRoomFailedItem {
+  clientIndex: number;
+  name: string;
+  reason: string;
+  code: string;
+}
+
+export interface BulkCreateRoomsResult {
+  summary: {
+    total: number;
+    succeeded: number;
+    failed: number;
+  };
+  created: Room[];
+  failed: BulkCreateRoomFailedItem[];
+}
+
 export interface RoomOverviewSummary {
   totalRooms: number;
   availableRooms: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ApartmentFormDialog } from "@/features/apartment/components/apartment-form-dialog";
@@ -39,9 +40,20 @@ export function DashboardPage() {
   const { data: apartments = [], isLoading } = useApartments();
   const { remove } = useApartmentActions();
 
+  const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ApartmentOverview | null>(null);
   const [deleting, setDeleting] = useState<ApartmentOverview | null>(null);
+
+  const filteredApartments = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return apartments;
+    return apartments.filter(
+      (apt) =>
+        apt.name.toLowerCase().includes(q) ||
+        apt.address?.toLowerCase().includes(q)
+    );
+  }, [apartments, search]);
 
   const openCreate = useCallback(() => {
     setEditing(null);
@@ -99,8 +111,21 @@ export function DashboardPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {apartments.map((apt) => (
+        <>
+          {apartments.length > 3 && (
+            <FilterBar
+              search={{
+                value: search,
+                onChange: setSearch,
+                placeholder: t("search"),
+              }}
+              onClear={() => setSearch("")}
+              showClear={search !== ""}
+            />
+          )}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredApartments.map((apt) => (
             <Card
               key={apt.id}
               className="group transition-shadow hover:shadow-md"
@@ -125,9 +150,14 @@ export function DashboardPage() {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={t("more-actions")}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEdit(apt)}>
@@ -188,7 +218,8 @@ export function DashboardPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        </>
       )}
 
       <ApartmentFormDialog

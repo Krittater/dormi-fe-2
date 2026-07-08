@@ -75,5 +75,5 @@ export function StatusBadge({ kind, value }: Props) {
       : value;
   }
 
-  return <Badge variant={variant}>{label}</Badge>;
+  return <Badge variant={variant} role="status">{label}</Badge>;
 }

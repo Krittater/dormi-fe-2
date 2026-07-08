@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
-import { ChevronRight, Loader2, Plus } from "lucide-react";
+import { ChevronRight, Download, Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,14 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/page-header";
-import { DataTable, type Column } from "@/components/shared/data-table";
+import { FilterBar } from "@/components/shared/filter-bar";
+import {
+  DataTable,
+  type Column,
+  sortTableData,
+  type SortDirection,
+} from "@/components/shared/data-table";
+import { exportTableCsv } from "@/lib/export";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ALL } from "@/constants/config";
 import { MONTH_CODES } from "@/constants/months";
@@ -64,6 +72,8 @@ export function BillingPeriodsPage() {
 
   const [tab, setTab] = useState<string>(ALL);
   const [formOpen, setFormOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<string | null>("period");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const { data: items = [], isLoading } = useBillingPeriods(apartmentId);
   const { data: setups = [], isLoading: setupsLoading } =
@@ -112,11 +122,27 @@ export function BillingPeriodsPage() {
     [apartmentId, router]
   );
 
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
+      }
+    },
+    [sortKey]
+  );
+
   const columns = useMemo<Column<BillingPeriod>[]>(
     () => [
       {
         key: "period",
         header: t("nav-billing-periods"),
+        sortable: true,
+        sortValue: (b) =>
+          b.name ??
+          `${(b.periodYear ?? 0) * 100 + (b.periodMonth ?? 0)}`,
         cell: (b) => (
           <span className="font-medium text-gray-900">
             {b.name ??
@@ -138,6 +164,8 @@ export function BillingPeriodsPage() {
       {
         key: "status",
         header: t("status"),
+        sortable: true,
+        sortValue: (b) => b.status,
         cell: (b) => <StatusBadge kind="billing" value={b.status} />,
       },
       {
@@ -150,6 +178,15 @@ export function BillingPeriodsPage() {
     ],
     [t]
   );
+
+  const sorted = useMemo(
+    () => sortTableData(filtered, columns, sortKey, sortDirection),
+    [filtered, columns, sortKey, sortDirection]
+  );
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("billing-periods.csv", columns, sorted);
+  }, [columns, sorted]);
 
   return (
     <div className="space-y-6">
@@ -169,36 +206,56 @@ export function BillingPeriodsPage() {
 
       {setups.length === 0 && !setupsLoading && (
         <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">
-          {t("add-invoice-setup-first")}
+          {t("add-invoice-setup-first")}{" "}
+          <Link
+            href={`/apartments/${apartmentId}/invoice-setups`}
+            className="font-medium text-primary hover:underline"
+          >
+            {t("nav-invoice-setups")}
+          </Link>
         </p>
       )}
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value={ALL}>{t("all")}</TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.OPEN}>
-            {t("billing-period-status-open")}
-          </TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.GENERATED}>
-            {t("billing-period-status-generated")}
-          </TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.CLOSED}>
-            {t("billing-period-status-closed")}
-          </TabsTrigger>
-          <TabsTrigger value={BillingPeriodStatus.CANCELLED}>
-            {t("billing-period-status-cancelled")}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <FilterBar
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList className="flex-wrap">
+                <TabsTrigger value={ALL}>{t("all")}</TabsTrigger>
+                <TabsTrigger value={BillingPeriodStatus.OPEN}>
+                  {t("billing-period-status-open")}
+                </TabsTrigger>
+                <TabsTrigger value={BillingPeriodStatus.GENERATED}>
+                  {t("billing-period-status-generated")}
+                </TabsTrigger>
+                <TabsTrigger value={BillingPeriodStatus.CLOSED}>
+                  {t("billing-period-status-closed")}
+                </TabsTrigger>
+                <TabsTrigger value={BillingPeriodStatus.CANCELLED}>
+                  {t("billing-period-status-cancelled")}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button variant="outline" size="sm" onClick={handleExportCsv}>
+              <Download className="h-4 w-4" />
+              {t("export-csv")}
+            </Button>
+          </div>
+        }
+      />
 
       <DataTable
         columns={columns}
-        data={filtered}
+        data={sorted}
         loading={isLoading}
         getRowId={(b) => b.id}
         onRowClick={handleRowClick}
         emptyTitle={t("no-billing-periods")}
         emptyDescription={t("no-billing-periods-description")}
+        stickyHeader
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={handleSortChange}
       />
 
       <Dialog

@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApartmentId } from "@/hooks/use-apartment-id";
+import { useFilterParams } from "@/hooks/use-filter-params";
 import { useQueries } from "@tanstack/react-query";
-import { Plus, Send, FileDown, X, Check, Search } from "lucide-react";
+import { Plus, Send, FileDown, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,8 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination } from "@/components/ui/pagination";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
-import { DataTable, type Column } from "@/components/shared/data-table";
+import { DataTable, type Column, type SortDirection } from "@/components/shared/data-table";
+import { exportTableCsv } from "@/lib/export";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,15 +65,20 @@ export function InvoicesPage() {
   const apartmentId = useApartmentId();
   const router = useRouter();
 
-  const [status, setStatus] = useState<string>(ALL);
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [page, setPage] = useState(1);
+  const { values, setValue, hasActiveFilters } = useFilterParams({
+    defaults: { status: ALL, q: "", page: "1", period: "" },
+    debounceKeys: ["q"],
+  });
+  const status = values.status;
+  const invoiceNumber = values.q;
+  const page = Math.max(1, Number(values.page) || 1);
+  const periodFromUrl = values.period;
+
   const [formOpen, setFormOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmPublish, setConfirmPublish] = useState(false);
-  const [periodDraft, setPeriodDraft] = useState("");
-  const [periodApplied, setPeriodApplied] = useState("");
-  const periodInitialized = useRef(false);
+  const [sortKey, setSortKey] = useState<string | null>("number");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const { data: periodOptionsData } = useBillingPeriodDropdown(apartmentId, {
     type: "RENT",
@@ -79,14 +86,10 @@ export function InvoicesPage() {
   });
   const periodOptions = periodOptionsData ?? EMPTY_PERIODS;
 
-  useEffect(() => {
-    if (periodInitialized.current || periodOptions.length === 0) return;
-    const first = periodOptions[0]?.id ?? "";
-    if (!first) return;
-    setPeriodDraft(first);
-    setPeriodApplied(first);
-    periodInitialized.current = true;
-  }, [periodOptions]);
+  const periodApplied = useMemo(() => {
+    if (periodFromUrl) return periodFromUrl;
+    return periodOptions[0]?.id ?? "";
+  }, [periodFromUrl, periodOptions]);
 
   const { data, isLoading, refetch, dataUpdatedAt } = useInvoices(apartmentId, {
     page,
@@ -203,15 +206,24 @@ export function InvoicesPage() {
     toast.info(t("pdf-coming-soon"));
   }, [t]);
 
-  const applyPeriod = useCallback(() => {
-    setPage(1);
-    setPeriodApplied(periodDraft);
-  }, [periodDraft]);
-
-  const selectStatusFilter = useCallback((value: string) => {
-    setPage(1);
-    setStatus(value);
+  const handleSortChange = useCallback((key: string) => {
+    setSortKey((prev) => {
+      if (prev === key) {
+        setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+        return key;
+      }
+      setSortDirection("asc");
+      return key;
+    });
   }, []);
+
+  const selectStatusFilter = useCallback(
+    (value: string) => {
+      setValue("page", "1");
+      setValue("status", value);
+    },
+    [setValue]
+  );
 
   const columns = useMemo<Column<Invoice>[]>(
     () => [
@@ -231,6 +243,8 @@ export function InvoicesPage() {
       {
         key: "number",
         header: t("invoice-number"),
+        sortable: true,
+        sortValue: (i) => i.invoiceNumber ?? i.id,
         className: "min-w-[9rem] whitespace-nowrap",
         cell: (i) => (
           <span
@@ -316,6 +330,8 @@ export function InvoicesPage() {
       {
         key: "total",
         header: t("total"),
+        sortable: true,
+        sortValue: (i) => i.total ?? 0,
         className: "min-w-[6rem] whitespace-nowrap text-right",
         cell: (i) => formatCurrency(i.total),
       },
@@ -346,6 +362,10 @@ export function InvoicesPage() {
     ],
     [selectedIds, t, toggleSelect]
   );
+
+  const handleExportCsv = useCallback(() => {
+    exportTableCsv("invoices.csv", columns, items);
+  }, [columns, items]);
 
   return (
     <div className="space-y-6">
@@ -396,59 +416,78 @@ export function InvoicesPage() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="flex items-center gap-2">
-          <Select
-            value={periodDraft || undefined}
-            onValueChange={setPeriodDraft}
-            disabled={periodOptions.length === 0}
-          >
-            <SelectTrigger className="w-full sm:w-56">
-              <SelectValue placeholder={t("billing-period")} />
-            </SelectTrigger>
-            <SelectContent>
-              {periodOptions.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={applyPeriod}>
-            <Search className="h-4 w-4" />
-            {t("search")}
+      <FilterBar
+        filters={[
+          {
+            id: "period",
+            node: (
+              <Select
+                value={periodApplied || undefined}
+                onValueChange={(v) => {
+                  setValue("page", "1");
+                  setValue("period", v);
+                }}
+                disabled={periodOptions.length === 0}
+              >
+                <SelectTrigger className="w-full sm:w-56">
+                  <SelectValue placeholder={t("billing-period")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {periodOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+          {
+            id: "status",
+            node: (
+              <Select
+                value={status}
+                onValueChange={(v) => {
+                  setValue("page", "1");
+                  setValue("status", v);
+                }}
+              >
+                <SelectTrigger className="sm:w-48">
+                  <SelectValue placeholder={t("status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
+                  {Object.values(InvoiceStatus).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {t(INVOICE_STATUS_CODES[s])}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        search={{
+          value: invoiceNumber,
+          onChange: (v) => {
+            setValue("page", "1");
+            setValue("q", v);
+          },
+          placeholder: t("search-invoice-number"),
+        }}
+        onClear={() => {
+          setValue("page", "1");
+          setValue("q", "");
+          setValue("status", ALL);
+        }}
+        showClear={hasActiveFilters && (invoiceNumber !== "" || status !== ALL)}
+        actions={
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <FileDown className="h-4 w-4" />
+            {t("export-csv")}
           </Button>
-        </div>
-
-        <Input
-          placeholder={t("search-invoice-number")}
-          value={invoiceNumber}
-          onChange={(e) => {
-            setPage(1);
-            setInvoiceNumber(e.target.value);
-          }}
-          className="sm:max-w-xs"
-        />
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setPage(1);
-            setStatus(v);
-          }}
-        >
-          <SelectTrigger className="sm:w-48">
-            <SelectValue placeholder={t("status")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
-            {Object.values(InvoiceStatus).map((s) => (
-              <SelectItem key={s} value={s}>
-                {t(INVOICE_STATUS_CODES[s])}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        }
+      />
 
       {selectedIds.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
@@ -489,12 +528,16 @@ export function InvoicesPage() {
         onRowClick={handleRowClick}
         emptyTitle={t("no-invoices")}
         emptyDescription={t("no-invoices-description")}
+        stickyHeader
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={handleSortChange}
       />
 
       <Pagination
         page={page}
         totalPages={totalPagesOf(meta, items.length, DEFAULT_PAGE_SIZE)}
-        onPageChange={setPage}
+        onPageChange={(p) => setValue("page", String(p))}
       />
 
       <InvoiceFormDialog

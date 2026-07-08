@@ -4,11 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApartmentRouteParams } from "@/hooks/use-apartment-id";
 import {
-  ArrowLeft,
   HandCoins,
   Loader2,
   Pencil,
   Plus,
+  Printer,
   Save,
   Trash2,
   XCircle,
@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +38,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useBreadcrumbTail } from "@/contexts/breadcrumb.context";
 import { RecordTransactionDialog } from "@/features/finance/components/record-transaction-dialog";
 import {
   useInvoiceActions,
@@ -71,6 +73,8 @@ export function InvoiceDetailPage() {
   const [editItems, setEditItems] = useState<EditItem[]>([]);
   const [confirm, setConfirm] = useState<null | "cancel">(null);
   const [payOpen, setPayOpen] = useState(false);
+
+  useBreadcrumbTail(invoice?.invoiceNumber ?? invoiceId);
 
   const items = useMemo(
     () =>
@@ -156,50 +160,52 @@ export function InvoiceDetailPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 w-fit text-gray-500"
-        onClick={() => router.push(`/apartments/${apartmentId}/invoices`)}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("back-to-invoices")}
-      </Button>
-
+    <div className="space-y-6 print:space-y-4">
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-xl" />
       ) : !invoice ? (
-        <p className="text-sm text-gray-500">{t("invoice-not-found")}</p>
+        <p className="text-sm text-gray-600">{t("invoice-not-found")}</p>
       ) : (
         <>
           <PageHeader
             title={t("invoice-title", { number: invoice.invoiceNumber ?? "" })}
-            actions={<StatusBadge kind="invoice" value={invoice.status} />}
+            actions={
+              <div className="flex flex-wrap items-center gap-2 print:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                >
+                  <Printer className="h-4 w-4" />
+                  {t("print-invoice")}
+                </Button>
+                <StatusBadge kind="invoice" value={invoice.status} />
+              </div>
+            }
           />
 
-          <Card>
+          <Card className="invoice-print-area">
             <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
               <div>
-                <p className="text-xs text-gray-500">{t("room")}</p>
+                <p className="text-xs text-gray-600">{t("room")}</p>
                 <p className="font-medium text-gray-900">
                   {invoice.roomName ?? "-"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("tenant")}</p>
+                <p className="text-xs text-gray-600">{t("tenant")}</p>
                 <p className="font-medium text-gray-900">
                   {invoice.tenantName ?? "-"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("issue-date")}</p>
+                <p className="text-xs text-gray-600">{t("issue-date")}</p>
                 <p className="font-medium text-gray-900">
                   {formatDate(invoice.issueDate)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("due")}</p>
+                <p className="text-xs text-gray-600">{t("due")}</p>
                 <p className="font-medium text-gray-900">
                   {formatDate(invoice.dueDate)}
                 </p>
@@ -232,13 +238,13 @@ export function InvoiceDetailPage() {
                 })()}
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("paid-amount")}</p>
+                <p className="text-xs text-gray-600">{t("paid-amount")}</p>
                 <p className="font-medium text-emerald-600">
                   {formatCurrency(paidAmount)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("outstanding")}</p>
+                <p className="text-xs text-gray-600">{t("outstanding")}</p>
                 <p className="font-medium text-destructive">
                   {formatCurrency(outstanding)}
                 </p>
@@ -246,7 +252,33 @@ export function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
-          <div className="flex flex-wrap gap-2">
+          {(invoice.paidAt || paidAmount > 0) && (
+            <Card>
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-gray-900">
+                  {t("payment-history")}
+                </h3>
+                <dl className="mt-3 space-y-2 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-600">{t("paid-amount")}</dt>
+                    <dd className="font-medium text-gray-900">
+                      {formatCurrency(paidAmount)}
+                    </dd>
+                  </div>
+                  {invoice.paidAt && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-gray-600">{t("paid-at")}</dt>
+                      <dd className="font-medium text-gray-900">
+                        {formatDate(invoice.paidAt)}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex flex-wrap gap-2 print:hidden">
             {isDraft && !editing && (
               <Button variant="outline" onClick={startEdit}>
                 <Pencil className="h-4 w-4" />
@@ -282,7 +314,7 @@ export function InvoiceDetailPage() {
                       className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:grid-cols-12"
                     >
                       <div className="sm:col-span-3">
-                        <label className="text-xs text-gray-500">{t("type")}</label>
+                        <label className="text-xs text-gray-600">{t("type")}</label>
                         <Select
                           value={it.itemType}
                           onValueChange={(v) =>
@@ -304,7 +336,7 @@ export function InvoiceDetailPage() {
                         </Select>
                       </div>
                       <div className="sm:col-span-4">
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-gray-600">
                           {t("details")}
                         </label>
                         <Input
@@ -315,7 +347,7 @@ export function InvoiceDetailPage() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-xs text-gray-500">{t("quantity")}</label>
+                        <label className="text-xs text-gray-600">{t("quantity")}</label>
                         <Input
                           type="number"
                           min={0}
@@ -329,7 +361,7 @@ export function InvoiceDetailPage() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-xs text-gray-500">
+                        <label className="text-xs text-gray-600">
                           {t("unit-price")}
                         </label>
                         <Input
@@ -345,10 +377,9 @@ export function InvoiceDetailPage() {
                         />
                       </div>
                       <div className="flex items-end sm:col-span-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
+                        <IconActionButton
+                          label={t("remove-row")}
+                          destructive
                           disabled={editItems.length <= 1}
                           onClick={() =>
                             setEditItems((prev) =>
@@ -357,7 +388,7 @@ export function InvoiceDetailPage() {
                           }
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </IconActionButton>
                       </div>
                     </div>
                   ))}
@@ -426,7 +457,7 @@ export function InvoiceDetailPage() {
                               : it.name}
                           </p>
                           {it.description && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-600">
                               {it.description}
                             </p>
                           )}
@@ -459,7 +490,7 @@ export function InvoiceDetailPage() {
           <Card>
             <CardContent className="grid grid-cols-1 gap-3 p-5 text-sm sm:grid-cols-2">
               <div>
-                <p className="text-xs text-gray-500">{t("created-by")}</p>
+                <p className="text-xs text-gray-600">{t("created-by")}</p>
                 <p className="text-gray-900">
                   {invoice.createdByName ?? "-"}
                   {invoice.createdAt && (
@@ -471,7 +502,7 @@ export function InvoiceDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">{t("updated-by")}</p>
+                <p className="text-xs text-gray-600">{t("updated-by")}</p>
                 <p className="text-gray-900">
                   {invoice.updatedByName ?? "-"}
                   {invoice.updatedAt && (

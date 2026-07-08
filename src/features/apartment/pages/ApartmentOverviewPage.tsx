@@ -24,6 +24,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RevenueChart } from "@/features/apartment/components/dashboard/revenue-chart";
+import {
+  SetupWizard,
+  deriveSetupStep,
+  isSetupIncomplete,
+} from "@/features/onboarding/components/setup-wizard";
+import { useSetupProgress } from "@/hooks/useSetupProgress";
 import { useApartmentOverview } from "@/hooks/useApartments";
 import { formatNumber } from "@/lib/format";
 import { getIntlLocale } from "@/i18n/runtime";
@@ -86,6 +92,9 @@ export function ApartmentOverviewPage() {
 
   const { overview, invoices: invoicesQuery, periods: periodsQuery } =
     useApartmentOverview(apartmentId);
+  const setupCounts = useSetupProgress(apartmentId);
+  const showSetupWizard = isSetupIncomplete(setupCounts);
+  const setupStep = deriveSetupStep(setupCounts);
 
   const overviewData = overview.data;
   const invoices = invoicesQuery.data ?? [];
@@ -193,7 +202,7 @@ export function ApartmentOverviewPage() {
         seg: "billing-periods",
       },
       { label: t("nav-invoices"), desc: t("link-invoices-desc"), icon: Receipt, seg: "invoices" },
-      { label: t("nav-reports"), desc: t("link-reports-desc"), icon: BarChart3, seg: "invoices" },
+      { label: t("nav-finance"), desc: t("link-reports-desc"), icon: BarChart3, seg: "finance" },
     ],
     [t]
   );
@@ -223,11 +232,15 @@ export function ApartmentOverviewPage() {
         >
           {t(greetingCode(now.getHours()))}, {firstName}
         </h1>
-        <p suppressHydrationWarning className="text-sm text-gray-500">
+        <p suppressHydrationWarning className="text-sm text-gray-600">
           {apartment?.name ? `${apartment.name} · ` : ""}
           {t("dashboard-overview-subtitle", { date: formatLongDate(now) })}
         </p>
       </div>
+
+      {/* {showSetupWizard && (
+        <SetupWizard apartmentId={apartmentId} activeStep={setupStep} />
+      )} */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => {
@@ -236,7 +249,7 @@ export function ApartmentOverviewPage() {
             <Card key={kpi.label}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
-                  <p className="text-sm text-gray-500">{kpi.label}</p>
+                  <p className="text-sm text-gray-600">{kpi.label}</p>
                   <div
                     className={`flex h-9 w-9 items-center justify-center rounded-lg ${kpi.iconClass}`}
                   >
@@ -284,7 +297,7 @@ export function ApartmentOverviewPage() {
                           <p className="truncate text-sm font-medium text-gray-900">
                             {link.label}
                           </p>
-                          <p className="truncate text-xs text-gray-500">
+                          <p className="truncate text-xs text-gray-600">
                             {link.desc}
                           </p>
                         </div>
@@ -304,7 +317,7 @@ export function ApartmentOverviewPage() {
                   <h2 className="text-base font-semibold text-gray-900">
                     {t("revenue-overview")}
                   </h2>
-                  <p className="text-xs text-gray-500">{t("revenue-subtitle")}</p>
+                  <p className="text-xs text-gray-600">{t("revenue-subtitle")}</p>
                 </div>
                 <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                   {t("this-month")}
@@ -313,7 +326,7 @@ export function ApartmentOverviewPage() {
 
               <div className="mb-3 flex items-end gap-3">
                 <div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-600">
                     {t("revenue-total-label", { month: revenue.monthLabel })}
                   </p>
                   {loadingInvoices ? (
@@ -442,7 +455,7 @@ export function ApartmentOverviewPage() {
                           <p className="text-sm font-medium text-gray-900">
                             {n.title}
                           </p>
-                          <p className="text-xs text-gray-500">{n.desc}</p>
+                          <p className="text-xs text-gray-600">{n.desc}</p>
                         </div>
                       </li>
                     );

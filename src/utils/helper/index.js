@@ -1,5 +1,4 @@
 export * from './date-utils';
-export * from './sweet-alert-2';
 export * from './object-utils';
 export * from './image-utils';
 export * from './number-format-utils';

@@ -1,7 +1,13 @@
 import { buildQuery, http } from "@/api";
 import { endpoints } from "@/lib/endpoints";
 import { toList } from "@/lib/list";
-import type { PaginationMeta, Room, RoomOverview } from "@/types";
+import type {
+  BulkCreateRoomsPayload,
+  BulkCreateRoomsResult,
+  PaginationMeta,
+  Room,
+  RoomOverview,
+} from "@/types";
 import { normalizeRoomOptions, normalizeRooms } from "@/utils/room";
 
 export interface RoomListParams {
@@ -41,6 +47,16 @@ export const roomService = {
 
   async create(apartmentId: string, payload: unknown): Promise<Room> {
     return http.post<Room>(endpoints.rooms.create(apartmentId), payload);
+  },
+
+  async bulkCreate(
+    apartmentId: string,
+    payload: BulkCreateRoomsPayload
+  ): Promise<BulkCreateRoomsResult> {
+    return http.post<BulkCreateRoomsResult>(
+      endpoints.rooms.bulkCreate(apartmentId),
+      payload
+    );
   },
 
   async update(roomId: string, payload: unknown): Promise<Room> {

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Loader2, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -33,7 +34,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
+import { ALL } from "@/constants/config";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   useTransactionCategories,
@@ -55,6 +58,8 @@ export function TransactionCategoriesPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>(ALL);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TransactionCategory | null>(null);
   const [deleting, setDeleting] = useState<TransactionCategory | null>(null);
@@ -125,6 +130,16 @@ export function TransactionCategoriesPage() {
     remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
   }, [deleting, remove]);
 
+  const filtered = useMemo(() => {
+    let result = items;
+    if (typeFilter !== ALL) {
+      result = result.filter((c) => c.type === typeFilter);
+    }
+    const q = search.trim().toLowerCase();
+    if (!q) return result;
+    return result.filter((c) => c.name.toLowerCase().includes(q));
+  }, [items, search, typeFilter]);
+
   const columns = useMemo<Column<TransactionCategory>[]>(
     () => [
       {
@@ -175,24 +190,23 @@ export function TransactionCategoriesPage() {
           const shared = c.apartmentId === null;
           return (
             <div className="flex justify-end gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
+              <IconActionButton
+                label={t("edit")}
                 className="h-8 w-8"
                 disabled={shared}
                 onClick={() => openEdit(c)}
               >
                 <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive"
+              </IconActionButton>
+              <IconActionButton
+                label={t("delete")}
+                destructive
+                className="h-8 w-8"
                 disabled={shared}
                 onClick={() => setDeleting(c)}
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </IconActionButton>
             </div>
           );
         },
@@ -214,9 +228,42 @@ export function TransactionCategoriesPage() {
         }
       />
 
+      <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("search"),
+        }}
+        filters={[
+          {
+            id: "type",
+            node: (
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="sm:w-44">
+                  <SelectValue placeholder={t("type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all")}</SelectItem>
+                  {Object.values(TransactionCategoryType).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {t(TRANSACTION_CATEGORY_TYPE_CODES[v])}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        onClear={() => {
+          setSearch("");
+          setTypeFilter(ALL);
+        }}
+        showClear={search !== "" || typeFilter !== ALL}
+      />
+
       <DataTable
         columns={columns}
-        data={items}
+        data={filtered}
         loading={isLoading}
         getRowId={(c) => c.id}
         emptyTitle={t("no-categories")}

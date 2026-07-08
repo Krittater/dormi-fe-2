@@ -18,13 +18,24 @@ interface RawMeter {
 
 export type DisplayMeter = Meter & { floor?: string | null };
 
+/** Maps API/billing-period type strings to MeterType (handles "WATER" vs "water"). */
+export function normalizeMeterType(
+  value: string | null | undefined
+): MeterType | null {
+  if (!value) return null;
+  const lower = value.toLowerCase();
+  if (lower === MeterType.ELECTRICITY) return MeterType.ELECTRICITY;
+  if (lower === MeterType.WATER) return MeterType.WATER;
+  return null;
+}
+
 export function normalizeMeter(raw: RawMeter): DisplayMeter {
   return {
     id: raw.id ?? raw.meterId ?? "",
     apartmentId: raw.apartmentId,
     roomId: raw.roomId,
     roomName: raw.room?.name ?? raw.roomName ?? null,
-    type: raw.type as MeterType,
+    type: normalizeMeterType(raw.type) ?? (raw.type as MeterType),
     meterNumber: raw.meterNumber,
     status: raw.status,
     isActive: raw.isActive ?? true,
@@ -82,7 +93,10 @@ export function normalizeMeterReading(
     readingStatus: raw.readingStatus,
     recordedAt: raw.recordedAt ?? null,
     roomName: raw.room?.name ?? raw.roomName ?? null,
-    meterType: raw.type ?? raw.meterType ?? context?.billingPeriodType ?? null,
+    meterType:
+      normalizeMeterType(
+        raw.type ?? raw.meterType ?? context?.billingPeriodType
+      ) ?? null,
   };
 }
 
@@ -98,17 +112,32 @@ export function normalizeMeterReadings(
 }
 
 export interface PeriodOption {
-  id: string;
+  key: string;
   name: string;
 }
 
 export function normalizePeriodOptions(
-  items: Array<{ id: string; periodYear?: number; periodMonth?: number; name?: string }>
+  items: Array<{
+    key: string;
+    periodYear?: number;
+    periodMonth?: number;
+    name?: string;
+  }>
 ): PeriodOption[] {
   return items.map((p) => ({
-    id: p.id,
+    key: p.key,
     name: p.name ?? `${p.periodMonth}/${p.periodYear}`,
   }));
+}
+
+export function resolveMeterPeriodId(
+  group: { electricityPeriodId?: string; waterPeriodId?: string } | undefined,
+  pageType: MeterType
+): string {
+  if (!group) return "";
+  return pageType === MeterType.WATER
+    ? group.waterPeriodId ?? ""
+    : group.electricityPeriodId ?? "";
 }
 
 export type { RawMeter, MeterReading };

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -33,7 +34,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
+import { ACTIVE, ALL, INACTIVE } from "@/constants/config";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   usePaymentAccountActions,
@@ -55,6 +58,8 @@ export function PaymentAccountsPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<string>(ALL);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PaymentAccount | null>(null);
   const [deleting, setDeleting] = useState<PaymentAccount | null>(null);
@@ -109,6 +114,18 @@ export function PaymentAccountsPage() {
     remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
   }, [deleting, remove]);
 
+  const filtered = useMemo(() => {
+    let result = items;
+    if (activeFilter === ACTIVE) {
+      result = result.filter((a) => a.isActive);
+    } else if (activeFilter === INACTIVE) {
+      result = result.filter((a) => !a.isActive);
+    }
+    const q = search.trim().toLowerCase();
+    if (!q) return result;
+    return result.filter((a) => a.name.toLowerCase().includes(q));
+  }, [items, search, activeFilter]);
+
   const columns = useMemo<Column<PaymentAccount>[]>(
     () => [
       {
@@ -143,22 +160,21 @@ export function PaymentAccountsPage() {
         className: "text-right",
         cell: (a) => (
           <div className="flex justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconActionButton
+              label={t("edit")}
               className="h-8 w-8"
               onClick={() => openEdit(a)}
             >
               <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive"
+            </IconActionButton>
+            <IconActionButton
+              label={t("delete")}
+              destructive
+              className="h-8 w-8"
               onClick={() => setDeleting(a)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconActionButton>
           </div>
         ),
       },
@@ -179,9 +195,39 @@ export function PaymentAccountsPage() {
         }
       />
 
+      <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("search"),
+        }}
+        filters={[
+          {
+            id: "active",
+            node: (
+              <Select value={activeFilter} onValueChange={setActiveFilter}>
+                <SelectTrigger className="sm:w-44">
+                  <SelectValue placeholder={t("status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all")}</SelectItem>
+                  <SelectItem value={ACTIVE}>{t("active")}</SelectItem>
+                  <SelectItem value={INACTIVE}>{t("inactive")}</SelectItem>
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        onClear={() => {
+          setSearch("");
+          setActiveFilter(ALL);
+        }}
+        showClear={search !== "" || activeFilter !== ALL}
+      />
+
       <DataTable
         columns={columns}
-        data={items}
+        data={filtered}
         loading={isLoading}
         getRowId={(a) => a.id}
         emptyTitle={t("no-accounts")}

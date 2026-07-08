@@ -18,12 +18,34 @@ function pickRepresentativePeriod(periods: BillingPeriod[]): BillingPeriod | und
   );
 }
 
-/** One row per month for meter recording — only ELECTRICITY/WATER periods have meter readings linked to them. */
-function pickMeterPeriod(periods: BillingPeriod[]): BillingPeriod | undefined {
-  return (
-    periods.find((p) => p.type === BillingPeriodType.ELECTRICITY) ??
-    periods.find((p) => p.type === BillingPeriodType.WATER)
-  );
+/** One row per month for meter recording — keeps both ELECTRICITY and WATER period IDs. */
+export interface MeterPeriodGroup {
+  key: string;
+  periodYear: number;
+  periodMonth: number;
+  name: string;
+  electricityPeriodId?: string;
+  waterPeriodId?: string;
+}
+
+function buildMeterPeriodGroup(group: BillingPeriodGroup): MeterPeriodGroup | null {
+  const periods = group.periods ?? [];
+  const electricity = periods.find((p) => p.type === BillingPeriodType.ELECTRICITY);
+  const water = periods.find((p) => p.type === BillingPeriodType.WATER);
+
+  if (!electricity && !water) return null;
+
+  return {
+    key: `${group.periodYear}-${group.periodMonth}`,
+    periodYear: group.periodYear,
+    periodMonth: group.periodMonth,
+    name:
+      electricity?.name ??
+      water?.name ??
+      `${group.periodMonth}/${group.periodYear}`,
+    electricityPeriodId: electricity?.id,
+    waterPeriodId: water?.id,
+  };
 }
 
 export const billingService = {
@@ -35,15 +57,15 @@ export const billingService = {
       .filter((period): period is BillingPeriod => Boolean(period));
   },
 
-  /** Periods for the meter-reading-by-period picker: one entry per month/year, never split by type. */
-  async meterPeriodDropdown(apartmentId: string): Promise<BillingPeriod[]> {
+  /** Periods for the meter-reading-by-period picker: one entry per month with both utility period IDs. */
+  async meterPeriodDropdown(apartmentId: string): Promise<MeterPeriodGroup[]> {
     const res = await http.get(
       `${endpoints.billingPeriods.list(apartmentId)}${buildQuery({ limit: 100 })}`
     );
     const groups = toList<BillingPeriodGroup>(res).items;
     return groups
-      .map((group) => pickMeterPeriod(group.periods ?? []))
-      .filter((period): period is BillingPeriod => Boolean(period));
+      .map(buildMeterPeriodGroup)
+      .filter((group): group is MeterPeriodGroup => Boolean(group));
   },
 
   async dropdown(

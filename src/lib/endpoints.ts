@@ -25,6 +25,7 @@ export const endpoints = {
   rooms: {
     list: (apartmentId: string) => `${a(apartmentId)}/rooms`,
     create: (apartmentId: string) => `${a(apartmentId)}/rooms`,
+    bulkCreate: (apartmentId: string) => `${a(apartmentId)}/rooms/bulk`,
     overview: (apartmentId: string) => `${a(apartmentId)}/rooms/overview`,
     dropdown: (apartmentId: string) => `${a(apartmentId)}/rooms/dropdown`,
     detail: (apartmentId: string, roomId: string) =>

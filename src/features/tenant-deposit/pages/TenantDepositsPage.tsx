@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { HandCoins, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -33,7 +34,9 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
+import { ALL } from "@/constants/config";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { SettleDepositDialog } from "@/features/tenant-deposit/components/settle-deposit-dialog";
 import {
@@ -69,6 +72,8 @@ export function TenantDepositsPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TenantDeposit | null>(null);
   const [deleting, setDeleting] = useState<TenantDeposit | null>(null);
@@ -176,6 +181,18 @@ export function TenantDepositsPage() {
     remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
   }, [deleting, remove]);
 
+  const filtered = useMemo(() => {
+    let result = items;
+    if (statusFilter !== ALL) {
+      result = result.filter((d) => d.status === statusFilter);
+    }
+    const q = search.trim().toLowerCase();
+    if (!q) return result;
+    return result.filter((d) =>
+      tenantName(d.tenantId).toLowerCase().includes(q)
+    );
+  }, [items, search, statusFilter, tenantName]);
+
   const columns = useMemo<Column<TenantDeposit>[]>(
     () => [
       {
@@ -220,32 +237,29 @@ export function TenantDepositsPage() {
         cell: (d) => (
           <div className="flex justify-end gap-1">
             {d.status === TenantDepositStatus.HELD && (
-              <Button
-                variant="ghost"
-                size="icon"
+              <IconActionButton
+                label={t("settle-deposit")}
                 className="h-8 w-8 text-emerald-600"
-                title={t("settle-deposit")}
                 onClick={() => setSettling(d)}
               >
                 <HandCoins className="h-4 w-4" />
-              </Button>
+              </IconActionButton>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconActionButton
+              label={t("edit")}
               className="h-8 w-8"
               onClick={() => openEdit(d)}
             >
               <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive"
+            </IconActionButton>
+            <IconActionButton
+              label={t("delete")}
+              destructive
+              className="h-8 w-8"
               onClick={() => setDeleting(d)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconActionButton>
           </div>
         ),
       },
@@ -266,9 +280,42 @@ export function TenantDepositsPage() {
         }
       />
 
+      <FilterBar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t("search"),
+        }}
+        filters={[
+          {
+            id: "status",
+            node: (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="sm:w-44">
+                  <SelectValue placeholder={t("status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all-statuses")}</SelectItem>
+                  {Object.values(TenantDepositStatus).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {t(TENANT_DEPOSIT_STATUS_CODES[v])}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        onClear={() => {
+          setSearch("");
+          setStatusFilter(ALL);
+        }}
+        showClear={search !== "" || statusFilter !== ALL}
+      />
+
       <DataTable
         columns={columns}
-        data={items}
+        data={filtered}
         loading={isLoading}
         getRowId={(d) => d.id}
         emptyTitle={t("no-deposits")}

@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApartmentRouteParams } from "@/hooks/use-apartment-id";
 import {
-  ArrowLeft,
   FileCheck2,
   FilePlus2,
   Gauge,
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
+import { BillingStatusStepper } from "@/features/billing/components/billing-status-stepper";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -35,6 +35,7 @@ import {
   InvoiceStatus,
 } from "@/types";
 import type { Invoice } from "@/types";
+import { useBreadcrumbTail } from "@/contexts/breadcrumb.context";
 import { countInvoicesByStatus } from "@/utils/invoice";
 
 export function BillingPeriodDetailPage() {
@@ -68,6 +69,14 @@ export function BillingPeriodDetailPage() {
     regenerateInvoices.isPending ||
     updateStatus.isPending;
 
+  const periodTitle =
+    period?.name ??
+    (period
+      ? `${t(MONTH_CODES[(period.periodMonth ?? 1) - 1])} ${period.periodYear}`
+      : undefined);
+
+  useBreadcrumbTail(periodTitle);
+
   const handleGenerateInvoices = useCallback(() => {
     generateInvoices.mutate(billingPeriodId, {
       onSuccess: () => setConfirm(null),
@@ -95,10 +104,6 @@ export function BillingPeriodDetailPage() {
     },
     [billingPeriodId, updateStatus]
   );
-
-  const handleBack = useCallback(() => {
-    router.push(`/apartments/${apartmentId}/billing-periods`);
-  }, [apartmentId, router]);
 
   const handleMeters = useCallback(() => {
     router.push(`/apartments/${apartmentId}/meters`);
@@ -154,20 +159,10 @@ export function BillingPeriodDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 w-fit text-gray-500"
-        onClick={handleBack}
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("back-to-billing-periods")}
-      </Button>
-
       {isLoading ? (
         <Skeleton className="h-32 w-full rounded-xl" />
       ) : !period ? (
-        <p className="text-sm text-gray-500">{t("billing-period-not-found")}</p>
+        <p className="text-sm text-gray-600">{t("billing-period-not-found")}</p>
       ) : (
         <>
           <PageHeader
@@ -183,10 +178,12 @@ export function BillingPeriodDetailPage() {
             actions={<StatusBadge kind="billing" value={period.status} />}
           />
 
+          <BillingStatusStepper status={period.status} />
+
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">{t("invoice-count")}</p>
+                <p className="text-sm text-gray-600">{t("invoice-count")}</p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">
                   {invoices.length}
                 </p>
@@ -194,7 +191,7 @@ export function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">{t("due")}</p>
+                <p className="text-sm text-gray-600">{t("due")}</p>
                 <p className="mt-1 text-base font-medium text-gray-900">
                   {formatDate(period.dueDate)}
                 </p>
@@ -202,7 +199,7 @@ export function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">{t("grand-total")}</p>
+                <p className="text-sm text-gray-600">{t("grand-total")}</p>
                 <p className="mt-1 text-base font-medium text-gray-900">
                   {formatCurrency(grandTotal)}
                 </p>
@@ -210,7 +207,7 @@ export function BillingPeriodDetailPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-gray-500">{t("invoice-status-paid")}</p>
+                <p className="text-sm text-gray-600">{t("invoice-status-paid")}</p>
                 <p className="mt-1 text-base font-medium text-success">
                   {paidCount}
                 </p>
@@ -218,7 +215,7 @@ export function BillingPeriodDetailPage() {
             </Card>
           </div>
 
-          <Card>
+          <Card className="sticky bottom-4 z-10 lg:static">
             <CardContent className="flex flex-wrap gap-2 p-5">
               <Button variant="outline" onClick={handleMeters}>
                 <Gauge className="h-4 w-4" />

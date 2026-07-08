@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -55,6 +56,7 @@ import type { Meter, MeterReading } from "@/types";
 import {
   countMetersByType,
   normalizePeriodOptions,
+  resolveMeterPeriodId,
   type DisplayMeter,
 } from "@/utils/meter";
 
@@ -86,12 +88,12 @@ export function MetersPage() {
   const apartmentId = useApartmentId();
 
   const { data: meters = [], isLoading } = useMeters(apartmentId);
-  const { data: periodItems = [] } = useMeterPeriodDropdown(apartmentId);
+  const { data: periodGroups = [] } = useMeterPeriodDropdown(apartmentId);
   const { remove, recordReading, updateReading } = useMeterActions(apartmentId);
 
   const periods = useMemo(
-    () => normalizePeriodOptions(periodItems),
-    [periodItems]
+    () => normalizePeriodOptions(periodGroups),
+    [periodGroups]
   );
 
   const [topTab, setTopTab] = useState<TopTab>("by-period");
@@ -105,7 +107,7 @@ export function MetersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<DisplayMeter | null>(null);
 
-  const [periodId, setPeriodId] = useState("");
+  const [selectedMonthKey, setSelectedMonthKey] = useState("");
   const [currentDrafts, setCurrentDrafts] = useState<Record<string, string>>({});
   const [savingReadingId, setSavingReadingId] = useState<string | null>(null);
   const [readingsSearch, setReadingsSearch] = useState("");
@@ -113,11 +115,21 @@ export function MetersPage() {
   const [readingsPerPage, setReadingsPerPage] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
-    if (!periodId && periods[0]) setPeriodId(periods[0].id);
-  }, [periods, periodId]);
+    if (!selectedMonthKey && periods[0]) setSelectedMonthKey(periods[0].key);
+  }, [periods, selectedMonthKey]);
 
-  const changePeriodId = useCallback((value: string) => {
-    setPeriodId(value);
+  const selectedPeriodGroup = useMemo(
+    () => periodGroups.find((group) => group.key === selectedMonthKey),
+    [periodGroups, selectedMonthKey]
+  );
+
+  const periodId = useMemo(
+    () => resolveMeterPeriodId(selectedPeriodGroup, pageType),
+    [selectedPeriodGroup, pageType]
+  );
+
+  const changeSelectedMonthKey = useCallback((value: string) => {
+    setSelectedMonthKey(value);
     setReadingsPage(1);
   }, []);
 
@@ -398,6 +410,7 @@ export function MetersPage() {
         key: "actions",
         header: "",
         className: "text-right",
+        mobileFullWidth: true,
         cell: (r) => {
           if (r.readingStatus === MeterReadingStatus.BILLED) return null;
 
@@ -420,6 +433,7 @@ export function MetersPage() {
                   : "outline"
               }
               size="sm"
+              className="w-full md:w-auto"
               disabled={!canSave}
               onClick={() => void saveReading(r)}
             >
@@ -479,17 +493,16 @@ export function MetersPage() {
 
         {topTab === "meters" ? (
           <div className="space-y-4 p-4">
-            <div className="flex items-center justify-end">
-              <div className="relative w-full lg:w-72">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder={t("search-meter-placeholder")}
-                  value={search}
-                  onChange={(e) => changeSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
+            <FilterBar
+              search={{
+                value: search,
+                onChange: changeSearch,
+                placeholder: t("search-meter-placeholder"),
+                className: "pl-9 lg:w-72",
+              }}
+              onClear={() => changeSearch("")}
+              showClear={Boolean(search)}
+            />
 
             <MetersTable
               t={t}
@@ -524,13 +537,13 @@ export function MetersPage() {
               <>
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div className="w-full max-w-xs">
-                    <Select value={periodId} onValueChange={changePeriodId}>
+                    <Select value={selectedMonthKey} onValueChange={changeSelectedMonthKey}>
                       <SelectTrigger aria-label={t("select-billing-period")}>
                         <SelectValue placeholder={t("select-billing-period")} />
                       </SelectTrigger>
                       <SelectContent>
                         {periods.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
+                          <SelectItem key={p.key} value={p.key}>
                             {p.name}
                           </SelectItem>
                         ))}
@@ -701,7 +714,7 @@ function TypeToggleButton({
         ) : (
           <p className="mt-0.5 flex items-baseline gap-1">
             <span className="text-xl font-semibold text-gray-900">{count}</span>
-            <span className="text-xs text-gray-500">{t("meters-unit")}</span>
+            <span className="text-xs text-gray-600">{t("meters-unit")}</span>
           </p>
         )}
       </div>
@@ -776,12 +789,12 @@ function Pagination({
 }) {
   return (
     <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-100 pt-4 sm:flex-row">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-600">
         {t("showing-range", { from, to, total })}
       </p>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">{t("per-page")}</span>
+          <span className="text-sm text-gray-600">{t("per-page")}</span>
           <Select
             value={String(perPage)}
             onValueChange={(v) => onPerPageChange(Number(v))}
@@ -928,7 +941,7 @@ function MetersTable({
                       {m.roomName ?? "-"}
                     </p>
                     {m.floor && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-600">
                         {t("floor-with-number", { floor: m.floor })}
                       </p>
                     )}
@@ -953,7 +966,7 @@ function MetersTable({
                   </StatusDot>
                 </Row>
                 <Row label={t("last-usage")}>
-                  <span className="text-gray-500">{t("no-last-reading")}</span>
+                  <span className="text-gray-600">{t("no-last-reading")}</span>
                 </Row>
               </dl>
               <Button
@@ -992,7 +1005,7 @@ function MeterRow({
           <div className="min-w-0">
             <p className="font-medium text-gray-900">{meter.roomName ?? "-"}</p>
             {meter.floor && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-600">
                 {t("floor-with-number", { floor: meter.floor })}
               </p>
             )}
@@ -1008,7 +1021,7 @@ function MeterRow({
         </StatusDot>
       </td>
       <td className="px-4 py-3">
-        <span className="text-gray-500">{t("no-last-reading")}</span>
+        <span className="text-gray-600">{t("no-last-reading")}</span>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
@@ -1041,7 +1054,12 @@ function MeterActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          aria-label={t("more-actions")}
+        >
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -1098,7 +1116,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <dt className="text-xs font-medium text-gray-600">
         {label}
       </dt>
       <dd className="text-right">{children}</dd>

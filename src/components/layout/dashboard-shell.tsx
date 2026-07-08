@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavContent } from "@/components/layout/nav-content";
+import { CommandPalette } from "@/components/layout/command-palette";
+import { BreadcrumbBar } from "@/components/shared/breadcrumb-bar";
+import { BreadcrumbProvider } from "@/contexts/breadcrumb.context";
 import { ApartmentSwitcher } from "@/components/layout/apartment-switcher";
 import { UserMenu } from "@/components/layout/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -82,6 +85,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TooltipProvider delayDuration={200}>
+      <BreadcrumbProvider>
       <div className="flex min-h-screen bg-gray-50">
         {/* Desktop sidebar */}
         <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
@@ -139,10 +143,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </header>
 
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-7xl">{children}</div>
+            <div className="mx-auto w-full max-w-7xl space-y-4">
+              <BreadcrumbBar />
+              {children}
+            </div>
           </main>
         </div>
       </div>
+      </BreadcrumbProvider>
+      <CommandPalette />
     </TooltipProvider>
   );
 }

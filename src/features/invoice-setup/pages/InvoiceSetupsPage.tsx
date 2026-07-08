@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -33,8 +34,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/page-header";
+import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
+import { ACTIVE, ALL } from "@/constants/config";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { InvoiceSetupWizard } from "@/features/invoice-setup/components/invoice-setup-wizard";
 import {
   useInvoiceSetupActions,
   useInvoiceSetups,
@@ -55,6 +59,8 @@ export function InvoiceSetupsPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
+  const [typeFilter, setTypeFilter] = useState<string>(ALL);
+  const [activeFilter, setActiveFilter] = useState<string>(ALL);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<InvoiceSetup | null>(null);
   const [deleting, setDeleting] = useState<InvoiceSetup | null>(null);
@@ -142,6 +148,17 @@ export function InvoiceSetupsPage() {
     setDeleting(null);
   }, [deleting, remove]);
 
+  const filtered = useMemo(() => {
+    let result = items;
+    if (typeFilter !== ALL) {
+      result = result.filter((s) => s.type === typeFilter);
+    }
+    if (activeFilter === ACTIVE) {
+      result = result.filter((s) => s.isActive);
+    }
+    return result;
+  }, [items, typeFilter, activeFilter]);
+
   const columns = useMemo<Column<InvoiceSetup>[]>(
     () => [
       {
@@ -188,22 +205,21 @@ export function InvoiceSetupsPage() {
         className: "text-right",
         cell: (s) => (
           <div className="flex justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconActionButton
+              label={t("edit")}
               className="h-8 w-8"
               onClick={() => openEdit(s)}
             >
               <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive"
+            </IconActionButton>
+            <IconActionButton
+              label={t("delete")}
+              destructive
+              className="h-8 w-8"
               onClick={() => setDeleting(s)}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </IconActionButton>
           </div>
         ),
       },
@@ -224,14 +240,62 @@ export function InvoiceSetupsPage() {
         }
       />
 
-      <DataTable
-        columns={columns}
-        data={items}
-        loading={isLoading}
-        getRowId={(s) => s.id}
-        emptyTitle={t("no-invoice-setups")}
-        emptyDescription={t("no-invoice-setups-description")}
-      />
+      {items.length === 0 && !isLoading ? (
+        <InvoiceSetupWizard apartmentId={apartmentId} />
+      ) : (
+        <>
+          <FilterBar
+            filters={[
+              {
+                id: "type",
+                node: (
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="sm:w-44">
+                      <SelectValue placeholder={t("type")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>{t("all")}</SelectItem>
+                      {Object.values(InvoiceType).map((it) => (
+                        <SelectItem key={it} value={it}>
+                          {t(INVOICE_TYPE_CODES[it])}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+              {
+                id: "active",
+                node: (
+                  <Select value={activeFilter} onValueChange={setActiveFilter}>
+                    <SelectTrigger className="sm:w-44">
+                      <SelectValue placeholder={t("status")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>{t("all")}</SelectItem>
+                      <SelectItem value={ACTIVE}>{t("active")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ),
+              },
+            ]}
+            onClear={() => {
+              setTypeFilter(ALL);
+              setActiveFilter(ALL);
+            }}
+            showClear={typeFilter !== ALL || activeFilter !== ALL}
+          />
+
+          <DataTable
+            columns={columns}
+            data={filtered}
+            loading={isLoading}
+            getRowId={(s) => s.id}
+            emptyTitle={t("no-invoice-setups")}
+            emptyDescription={t("no-invoice-setups-description")}
+          />
+        </>
+      )}
 
       <Dialog open={formOpen} onOpenChange={(o) => !isPending && setFormOpen(o)}>
         <DialogContent className="max-w-lg">
