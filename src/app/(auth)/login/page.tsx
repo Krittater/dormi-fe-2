@@ -279,12 +279,29 @@ function LoginContent() {
                   </span>
                 </button>
 
-                <Link
+                {/* <Link
                   href="/forgot-password"
                   className="text-[12px] font-medium text-primary transition-colors hover:text-primary-hover"
                 >
                   {t("forgot-password")}
-                </Link>
+                </Link> */}
+                <span
+                  className="group relative inline-flex"
+                  aria-label={t("forgot-password")}
+                >
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    className="cursor-not-allowed text-[12px] font-medium text-gray-400 opacity-60"
+                  >
+                    {t("forgot-password")}
+                  </button>
+
+                  <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-max max-w-[220px] rounded-md bg-gray-900 px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover:block">
+                    {t("not-available")}
+                  </span>
+                </span>
               </div>
 
               {/* Submit */}
