@@ -22,8 +22,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ── ด่านตรวจ lock ── ลอง `npm ci` บน Linux (แบบเดียวกับ Docker build บน server)
+  #   ถ้า package-lock.json เพี้ยน (เช่น @emnapi หายเพราะ gen จาก Windows) จะแดงตรงนี้
+  #   → job deploy ถูกข้าม → รู้ก่อนขึ้น server (แก้ด้วย `npm run lockfile` แล้ว push ใหม่)
+  check-lockfile:
+    name: Verify lockfile (npm ci)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+
   deploy:
     name: Deploy dormi-fe-2
+    needs: check-lockfile          # deploy ต่อเมื่อด่านตรวจ lock ผ่านเท่านั้น
     runs-on: ubuntu-latest
     environment: production
 
