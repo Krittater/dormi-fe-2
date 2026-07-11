@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
   const t = useT();
   const overdueCount = useOverdueInvoiceCount();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const hydratedFromStorage = useRef(false);
 
   useEffect(() => {
     try {
@@ -31,15 +32,23 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
     } catch {
       /* ignore */
     }
+    hydratedFromStorage.current = true;
   }, []);
 
   const toggleSection = useCallback((title: string) => {
-    setCollapsed((prev) => {
-      const next = { ...prev, [title]: !prev[title] };
-      localStorage.setItem(NAV_COLLAPSE_KEY, JSON.stringify(next));
-      return next;
-    });
+    setCollapsed((prev) => ({ ...prev, [title]: !prev[title] }));
   }, []);
+
+  // persist นอก setState updater — updater ต้อง pure (อาจถูก replay ตอน render)
+  // ข้ามรอบแรกก่อน hydrate ไม่งั้น {} จะทับค่าที่เคยบันทึกไว้
+  useEffect(() => {
+    if (!hydratedFromStorage.current) return;
+    try {
+      localStorage.setItem(NAV_COLLAPSE_KEY, JSON.stringify(collapsed));
+    } catch {
+      /* ignore */
+    }
+  }, [collapsed]);
 
   const isActive = (segment: string) => {
     if (!apartmentId) return false;

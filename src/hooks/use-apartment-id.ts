@@ -2,13 +2,8 @@
 
 import { useParams, usePathname } from "next/navigation";
 
+// เผื่อ path placeholder "_" จากยุค static export — ไม่ถือเป็น id จริง
 const PLACEHOLDER = "_";
-
-/** Browser URL (rewrite คง path จริงไว้) — ไม่ใช้ usePathname อย่างเดียวเพราะ static export อาจเห็น "_" */
-function resolvedPathname(pathname: string): string {
-  if (typeof window !== "undefined") return window.location.pathname;
-  return pathname;
-}
 
 function segment(path: string, pattern: RegExp): string | undefined {
   const id = path.match(pattern)?.[1];
@@ -21,11 +16,14 @@ function pick(pathSeg: string | undefined, param?: string): string {
   return "";
 }
 
-/** apartment id จาก URL จริง (รองรับ static export + host rewrite) */
+/**
+ * apartment id จาก usePathname (reactive ต่อ navigation)
+ * ห้ามอ่าน window.location ตอน render — ค่าไม่ sync กับ React transition
+ * ทำให้ uuid หลุดจาก state ชั่วขณะระหว่าง navigate
+ */
 export function useApartmentIdFromPath(): string | null {
   const pathname = usePathname();
-  const path = resolvedPathname(pathname);
-  return segment(path, /^\/apartments\/([^/]+)/) ?? null;
+  return segment(pathname, /^\/apartments\/([^/]+)/) ?? null;
 }
 
 export function useApartmentId(): string {
@@ -43,19 +41,18 @@ export function useApartmentRouteParams(): {
     billingPeriodId?: string;
   }>();
   const pathname = usePathname();
-  const path = resolvedPathname(pathname);
 
   return {
     apartmentId: pick(
-      segment(path, /^\/apartments\/([^/]+)/),
+      segment(pathname, /^\/apartments\/([^/]+)/),
       params.apartmentId
     ),
     invoiceId: pick(
-      segment(path, /\/invoices\/([^/]+)/),
+      segment(pathname, /\/invoices\/([^/]+)/),
       params.invoiceId
     ),
     billingPeriodId: pick(
-      segment(path, /\/billing-periods\/([^/]+)/),
+      segment(pathname, /\/billing-periods\/([^/]+)/),
       params.billingPeriodId
     ),
   };

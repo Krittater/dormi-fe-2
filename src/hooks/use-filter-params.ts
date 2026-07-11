@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type FilterDefaults = Record<string, string>;
@@ -41,22 +41,39 @@ export function useFilterParams({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Latest-ref สำหรับ defaults/debounceKeys (caller ส่ง object literal ใหม่ทุก render)
+  // เขียน ref ใน effect เท่านั้น — render ต้อง pure
   const defaultsRef = useRef(defaults);
-  defaultsRef.current = defaults;
-
   const debounceKeysRef = useRef(debounceKeys);
-  debounceKeysRef.current = debounceKeys;
+  useEffect(() => {
+    defaultsRef.current = defaults;
+    debounceKeysRef.current = debounceKeys;
+  });
 
   const paramsKey = searchParams.toString();
 
   const [values, setValuesState] = useState<FilterDefaults>(() =>
-    readFromSearchParams(searchParams, defaultsRef.current)
+    readFromSearchParams(searchParams, defaults)
   );
   const [pending, setPending] = useState<FilterDefaults>({});
 
+  // Latest values, updated synchronously so URL writes never run inside a
+  // setState updater (React may replay updaters during render — a
+  // router.replace there is a setState-in-render error)
+  const valuesRef = useRef(values);
+
+  // qs ทุกตัวที่เราเขียนเองและยังรอ echo — sync effect ต้องข้าม echo ของตัวเอง
+  // ไม่งั้น pending (search ที่กำลังพิมพ์) จะถูกล้างกลางคัน ตัวอักษรหาย
+  // เก็บเป็น Set เพราะพิมพ์เร็ว ๆ echo ของ write เก่าอาจมาถึงหลัง write ใหม่
+  const selfWritesRef = useRef(new Set<string>());
+
   // Sync from URL on external navigation; paramsKey is the only stable URL signal
   useEffect(() => {
+    if (selfWritesRef.current.delete(paramsKey)) return;
+    // URL เปลี่ยนจากภายนอก (back/forward ฯลฯ) — self-write ค้างเก่าไม่เกี่ยวแล้ว
+    selfWritesRef.current.clear();
     const next = readFromSearchParams(searchParams, defaultsRef.current);
+    valuesRef.current = next;
     setValuesState((prev) => (filterValuesEqual(prev, next) ? prev : next));
     setPending({});
     // searchParams is read from closure when paramsKey changes
@@ -75,6 +92,7 @@ export function useFilterParams({
       }
       const qs = params.toString();
       if (qs === paramsKey) return;
+      selfWritesRef.current.add(qs);
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
     [paramsKey, pathname, router]
@@ -84,45 +102,42 @@ export function useFilterParams({
   useEffect(() => {
     if (Object.keys(pending).length === 0) return;
     const timer = setTimeout(() => {
-      setValuesState((current) => {
-        const merged = { ...current, ...pending };
-        writeUrl(merged);
-        return merged;
-      });
+      const merged = { ...valuesRef.current, ...pending };
+      valuesRef.current = merged;
+      setValuesState(merged);
       setPending({});
+      writeUrl(merged);
     }, debounceMs);
     return () => clearTimeout(timer);
+    // pending is read from closure when pendingKey changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingKey, debounceMs, writeUrl]);
 
   const setValue = useCallback(
     (key: string, value: string) => {
+      const next = { ...valuesRef.current, [key]: value };
+      valuesRef.current = next;
+      setValuesState(next);
       if (debounceKeysRef.current.includes(key)) {
         setPending((p) => ({ ...p, [key]: value }));
-        setValuesState((v) => ({ ...v, [key]: value }));
         return;
       }
-      setValuesState((v) => {
-        const next = { ...v, [key]: value };
-        writeUrl(next);
-        return next;
-      });
+      writeUrl(next);
     },
     [writeUrl]
   );
 
   const clearAll = useCallback(() => {
     const d = defaultsRef.current;
+    valuesRef.current = d;
     setValuesState(d);
     setPending({});
+    selfWritesRef.current.add("");
     router.replace(pathname, { scroll: false });
   }, [pathname, router]);
 
-  const hasActiveFilters = useMemo(
-    () =>
-      Object.keys(defaultsRef.current).some(
-        (key) => values[key] !== defaultsRef.current[key]
-      ),
-    [values]
+  const hasActiveFilters = Object.keys(defaults).some(
+    (key) => values[key] !== defaults[key]
   );
 
   return { values, setValue, clearAll, hasActiveFilters };

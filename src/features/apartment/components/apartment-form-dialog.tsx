@@ -232,7 +232,7 @@ export function ApartmentFormDialog({
                   <FormItem>
                     <FormLabel>{t("province")}</FormLabel>
                     <Select
-                      value={field.value || undefined}
+                      value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
                         form.setValue("district", "");
@@ -264,7 +264,7 @@ export function ApartmentFormDialog({
                   <FormItem>
                     <FormLabel>{t("district")}</FormLabel>
                     <Select
-                      value={field.value || undefined}
+                      value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
                         form.setValue("subDistrict", "");
@@ -296,7 +296,7 @@ export function ApartmentFormDialog({
                   <FormItem>
                     <FormLabel>{t("sub-district")}</FormLabel>
                     <Select
-                      value={field.value || undefined}
+                      value={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
                         const postcode = getPostcode(

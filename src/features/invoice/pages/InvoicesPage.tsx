@@ -206,16 +206,17 @@ export function InvoicesPage() {
     toast.info(t("pdf-coming-soon"));
   }, [t]);
 
-  const handleSortChange = useCallback((key: string) => {
-    setSortKey((prev) => {
-      if (prev === key) {
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
         setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
-        return key;
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
       }
-      setSortDirection("asc");
-      return key;
-    });
-  }, []);
+    },
+    [sortKey]
+  );
 
   const selectStatusFilter = useCallback(
     (value: string) => {
@@ -422,7 +423,7 @@ export function InvoicesPage() {
             id: "period",
             node: (
               <Select
-                value={periodApplied || undefined}
+                value={periodApplied}
                 onValueChange={(v) => {
                   setValue("page", "1");
                   setValue("period", v);

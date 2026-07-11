@@ -163,16 +163,17 @@ export function TenantsPage() {
     [t, rooms, openEdit]
   );
 
-  const handleSortChange = useCallback((key: string) => {
-    setSortKey((prev) => {
-      if (prev === key) {
+  const handleSortChange = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
         setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
-        return key;
+      } else {
+        setSortKey(key);
+        setSortDirection("asc");
       }
-      setSortDirection("asc");
-      return key;
-    });
-  }, []);
+    },
+    [sortKey]
+  );
 
   const handleExportCsv = useCallback(() => {
     exportTableCsv("tenants.csv", columns, filtered);
