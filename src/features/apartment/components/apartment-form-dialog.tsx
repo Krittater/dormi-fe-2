@@ -183,6 +183,16 @@ export function ApartmentFormDialog({
     }
   }, [open, apartment, form]);
 
+  // ฟอร์มยาวเกินจอ — ถ้า validation ไม่ผ่านต้องพาผู้ใช้ไปเห็น error แรก
+  // (จังหวัด/อำเภอเป็น Radix Select โฟกัสอัตโนมัติของ RHF ไปไม่ถึง)
+  const onInvalid = () => {
+    requestAnimationFrame(() => {
+      document
+        .querySelector('[role="dialog"] p.text-destructive')
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
+
   const onSubmit = (values: CreateValues) => {
     const onDone = {
       onSuccess: () => {
@@ -210,7 +220,13 @@ export function ApartmentFormDialog({
           <DialogDescription>{t("apartment-form-description")}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+            className="space-y-5"
+          >
+            <h3 className="text-sm font-semibold text-gray-900">
+              {t("apartment-info-section")}
+            </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -457,22 +473,9 @@ export function ApartmentFormDialog({
               <>
                 <Separator />
                 <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {t("nav-room-types")}
-                    </h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        append({ name: "", price: 0, description: "" })
-                      }
-                    >
-                      <Plus className="h-4 w-4" />
-                      {t("add-type")}
-                    </Button>
-                  </div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-900">
+                    {t("nav-room-types")}
+                  </h3>
                   {form.formState.errors.roomTypes?.root && (
                     <p className="mb-2 text-xs font-medium text-destructive">
                       {form.formState.errors.roomTypes.root.message}
@@ -543,6 +546,17 @@ export function ApartmentFormDialog({
                         </div>
                       </div>
                     ))}
+                    {/* ปุ่มเพิ่มแถวสไตล์ dashed — แยกให้ต่างจากปุ่ม submit ชัดเจน */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        append({ name: "", price: 0, description: "" })
+                      }
+                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-primary hover:text-primary"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t("add-type")}
+                    </button>
                   </div>
                 </div>
               </>

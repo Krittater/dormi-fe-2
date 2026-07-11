@@ -2,7 +2,9 @@ import { dictionary } from "./dictionary";
 import { DEFAULT_LOCALE, type Locale } from "./types";
 
 const INTL_LOCALES: Record<Locale, string> = {
-  th: "th-TH",
+  // u-ca-gregory: บังคับปี ค.ศ. — th-TH เปล่า ๆ Intl จะใช้ปฏิทินพุทธ (พ.ศ.)
+  // ทำให้ปีแสดงปนกันสองแบบทั้งแอป
+  th: "th-TH-u-ca-gregory",
   en: "en-US",
   cn: "zh-CN",
 };

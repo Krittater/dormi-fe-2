@@ -55,9 +55,12 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
     (error: AxiosError<StandardApiResponse<unknown>>) => {
       const payload = error.response?.data;
       const status = error.response?.status ?? 0;
+      // status 0 = ไม่มี response เลย (server ล่ม / เน็ตหลุด) — "เกิดข้อผิดพลาด (0)" สื่อสารไม่ได้
       const message =
         payload?.message ||
-        translate("api-error-with-status", { status: String(status) });
+        (status === 0
+          ? translate("network-error")
+          : translate("api-error-with-status", { status: String(status) }));
 
       // client-side auth guard (static export ไม่มี proxy/middleware ฝั่ง server แล้ว)
       // 401 = ยังไม่ login / session หมด → เด้งไปหน้า login (กัน loop ถ้าอยู่หน้า login อยู่แล้ว)

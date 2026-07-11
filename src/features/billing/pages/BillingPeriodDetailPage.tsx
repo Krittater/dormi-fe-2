@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { BillingStatusStepper } from "@/features/billing/components/billing-status-stepper";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -47,10 +48,12 @@ export function BillingPeriodDetailPage() {
     null | "cancel" | "close" | "regenerate" | "generate" | "publish"
   >(null);
 
-  const { data: period, isLoading: loadingPeriod } = useBillingPeriod(
-    apartmentId,
-    billingPeriodId
-  );
+  const {
+    data: period,
+    isLoading: loadingPeriod,
+    error: periodError,
+    refetch: refetchPeriod,
+  } = useBillingPeriod(apartmentId, billingPeriodId);
   const { data: invoiceResult, isLoading: loadingInvoices } =
     useBillingPeriodInvoices(apartmentId, billingPeriodId);
   const invoices = invoiceResult?.items ?? [];
@@ -157,10 +160,17 @@ export function BillingPeriodDetailPage() {
     [invoices]
   );
 
+  const draftCount = useMemo(
+    () => countInvoicesByStatus(invoices, InvoiceStatus.DRAFT),
+    [invoices]
+  );
+
   return (
     <div className="space-y-6">
       {isLoading ? (
         <Skeleton className="h-32 w-full rounded-xl" />
+      ) : periodError ? (
+        <ErrorState error={periodError} onRetry={() => refetchPeriod()} />
       ) : !period ? (
         <p className="text-sm text-gray-600">{t("billing-period-not-found")}</p>
       ) : (
@@ -235,14 +245,28 @@ export function BillingPeriodDetailPage() {
 
               {isGenerated && (
                 <>
-                  <Button onClick={() => setConfirm("publish")} disabled={isBusy}>
-                    {publishInvoices.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                    {t("publish-invoices")}
-                  </Button>
+                  {/* เผยแพร่ครบแล้ว → เปลี่ยนเป็นสถานะบอกผล ไม่ทิ้งปุ่มที่กดแล้วไม่เกิดอะไรไว้ */}
+                  {draftCount > 0 ? (
+                    <Button
+                      onClick={() => setConfirm("publish")}
+                      disabled={isBusy}
+                    >
+                      {publishInvoices.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      {t("publish-invoices")}
+                    </Button>
+                  ) : (
+                    !loadingInvoices &&
+                    invoices.length > 0 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-2 text-sm font-medium text-success">
+                        <FileCheck2 className="h-4 w-4" />
+                        {t("all-invoices-published")}
+                      </span>
+                    )
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => setConfirm("regenerate")}

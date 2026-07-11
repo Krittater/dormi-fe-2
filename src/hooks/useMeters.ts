@@ -118,5 +118,59 @@ export function useMeterActions(apartmentId: string) {
     },
   });
 
-  return { create, remove, restore, recordReading, updateReading };
+  // บันทึกหลายห้องรวดเดียว — เรียก service ตรงเพื่อไม่ toast รายห้อง
+  // แล้วสรุปผล + invalidate ครั้งเดียวตอนจบ
+  const saveAllReadings = useMutation({
+    mutationFn: async ({
+      items,
+    }: {
+      items: Array<{
+        meterId: string;
+        meterReadingId: string;
+        isNew: boolean;
+        body: { previousValue: number; currentValue: number };
+      }>;
+      billingPeriodId?: string;
+    }) => {
+      let succeeded = 0;
+      let failed = 0;
+      for (const item of items) {
+        try {
+          if (item.isNew) {
+            await meterService.recordReading(item.meterReadingId, item.body);
+          } else {
+            await meterService.updateReading(
+              apartmentId,
+              item.meterId,
+              item.meterReadingId,
+              item.body
+            );
+          }
+          succeeded++;
+        } catch {
+          failed++;
+        }
+      }
+      return { succeeded, failed };
+    },
+    onSuccess: ({ succeeded, failed }, variables) => {
+      if (failed === 0) {
+        toast.success(t("save-all-readings-success", { count: succeeded }));
+      } else {
+        toast.warning(
+          t("save-all-readings-partial", { succeeded, failed })
+        );
+      }
+      invalidateReadings(variables.billingPeriodId);
+    },
+  });
+
+  return {
+    create,
+    remove,
+    restore,
+    recordReading,
+    updateReading,
+    saveAllReadings,
+  };
 }

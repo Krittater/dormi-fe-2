@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { SKELETON_ROWS_CARDS } from "@/constants/config";
 import {
   useRoomChargeActions,
@@ -30,7 +31,12 @@ export function RoomChargesPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
-  const { data: setupRows, isLoading } = useRoomChargeSetup(apartmentId);
+  const {
+    data: setupRows,
+    isLoading,
+    error: setupError,
+    refetch: refetchSetup,
+  } = useRoomChargeSetup(apartmentId);
   const { data: dropdowns } = useRoomChargeDropdowns(apartmentId);
   const { saveSetup, create, remove } = useRoomChargeActions(apartmentId);
 
@@ -162,6 +168,8 @@ export function RoomChargesPage() {
             <Skeleton key={i} className="h-40 w-full rounded-xl" />
           ))}
         </div>
+      ) : setupError ? (
+        <ErrorState error={setupError} onRetry={() => refetchSetup()} />
       ) : rows.length === 0 ? (
         <EmptyState
           title={t("no-rooms-to-setup")}

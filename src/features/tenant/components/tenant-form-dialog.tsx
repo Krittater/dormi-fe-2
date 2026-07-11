@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { Copy, KeyRound, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -68,6 +69,10 @@ export function TenantFormDialog({
   const isEdit = Boolean(tenant);
   const { create, update } = useTenantActions(apartmentId);
   const submitting = create.isPending || update.isPending;
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const form = useForm<TenantFormValues>({
     resolver: zodFormResolver<TenantFormValues>(makeTenantSchema(t)),
@@ -147,15 +152,48 @@ export function TenantFormDialog({
         roomId,
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           onSuccess?.();
           onOpenChange(false);
+          // บัญชีใหม่ → แสดงรหัสผ่านชั่วคราวใน dialog (toast หายเร็วเกินไป)
+          if (result?.userCreated) {
+            setCredentials({
+              email: values.email,
+              password: result.phone || values.phone,
+            });
+          }
         },
       }
     );
   };
 
+  const copyCredential = useCallback(
+    async (value: string) => {
+      try {
+        await navigator.clipboard.writeText(value);
+        toast.success(t("copied"));
+      } catch {
+        // clipboard API ใช้ไม่ได้ (บาง webview/ไม่มี permission) — fallback วิธีเก่า
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = value;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          toast.success(t("copied"));
+        } catch {
+          toast.error(t("generic-error"));
+        }
+      }
+    },
+    [t]
+  );
+
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => !submitting && onOpenChange(o)}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -330,5 +368,69 @@ export function TenantFormDialog({
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* แสดงรหัสผ่านชั่วคราวของบัญชีที่เพิ่งสร้าง — คงอยู่จนผู้ใช้ปิดเอง */}
+    <Dialog
+      open={Boolean(credentials)}
+      onOpenChange={(o) => !o && setCredentials(null)}
+    >
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-primary" />
+            {t("tenant-credentials-title")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("tenant-credentials-description")}
+          </DialogDescription>
+        </DialogHeader>
+        {credentials && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{t("email")}</p>
+                <p className="truncate text-sm font-medium text-gray-900">
+                  {credentials.email}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copyCredential(credentials.email)}
+              >
+                <Copy className="h-4 w-4" />
+                {t("copy")}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">
+                  {t("temp-password")}
+                </p>
+                <p className="truncate font-mono text-sm font-medium text-gray-900">
+                  {credentials.password}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copyCredential(credentials.password)}
+              >
+                <Copy className="h-4 w-4" />
+                {t("copy")}
+              </Button>
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button type="button" onClick={() => setCredentials(null)}>
+            {t("close")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

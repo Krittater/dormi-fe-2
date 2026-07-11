@@ -64,7 +64,12 @@ export function PaymentAccountsPage() {
   const [editing, setEditing] = useState<PaymentAccount | null>(null);
   const [deleting, setDeleting] = useState<PaymentAccount | null>(null);
 
-  const { data: items = [], isLoading } = usePaymentAccounts(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = usePaymentAccounts(apartmentId);
   const { create, update, remove } = usePaymentAccountActions(apartmentId);
   const submitting = create.isPending || update.isPending;
 
@@ -229,6 +234,8 @@ export function PaymentAccountsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(a) => a.id}
         emptyTitle={t("no-accounts")}
         emptyDescription={t("no-accounts-description")}

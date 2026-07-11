@@ -64,7 +64,12 @@ export function TransactionCategoriesPage() {
   const [editing, setEditing] = useState<TransactionCategory | null>(null);
   const [deleting, setDeleting] = useState<TransactionCategory | null>(null);
 
-  const { data: items = [], isLoading } = useTransactionCategories(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useTransactionCategories(apartmentId);
   const { create, update, remove } = useTransactionCategoryActions(apartmentId);
   const submitting = create.isPending || update.isPending;
 
@@ -265,6 +270,8 @@ export function TransactionCategoriesPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(c) => c.id}
         emptyTitle={t("no-categories")}
         emptyDescription={t("no-categories-description")}

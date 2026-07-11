@@ -31,12 +31,10 @@ export function useTenantActions(apartmentId: string) {
 
   const create = useMutation({
     mutationFn: (payload: unknown) => tenantService.create(payload),
-    onSuccess: (result) => {
-      if (result?.userCreated) {
-        toast.success(t("tenant-added-new-account", { phone: result.phone }));
-      } else {
-        toast.success(t("tenant-added"));
-      }
+    onSuccess: () => {
+      // กรณีสร้างบัญชีใหม่ dialog ฝั่ง caller แสดงรหัสผ่านชั่วคราวพร้อมปุ่มคัดลอก
+      // (toast หายเร็วเกินกว่าจะจดรหัสผ่านทัน)
+      toast.success(t("tenant-added"));
       invalidate();
     },
   });

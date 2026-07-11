@@ -79,7 +79,12 @@ export function TenantDepositsPage() {
   const [deleting, setDeleting] = useState<TenantDeposit | null>(null);
   const [settling, setSettling] = useState<TenantDeposit | null>(null);
 
-  const { data: items = [], isLoading } = useTenantDeposits(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useTenantDeposits(apartmentId);
   const { create, update, remove } = useTenantDepositActions(apartmentId);
   const { data: tenantsData } = useTenants(apartmentId);
   const { data: rooms = [] } = useRoomDropdown(apartmentId);
@@ -317,6 +322,8 @@ export function TenantDepositsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(d) => d.id}
         emptyTitle={t("no-deposits")}
         emptyDescription={t("no-deposits-description")}

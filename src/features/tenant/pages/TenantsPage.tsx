@@ -49,7 +49,7 @@ export function TenantsPage() {
   const [sortKey, setSortKey] = useState<string | null>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const { data, isLoading } = useTenants(apartmentId, {
+  const { data, isLoading, error, refetch } = useTenants(apartmentId, {
     page,
     limit: DEFAULT_PAGE_SIZE,
   });
@@ -214,6 +214,8 @@ export function TenantsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(row) => row.tenantId}
         emptyTitle={t("no-tenants")}
         emptyDescription={t("no-tenants-description")}

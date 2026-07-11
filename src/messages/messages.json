@@ -3474,6 +3474,90 @@
     "cn": "发生错误（{status}）"
   },
   {
+    "code": "save-all-readings",
+    "th": "บันทึกทั้งหมด ({count})",
+    "en": "Save all ({count})",
+    "cn": "保存全部（{count}）"
+  },
+  {
+    "code": "save-all-readings-success",
+    "th": "บันทึกค่ามิเตอร์สำเร็จ {count} ห้อง",
+    "en": "Saved meter readings for {count} rooms",
+    "cn": "已保存 {count} 个房间的读数"
+  },
+  {
+    "code": "save-all-readings-partial",
+    "th": "บันทึกสำเร็จ {succeeded} ห้อง ล้มเหลว {failed} ห้อง",
+    "en": "Saved {succeeded} rooms, {failed} failed",
+    "cn": "成功 {succeeded} 间，失败 {failed} 间"
+  },
+  {
+    "code": "fix-invalid-readings",
+    "th": "มี {count} ห้องที่ค่าไม่ถูกต้อง (ต้องเป็นตัวเลขและไม่น้อยกว่าค่าก่อนหน้า)",
+    "en": "{count} rooms have invalid values (must be numbers and not less than the previous reading)",
+    "cn": "有 {count} 个房间的数值无效（必须为数字且不小于上次读数）"
+  },
+  {
+    "code": "all-invoices-published",
+    "th": "เผยแพร่ใบแจ้งหนี้ครบแล้ว",
+    "en": "All invoices published",
+    "cn": "所有账单已发布"
+  },
+  {
+    "code": "tenant-credentials-title",
+    "th": "สร้างบัญชีผู้เช่าใหม่แล้ว",
+    "en": "New tenant account created",
+    "cn": "已创建新租户账号"
+  },
+  {
+    "code": "tenant-credentials-description",
+    "th": "ส่งข้อมูลเข้าสู่ระบบนี้ให้ผู้เช่า และแนะนำให้เปลี่ยนรหัสผ่านหลังเข้าสู่ระบบครั้งแรก",
+    "en": "Share these login details with the tenant and advise changing the password after first login.",
+    "cn": "请将登录信息发送给租户，并建议首次登录后修改密码。"
+  },
+  {
+    "code": "temp-password",
+    "th": "รหัสผ่านชั่วคราว",
+    "en": "Temporary password",
+    "cn": "临时密码"
+  },
+  {
+    "code": "copy",
+    "th": "คัดลอก",
+    "en": "Copy",
+    "cn": "复制"
+  },
+  {
+    "code": "copied",
+    "th": "คัดลอกแล้ว",
+    "en": "Copied",
+    "cn": "已复制"
+  },
+  {
+    "code": "apartment-info-section",
+    "th": "ข้อมูลหอพักและที่อยู่",
+    "en": "Apartment info & address",
+    "cn": "公寓信息与地址"
+  },
+  {
+    "code": "network-error",
+    "th": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่",
+    "en": "Cannot reach the server. Please check your connection and try again.",
+    "cn": "无法连接服务器，请检查网络后重试。"
+  },
+  {
+    "code": "load-failed-title",
+    "th": "โหลดข้อมูลไม่สำเร็จ",
+    "en": "Failed to load data",
+    "cn": "数据加载失败"
+  },
+  {
+    "code": "retry",
+    "th": "ลองใหม่",
+    "en": "Retry",
+    "cn": "重试"
+  },
+  {
     "code": "greeting-morning",
     "th": "สวัสดีตอนเช้า",
     "en": "Good morning",

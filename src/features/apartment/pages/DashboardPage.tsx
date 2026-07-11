@@ -24,6 +24,7 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ApartmentFormDialog } from "@/features/apartment/components/apartment-form-dialog";
 import { SKELETON_ROWS_DASHBOARD } from "@/constants/config";
@@ -37,7 +38,12 @@ export function DashboardPage() {
   const t = useT();
   const setCurrent = useApartmentStore((s) => s.setCurrent);
 
-  const { data: apartments = [], isLoading } = useApartments();
+  const {
+    data: apartments = [],
+    isLoading,
+    error: apartmentsError,
+    refetch: refetchApartments,
+  } = useApartments();
   const { remove } = useApartmentActions();
 
   const [search, setSearch] = useState("");
@@ -98,6 +104,11 @@ export function DashboardPage() {
             <Skeleton key={i} className="h-44 w-full rounded-xl" />
           ))}
         </div>
+      ) : apartmentsError ? (
+        <ErrorState
+          error={apartmentsError}
+          onRetry={() => refetchApartments()}
+        />
       ) : apartments.length === 0 ? (
         <EmptyState
           icon={Building2}

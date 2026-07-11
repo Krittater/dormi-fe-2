@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { useT } from "@/i18n";
 
 export interface Column<T> {
@@ -35,6 +36,9 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;
+  /** error จาก react-query — เมื่อมีค่าจะแสดง ErrorState แทน EmptyState (กัน server ล่มแล้วดูเหมือนข้อมูลว่าง) */
+  error?: unknown;
+  onRetry?: () => void;
   getRowId: (row: T) => string;
   onRowClick?: (row: T) => void;
   emptyTitle?: string;
@@ -80,6 +84,8 @@ export function DataTable<T>({
   columns,
   data,
   loading,
+  error,
+  onRetry,
   getRowId,
   onRowClick,
   emptyTitle,
@@ -111,6 +117,10 @@ export function DataTable<T>({
         ))}
       </div>
     );
+  }
+
+  if (error != null) {
+    return <ErrorState error={error} onRetry={onRetry} />;
   }
 
   if (!data.length) {
