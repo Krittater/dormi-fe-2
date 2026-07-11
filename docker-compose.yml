@@ -14,6 +14,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      # commit ที่ deploy — deploy.sh ส่งเข้ามา (โผล่ที่ GET /version, runtime env)
+      - APP_VERSION=${APP_VERSION:-unknown}
     expose:
       - "3000"          # ไม่ publish ออก host — เข้าผ่าน edge เท่านั้น
     networks:
