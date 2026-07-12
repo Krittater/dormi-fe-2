@@ -222,7 +222,7 @@ export interface Tenant {
   isActive: boolean;
   notes: string | null;
   user: User;
-  room: Room;
+  room: Room | null;
 }
 
 export interface ChargeType {

@@ -78,7 +78,7 @@ export function TenantsPage() {
         `${firstName} ${lastName}`.toLowerCase().includes(q) ||
         row.user.email?.toLowerCase().includes(q) ||
         row.user.phone?.includes(search) ||
-        row.room.name?.toLowerCase().includes(q)
+        row.room?.name?.toLowerCase().includes(q)
       );
     });
   }, [items, search]);
@@ -109,7 +109,7 @@ export function TenantsPage() {
         key: "room",
         header: t("room"),
         cell: (row) =>
-          row.room.name ??
+          row.room?.name ??
           rooms.find((r) => r.id === row.roomId)?.name ?? (
             <span className="text-gray-400">{t("not-specified")}</span>
           ),
