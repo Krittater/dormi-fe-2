@@ -35,6 +35,7 @@ import { useT } from "@/i18n";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { totalPagesOf } from "@/lib/list";
 import { cn } from "@/lib/utils";
+import { formatBillingPeriodName } from "@/utils/billing";
 import { invoiceQueries } from "@/queries/invoice.query";
 import { INVOICE_STATUS_CODES, InvoiceStatus } from "@/types";
 import type { Invoice } from "@/types";
@@ -58,7 +59,12 @@ const STATUS_TEXT: Record<InvoiceStatus, string> = {
 };
 
 const EMPTY_INVOICES: Invoice[] = [];
-const EMPTY_PERIODS: Array<{ id: string; name?: string }> = [];
+const EMPTY_PERIODS: Array<{
+  id: string;
+  name?: string;
+  periodYear?: number;
+  periodMonth?: number;
+}> = [];
 
 export function InvoicesPage() {
   const t = useT();
@@ -91,7 +97,7 @@ export function InvoicesPage() {
     return periodOptions[0]?.id ?? "";
   }, [periodFromUrl, periodOptions]);
 
-  const { data, isLoading, refetch, dataUpdatedAt } = useInvoices(apartmentId, {
+  const { data, isLoading, error, refetch, dataUpdatedAt } = useInvoices(apartmentId, {
     page,
     limit: DEFAULT_PAGE_SIZE,
     status: status === ALL ? undefined : status,
@@ -436,7 +442,7 @@ export function InvoicesPage() {
                 <SelectContent>
                   {periodOptions.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name}
+                      {formatBillingPeriodName(p.name, p, t)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -524,6 +530,8 @@ export function InvoicesPage() {
         columns={columns}
         data={items}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         tableClassName="min-w-[1080px]"
         getRowId={(i) => i.id}
         onRowClick={handleRowClick}

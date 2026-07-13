@@ -73,14 +73,18 @@ export function FinancePage() {
   const { data: summary } = useFinanceSummary(apartmentId, {
     period: apiPeriod,
   });
-  const { data: incData, isLoading: loadingIn } = useIncomes(
-    apartmentId,
-    listParams
-  );
-  const { data: exData, isLoading: loadingEx } = useExpenses(
-    apartmentId,
-    listParams
-  );
+  const {
+    data: incData,
+    isLoading: loadingIn,
+    error: incomesError,
+    refetch: refetchIncomes,
+  } = useIncomes(apartmentId, listParams);
+  const {
+    data: exData,
+    isLoading: loadingEx,
+    error: expensesError,
+    refetch: refetchExpenses,
+  } = useExpenses(apartmentId, listParams);
   const income = useIncomeActions(apartmentId);
   const expense = useExpenseActions(apartmentId);
 
@@ -345,6 +349,11 @@ export function FinancePage() {
           columns={columns}
           data={rows}
           loading={loadingIn || loadingEx}
+          error={incomesError ?? expensesError}
+          onRetry={() => {
+            refetchIncomes();
+            refetchExpenses();
+          }}
           getRowId={(r) => `${r.kind}-${r.id}`}
           emptyTitle={t("no-transactions")}
           emptyDescription={t("no-transactions-description")}

@@ -67,7 +67,12 @@ export function ChargeTypesPage() {
   const [sortKey, setSortKey] = useState<string | null>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const { data: items = [], isLoading } = useChargeTypes(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useChargeTypes(apartmentId);
   const { create, update, remove } = useChargeTypeActions(apartmentId);
   const submitting = create.isPending || update.isPending;
 
@@ -267,6 +272,8 @@ export function ChargeTypesPage() {
         columns={columns}
         data={sorted}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(c) => c.id}
         stickyHeader
         sortKey={sortKey}

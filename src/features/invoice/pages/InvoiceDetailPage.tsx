@@ -20,6 +20,7 @@ import { IconActionButton } from "@/components/shared/icon-action-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/shared/error-state";
 import {
   Select,
   SelectContent,
@@ -66,7 +67,12 @@ export function InvoiceDetailPage() {
   const { apartmentId, invoiceId } = useApartmentRouteParams();
   const router = useRouter();
 
-  const { data: invoice, isLoading } = useInvoiceDetail(apartmentId, invoiceId);
+  const {
+    data: invoice,
+    isLoading,
+    error: invoiceError,
+    refetch: refetchInvoice,
+  } = useInvoiceDetail(apartmentId, invoiceId);
   const { updateItems, cancel } = useInvoiceActions(apartmentId, invoiceId);
 
   const [editing, setEditing] = useState(false);
@@ -163,6 +169,8 @@ export function InvoiceDetailPage() {
     <div className="space-y-6 print:space-y-4">
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-xl" />
+      ) : invoiceError ? (
+        <ErrorState error={invoiceError} onRetry={() => refetchInvoice()} />
       ) : !invoice ? (
         <p className="text-sm text-gray-600">{t("invoice-not-found")}</p>
       ) : (

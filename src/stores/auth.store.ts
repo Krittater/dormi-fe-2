@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
@@ -32,7 +33,9 @@ interface AuthState {
   markUnauthenticated: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
   user: null,
   isAuthenticated: false,
   isBootstrapping: true,
@@ -69,4 +72,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   markUnauthenticated: () =>
     set({ user: null, isAuthenticated: false, isBootstrapping: false }),
-}));
+    }),
+    {
+      // เก็บเฉพาะโปรไฟล์ไว้แสดงชื่อหลัง refresh — สถานะ login จริงยังตรวจ
+      // จาก API ตอน bootstrap เสมอ (cookie คือ source of truth)
+      name: "dormi-auth",
+      partialize: (s) => ({ user: s.user }),
+      // rehydrate หลัง mount เท่านั้น กัน SSR/client HTML ไม่ตรงกัน
+      skipHydration: true,
+    }
+  )
+);

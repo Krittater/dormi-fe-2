@@ -65,7 +65,12 @@ export function InvoiceSetupsPage() {
   const [editing, setEditing] = useState<InvoiceSetup | null>(null);
   const [deleting, setDeleting] = useState<InvoiceSetup | null>(null);
 
-  const { data: items = [], isLoading } = useInvoiceSetups(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useInvoiceSetups(apartmentId);
   const { create, update, remove } = useInvoiceSetupActions(apartmentId);
 
   const form = useForm<InvoiceSetupFormValues>({
@@ -290,6 +295,8 @@ export function InvoiceSetupsPage() {
             columns={columns}
             data={filtered}
             loading={isLoading}
+            error={error}
+            onRetry={() => refetch()}
             getRowId={(s) => s.id}
             emptyTitle={t("no-invoice-setups")}
             emptyDescription={t("no-invoice-setups-description")}

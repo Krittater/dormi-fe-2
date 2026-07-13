@@ -80,7 +80,10 @@ export function RoomTypesPage() {
     [page, debouncedKeyword]
   );
 
-  const { data, isLoading } = useRoomTypes(apartmentId, listParams);
+  const { data, isLoading, error, refetch } = useRoomTypes(
+    apartmentId,
+    listParams
+  );
   const { create, update, remove } = useRoomTypeActions(apartmentId);
 
   const items = data?.items ?? [];
@@ -243,6 +246,8 @@ export function RoomTypesPage() {
         columns={columns}
         data={sorted}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(r) => r.id}
         emptyTitle={t("no-room-types")}
         emptyDescription={t("add-room-type-to-create-rooms")}

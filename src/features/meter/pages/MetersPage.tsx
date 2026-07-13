@@ -11,6 +11,7 @@ import {
   Loader2,
   MoreVertical,
   Plus,
+  Save,
   Search,
   Trash2,
   Zap,
@@ -38,6 +39,7 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { MeterReadingsSheet } from "@/features/meter/components/meter-readings-sheet";
 import { MeterFormDialog } from "@/features/meter/components/meter-form-dialog";
@@ -87,9 +89,15 @@ export function MetersPage() {
   const t = useT();
   const apartmentId = useApartmentId();
 
-  const { data: meters = [], isLoading } = useMeters(apartmentId);
+  const {
+    data: meters = [],
+    isLoading,
+    error: metersError,
+    refetch: refetchMeters,
+  } = useMeters(apartmentId);
   const { data: periodGroups = [] } = useMeterPeriodDropdown(apartmentId);
-  const { remove, recordReading, updateReading } = useMeterActions(apartmentId);
+  const { remove, recordReading, updateReading, saveAllReadings } =
+    useMeterActions(apartmentId);
 
   const periods = useMemo(
     () => normalizePeriodOptions(periodGroups),
@@ -139,8 +147,12 @@ export function MetersPage() {
     setReadingsPage(1);
   }, []);
 
-  const { data: periodReadings = [], isLoading: readingsLoading } =
-    useMeterReadingsByPeriod(apartmentId, periodId);
+  const {
+    data: periodReadings = [],
+    isLoading: readingsLoading,
+    error: readingsError,
+    refetch: refetchReadings,
+  } = useMeterReadingsByPeriod(apartmentId, periodId);
 
   // Readings for the selected meter type only — the whole page is scoped to one type.
   const typeReadings = useMemo(
@@ -316,6 +328,53 @@ export function MetersPage() {
     await remove.mutateAsync(deleting.id);
     setDeleting(null);
   }, [deleting, remove]);
+
+  // แถวที่ผู้ใช้แก้ค่าแล้วยังไม่ได้บันทึก (ห้อง BILLED แก้ไม่ได้แล้ว)
+  const draftReadings = useMemo(
+    () =>
+      typeReadings.filter(
+        (r) =>
+          r.id in currentDrafts &&
+          currentDrafts[r.id] !== "" &&
+          r.readingStatus !== MeterReadingStatus.BILLED
+      ),
+    [typeReadings, currentDrafts]
+  );
+
+  const handleSaveAll = useCallback(async () => {
+    const items: Array<{
+      meterId: string;
+      meterReadingId: string;
+      isNew: boolean;
+      body: { previousValue: number; currentValue: number };
+    }> = [];
+    let invalid = 0;
+    for (const r of draftReadings) {
+      const prev = r.previousValue ?? 0;
+      const curr = Number(currentDrafts[r.id]);
+      if (!Number.isFinite(curr) || curr < prev) {
+        invalid++;
+        continue;
+      }
+      items.push({
+        meterId: r.meterId,
+        meterReadingId: r.id,
+        isNew: r.readingStatus === MeterReadingStatus.NOT_RECORDED,
+        body: { previousValue: prev, currentValue: curr },
+      });
+    }
+    if (invalid > 0) {
+      toast.error(t("fix-invalid-readings", { count: invalid }));
+      return;
+    }
+    if (items.length === 0) return;
+    const result = await saveAllReadings.mutateAsync({
+      items,
+      billingPeriodId: periodId,
+    });
+    // ถ้ามีแถวล้มเหลว เก็บ draft ไว้ให้แก้ต่อ — ล้างเฉพาะตอนสำเร็จหมด
+    if (result.failed === 0) setCurrentDrafts({});
+  }, [draftReadings, currentDrafts, saveAllReadings, periodId, t]);
 
   const readingColumns = useMemo<Column<MeterReading>[]>(
     () => [
@@ -504,13 +563,20 @@ export function MetersPage() {
               showClear={Boolean(search)}
             />
 
-            <MetersTable
-              t={t}
-              loading={isLoading}
-              meters={pageItems}
-              onView={openMeter}
-              onDelete={setDeleting}
-            />
+            {metersError ? (
+              <ErrorState
+                error={metersError}
+                onRetry={() => refetchMeters()}
+              />
+            ) : (
+              <MetersTable
+                t={t}
+                loading={isLoading}
+                meters={pageItems}
+                onView={openMeter}
+                onDelete={setDeleting}
+              />
+            )}
 
             {!isLoading && total > 0 && (
               <Pagination
@@ -571,10 +637,30 @@ export function MetersPage() {
                   />
                 )}
 
+                {draftReadings.length > 0 && (
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleSaveAll}
+                      disabled={saveAllReadings.isPending}
+                    >
+                      {saveAllReadings.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      {t("save-all-readings", {
+                        count: draftReadings.length,
+                      })}
+                    </Button>
+                  </div>
+                )}
+
                 <DataTable
                   columns={readingColumns}
                   data={pageReadings}
                   loading={readingsLoading}
+                  error={readingsError}
+                  onRetry={() => refetchReadings()}
                   getRowId={(r) => r.id}
                   emptyTitle={t("no-readings")}
                   emptyDescription={t("no-readings-description")}

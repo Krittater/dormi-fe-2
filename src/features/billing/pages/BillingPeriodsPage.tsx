@@ -75,7 +75,12 @@ export function BillingPeriodsPage() {
   const [sortKey, setSortKey] = useState<string | null>("period");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const { data: items = [], isLoading } = useBillingPeriods(apartmentId);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useBillingPeriods(apartmentId);
   const { data: setups = [], isLoading: setupsLoading } =
     useBillingPeriodSetups(apartmentId);
   const { generate } = useBillingActions(apartmentId);
@@ -248,6 +253,8 @@ export function BillingPeriodsPage() {
         columns={columns}
         data={sorted}
         loading={isLoading}
+        error={error}
+        onRetry={() => refetch()}
         getRowId={(b) => b.id}
         onRowClick={handleRowClick}
         emptyTitle={t("no-billing-periods")}

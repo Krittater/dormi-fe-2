@@ -56,6 +56,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const t = useT();
   const register = useAuthStore((s) => s.register);
+  const login = useAuthStore((s) => s.login);
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -82,7 +83,13 @@ export default function RegisterPage() {
         lastNameTH: values.lastNameTH || undefined,
       });
       toast.success(t("register-success"));
-      router.replace("/login");
+      // เข้าสู่ระบบให้เลย ไม่ต้องกรอกซ้ำ — ถ้าไม่สำเร็จค่อยพาไปหน้า login
+      try {
+        await login({ email: values.email, password: values.password });
+        router.replace("/dashboard");
+      } catch {
+        router.replace("/login");
+      }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     } finally {

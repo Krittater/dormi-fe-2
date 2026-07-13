@@ -43,6 +43,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type Column, sortTableData, type SortDirection } from "@/components/shared/data-table";
 import { exportTableCsv } from "@/lib/export";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -126,12 +127,13 @@ export function RoomsPage() {
     [page, search, status, active]
   );
 
-  const { data, isLoading } = useRooms(apartmentId, listParams);
-  const { overview: overviewQuery } = useApartmentOverview(apartmentId);
-  const { data: roomTypesData } = useRoomTypesDropdown(
+  const { data, isLoading, isError, error, refetch } = useRooms(
     apartmentId,
-    DROPDOWN_LIMIT
+    listParams
   );
+  const { overview: overviewQuery } = useApartmentOverview(apartmentId);
+  const { data: roomTypesData, isSuccess: roomTypesLoaded } =
+    useRoomTypesDropdown(apartmentId, DROPDOWN_LIMIT);
   const { remove } = useRoomActions(apartmentId);
 
   const items = data?.items ?? [];
@@ -339,7 +341,7 @@ export function RoomsPage() {
         }
       />
 
-      {roomTypes.length === 0 && !isLoading && (
+      {roomTypesLoaded && roomTypes.length === 0 && (
         <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">
           {t("add-room-type-first")}{" "}
           <Link
@@ -513,7 +515,9 @@ export function RoomsPage() {
         </div>
       </div>
 
-      {view === VIEW_TABLE ? (
+      {isError ? (
+        <ErrorState error={error} onRetry={() => refetch()} />
+      ) : view === VIEW_TABLE ? (
         <DataTable
           columns={columns}
           data={visibleItems}

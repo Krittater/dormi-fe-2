@@ -41,6 +41,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const markAuthenticated = useAuthStore((s) => s.markAuthenticated);
   const markUnauthenticated = useAuthStore((s) => s.markUnauthenticated);
 
+  // โหลดโปรไฟล์ที่ persist ไว้ (ชื่อผู้ใช้) หลัง mount — skipHydration กัน SSR mismatch
+  useEffect(() => {
+    void useAuthStore.persist.rehydrate();
+  }, []);
+
   useEffect(() => {
     fetchApartments()
       .then(() => markAuthenticated())
