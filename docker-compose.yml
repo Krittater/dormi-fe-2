@@ -16,6 +16,8 @@ services:
       - PORT=3000
       # commit ที่ deploy — deploy.sh ส่งเข้ามา (โผล่ที่ GET /version, runtime env)
       - APP_VERSION=${APP_VERSION:-unknown}
+      # prod อ่าน release จาก mount ด้านล่าง (local default ./.dev-release)
+      - RELEASE_DIR=/dormi-releases
     volumes:
       # release info (VERSION + RELEASES.log ที่ version manager เขียนบน host) — อ่านตอน runtime
       # :ro = อ่านอย่างเดียว · local: path ไม่มี → Docker สร้างโฟลเดอร์ว่าง (โค้ดต้อง fail-safe)

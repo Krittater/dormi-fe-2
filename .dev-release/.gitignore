@@ -1,0 +1,9 @@
+# .dev-release/ — ไฟล์ตัวอย่าง release สำหรับรัน local (ไม่มี container)
+# ★ ไม่ push ของข้างใน — prod ใช้ mount /root/dormi-releases แทน (RELEASE_DIR=/dormi-releases)
+#
+# ถ้า GET /dormi-release ในเครื่องขึ้น release "unknown" ให้สร้าง 2 ไฟล์นี้เอง (ในโฟลเดอร์นี้):
+#   echo 0.0.0-dev > VERSION
+#   echo "v0.0.0-dev | 2026-01-01 00:00:00 | be=devbe fe=devfe | dev" > RELEASES.log
+
+*
+!.gitignore
