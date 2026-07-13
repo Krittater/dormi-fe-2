@@ -1,5 +1,12 @@
-# Auto deploy เมื่อ push ขึ้น main
-# ยึด pattern จาก nst-mam-api-microservices/bitbucket-pipelines.yml
+# Deploy frontend แบบ "มือ" (per-service) — ไม่ auto ตอน push แล้ว
+# ─────────────────────────────────────────────────────────────────
+# ★ push → main = แค่เก็บโค้ดขึ้น GitHub (ไม่ deploy)
+#   deploy ทำผ่าน:
+#     - ปกติ/coordinated → edge full-update (มี snapshot + version + rollback)
+#       แก้ FE ฝั่งเดียว → full-update เลือก scope=frontend (เบา ไม่ rebuild BE)
+#     - hotfix FE เร็วสุด → กดปุ่มนี้ (Actions → Run workflow) หรือ:
+#         gh workflow run deploy-production.yml --repo <owner>/dormi-fe-2
+#   เหตุผลที่ตัด auto: กัน deploy ซ้ำซ้อน/ชนกับ full-update (ต้อง push main ก่อน trigger edge)
 #
 # GitHub Secrets ที่ต้องตั้ง (Settings → Secrets and variables → Actions):
 #   SERVER_USER  — user SSH บน server (เช่น root)
@@ -13,9 +20,7 @@
 name: Deploy to Production
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production-frontend
