@@ -82,11 +82,6 @@ export function InvoiceDetailPage() {
 
   useBreadcrumbTail(invoice?.invoiceNumber ?? invoiceId);
 
-  // #region agent log
-  if (invoice) {
-    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'A,C,D',location:'InvoiceDetailPage.tsx:render',message:'UI-bound invoice values',data:{apartmentId,invoiceId,routeIdsEmpty:!apartmentId||!invoiceId,issueDate:invoice.issueDate??null,issuedDate:(invoice as Record<string,unknown>).issuedDate??null,roomName:invoice.roomName??null,tenantName:invoice.tenantName??null,itemsLen:invoice.items?.length??0,itemNames:(invoice.items??[]).slice(0,3).map((it)=>({name:it.name,description:it.description,itemType:it.itemType})),total:invoice.total,createdByName:invoice.createdByName??null},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
 
   const items = useMemo(
     () =>

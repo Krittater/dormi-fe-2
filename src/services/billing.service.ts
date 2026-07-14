@@ -54,10 +54,6 @@ export const billingService = {
     const periods = groups
       .map((group) => pickRepresentativePeriod(group.periods ?? []))
       .filter((period): period is BillingPeriod => Boolean(period));
-    // #region agent log
-    const sample = periods[0] as (BillingPeriod & Record<string, unknown>) | undefined;
-    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'B,E',location:'billing.service.ts:list',message:'billing period list field mapping',data:{apartmentId,groupCount:groups.length,periodCount:periods.length,sampleKeys:sample?Object.keys(sample):[],sampleName:sample?.name??null,sampleDisplayName:sample?.displayName??null,sampleInvoiceCount:sample?.invoiceCount??null,rawFirstPeriodKeys:groups[0]?.periods?.[0]?Object.keys(groups[0].periods[0] as object):[]},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return periods;
   },
 
@@ -91,9 +87,6 @@ export const billingService = {
     const period = await http.get<BillingPeriod & Record<string, unknown>>(
       endpoints.billingPeriods.byId(apartmentId, billingPeriodId)
     );
-    // #region agent log
-    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'B,D',location:'billing.service.ts:getById',message:'billing period byId payload',data:{apartmentId,billingPeriodId,keys:period?Object.keys(period):[],name:period?.name??null,displayName:period?.displayName??null,status:period?.status??null,dueDate:period?.dueDate??null,periodStart:period?.periodStart??period?.periodStartDate??null,periodEnd:period?.periodEnd??period?.periodEndDate??null,invoiceCount:period?.invoiceCount??null,nestedInvoicesLen:Array.isArray(period?.invoices)?(period.invoices as unknown[]).length:null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return period;
   },
 

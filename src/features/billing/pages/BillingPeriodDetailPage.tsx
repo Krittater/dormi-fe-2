@@ -80,11 +80,6 @@ export function BillingPeriodDetailPage() {
 
   useBreadcrumbTail(periodTitle);
 
-  // #region agent log
-  if (period) {
-    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'B,D',location:'BillingPeriodDetailPage.tsx:render',message:'UI-bound billing period values',data:{apartmentId,billingPeriodId,routeIdsEmpty:!apartmentId||!billingPeriodId,periodName:period.name??null,displayName:(period as Record<string,unknown>).displayName??null,periodTitle,dueDate:period.dueDate??null,status:period.status,invoicesLen:invoices.length},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion
 
   const handleGenerateInvoices = useCallback(() => {
     generateInvoices.mutate(billingPeriodId, {
