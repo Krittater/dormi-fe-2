@@ -14,8 +14,6 @@ export const qk = {
       [...qk.rooms.all(apartmentId), "dropdown"] as const,
     detail: (apartmentId: string, roomId: string) =>
       [...qk.rooms.all(apartmentId), "detail", roomId] as const,
-    byId: (apartmentId: string, roomId: string) =>
-      [...qk.rooms.all(apartmentId), "byId", roomId] as const,
   },
   roomTypes: {
     all: (apartmentId: string) => ["roomTypes", apartmentId] as const,

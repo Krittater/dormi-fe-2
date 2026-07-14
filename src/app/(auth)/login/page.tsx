@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-// import Link from "next/link"; // ปิดชั่วคราวพร้อมลิงก์ register
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -320,7 +320,7 @@ function LoginContent() {
             </form>
           </Form>
 
-          {/* Register link — ปิดชั่วคราว: ให้ admin สร้าง user จากหน้า Admin Users แทน
+          {/* Register link */}
           <p className="mt-6 text-center text-[13px] text-gray-500">
             {t("no-account-yet")}{" "}
             <Link
@@ -330,7 +330,6 @@ function LoginContent() {
               {t("register")}
             </Link>
           </p>
-          */}
         </div>
       </div>
     </div>

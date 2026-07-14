@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { useApartmentStore } from "@/stores/apartment.store";
-import type { Me, RoleAssignment, User } from "@/types";
+import type { User } from "@/types";
 
 interface LoginPayload {
   email: string;
@@ -26,103 +26,56 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isBootstrapping: boolean;
-  // RBAC — โหลดใหม่ทุก bootstrap (ไม่ persist)
-  isSuperuser: boolean;
-  roles: RoleAssignment[];
-  permissions: string[];
-  apartmentPermissions: Record<string, string[]>;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-  fetchMe: () => Promise<void>;
-  can: (permission: string, apartmentId?: string | null) => boolean;
   markAuthenticated: () => void;
   markUnauthenticated: () => void;
 }
 
-const EMPTY_RBAC = {
-  isSuperuser: false,
-  roles: [] as RoleAssignment[],
-  permissions: [] as string[],
-  apartmentPermissions: {} as Record<string, string[]>,
-};
-
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      isBootstrapping: true,
-      ...EMPTY_RBAC,
+    (set) => ({
+  user: null,
+  isAuthenticated: false,
+  isBootstrapping: true,
 
-      login: async (payload) => {
-        await api.post(endpoints.auth.login(), payload);
-        // ดึงสิทธิ์ + โปรไฟล์จริงจาก /auth/me (source of truth)
-        await get().fetchMe();
-      },
+  login: async (payload) => {
+    const data = await api.post<Partial<User> & { userId?: string }>(
+      endpoints.auth.login(),
+      payload
+    );
+    const user: User = {
+      id: data?.id ?? data?.userId ?? "",
+      email: data?.email ?? payload.email,
+      phone: data?.phone,
+      firstNameTH: data?.firstNameTH ?? null,
+      lastNameTH: data?.lastNameTH ?? null,
+    };
+    set({ user, isAuthenticated: true, isBootstrapping: false });
+  },
 
-      register: async (payload) => {
-        await api.post(endpoints.auth.register(), payload);
-      },
+  register: async (payload) => {
+    await api.post(endpoints.auth.register(), payload);
+  },
 
-      logout: async () => {
-        try {
-          await api.post(endpoints.auth.logout());
-        } finally {
-          set({
-            user: null,
-            isAuthenticated: false,
-            isBootstrapping: false,
-            ...EMPTY_RBAC,
-          });
-          useApartmentStore.getState().reset();
-        }
-      },
+  logout: async () => {
+    try {
+      await api.post(endpoints.auth.logout());
+    } finally {
+      set({ user: null, isAuthenticated: false, isBootstrapping: false });
+      useApartmentStore.getState().reset();
+    }
+  },
 
-      fetchMe: async () => {
-        const me = await api.get<Me>(endpoints.auth.me());
-        const user: User = {
-          id: me.user.userId,
-          email: me.user.email,
-          firstNameTH: me.user.firstNameTH,
-          lastNameTH: me.user.lastNameTH,
-        };
-        set({
-          user,
-          isAuthenticated: true,
-          isBootstrapping: false,
-          isSuperuser: me.isSuperuser,
-          roles: me.roles,
-          permissions: me.permissions,
-          apartmentPermissions: me.apartmentPermissions ?? {},
-        });
-      },
+  markAuthenticated: () => set({ isAuthenticated: true, isBootstrapping: false }),
 
-      can: (permission, apartmentId) => {
-        const s = get();
-        if (s.isSuperuser) return true;
-        if (s.permissions.includes(permission)) return true;
-        if (apartmentId) {
-          const scoped = s.apartmentPermissions[apartmentId];
-          if (scoped?.includes(permission)) return true;
-        }
-        return false;
-      },
-
-      markAuthenticated: () =>
-        set({ isAuthenticated: true, isBootstrapping: false }),
-
-      markUnauthenticated: () =>
-        set({
-          user: null,
-          isAuthenticated: false,
-          isBootstrapping: false,
-          ...EMPTY_RBAC,
-        }),
+  markUnauthenticated: () =>
+    set({ user: null, isAuthenticated: false, isBootstrapping: false }),
     }),
     {
-      // เก็บเฉพาะโปรไฟล์ไว้แสดงชื่อหลัง refresh — สถานะ login + สิทธิ์จริง
-      // ยังตรวจจาก /auth/me ตอน bootstrap เสมอ (cookie คือ source of truth)
+      // เก็บเฉพาะโปรไฟล์ไว้แสดงชื่อหลัง refresh — สถานะ login จริงยังตรวจ
+      // จาก API ตอน bootstrap เสมอ (cookie คือ source of truth)
       name: "dormi-auth",
       partialize: (s) => ({ user: s.user }),
       // rehydrate หลัง mount เท่านั้น กัน SSR/client HTML ไม่ตรงกัน

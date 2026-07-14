@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Pagination } from "@/components/ui/pagination";
 import { PageHeader } from "@/components/shared/page-header";
-import { PermissionGate } from "@/components/shared/permission-gate";
 import { FilterBar } from "@/components/shared/filter-bar";
 import {
   DataTable,
@@ -30,7 +29,6 @@ import {
   useTenantRoomDropdown,
   useTenants,
 } from "@/hooks/useTenants";
-import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 import { totalPagesOf } from "@/lib/list";
 import type { Tenant } from "@/types";
@@ -187,12 +185,10 @@ export function TenantsPage() {
         title={t("nav-tenants")}
         description={t("tenants-page-description")}
         actions={
-          <PermissionGate permission={P.tenant.create}>
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              {t("add-tenant")}
-            </Button>
-          </PermissionGate>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            {t("add-tenant")}
+          </Button>
         }
       />
 

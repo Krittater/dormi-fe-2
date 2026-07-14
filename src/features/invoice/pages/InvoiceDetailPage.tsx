@@ -82,7 +82,6 @@ export function InvoiceDetailPage() {
 
   useBreadcrumbTail(invoice?.invoiceNumber ?? invoiceId);
 
-
   const items = useMemo(
     () =>
       (invoice?.items ?? []).map((it) => ({

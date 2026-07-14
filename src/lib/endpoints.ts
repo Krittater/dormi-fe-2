@@ -5,41 +5,10 @@ export const endpoints = {
     register: () => `/auth/register`,
     login: () => `/auth/login`,
     logout: () => `/auth/logout`,
-    me: () => `/auth/me`,
-  },
-  users: {
-    list: () => `/users`,
-    create: () => `/users`,
-    detail: (userId: string) => `/users/${userId}`,
-    remove: (userId: string) => `/users/${userId}`,
-  },
-  roles: {
-    list: (apartmentId?: string) =>
-      apartmentId ? `/roles?apartmentId=${apartmentId}` : `/roles`,
-    create: () => `/roles`,
-    detail: (roleId: string) => `/roles/${roleId}`,
-    update: (roleId: string) => `/roles/${roleId}`,
-    remove: (roleId: string) => `/roles/${roleId}`,
-    permissions: (roleId: string) => `/roles/${roleId}/permissions`,
-    setUserGlobal: (userId: string) => `/users/${userId}/roles`,
-    setUserApartment: (userId: string, apartmentId: string) =>
-      `/users/${userId}/roles/apartment/${apartmentId}`,
-  },
-  permissions: {
-    list: (assignableToApartment?: boolean) =>
-      assignableToApartment
-        ? `/permissions?assignableToApartment=true`
-        : `/permissions`,
-  },
-  staff: {
-    list: (apartmentId: string) => `${a(apartmentId)}/staff`,
-    lookup: (apartmentId: string, email: string) =>
-      `${a(apartmentId)}/staff/lookup?email=${encodeURIComponent(email)}`,
   },
   apartments: {
     list: () => `/apartments`,
     create: () => `/apartments`,
-    byId: (id: string) => `/apartments/${id}`,
     update: (id: string) => `/apartments/${id}`,
     remove: (id: string) => `/apartments/${id}`,
   },
@@ -57,7 +26,6 @@ export const endpoints = {
     list: (apartmentId: string) => `${a(apartmentId)}/rooms`,
     create: (apartmentId: string) => `${a(apartmentId)}/rooms`,
     bulkCreate: (apartmentId: string) => `${a(apartmentId)}/rooms/bulk`,
-    bulkDelete: (apartmentId: string) => `${a(apartmentId)}/rooms/bulk-delete`,
     overview: (apartmentId: string) => `${a(apartmentId)}/rooms/overview`,
     dropdown: (apartmentId: string) => `${a(apartmentId)}/rooms/dropdown`,
     detail: (apartmentId: string, roomId: string) =>
@@ -132,6 +100,8 @@ export const endpoints = {
     update: (setupId: string) => `/invoice-setups/${setupId}`,
   },
   billingPeriods: {
+    generate: (apartmentId: string) =>
+      `${a(apartmentId)}/billing-periods/generate`,
     list: (apartmentId: string) => `${a(apartmentId)}/billing-periods`,
     dropdown: (apartmentId: string) =>
       `${a(apartmentId)}/billing-periods/dropdown`,

@@ -15,13 +15,6 @@ export const apartmentQueries = {
       queryFn: () => apartmentService.list(),
     }),
 
-  detail: (apartmentId: string) =>
-    queryOptions({
-      queryKey: qk.apartments.detail(apartmentId),
-      queryFn: () => apartmentService.getById(apartmentId),
-      enabled: Boolean(apartmentId),
-    }),
-
   overview: (apartmentId: string) =>
     queryOptions({
       queryKey: qk.rooms.overview(apartmentId),

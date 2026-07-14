@@ -30,8 +30,6 @@ import { FinanceControls } from "@/features/finance/components/finance-controls"
 import { useIncomeActions, useIncomes } from "@/hooks/useIncomes";
 import { useExpenseActions, useExpenses } from "@/hooks/useExpenses";
 import { useFinanceSummary } from "@/hooks/useFinance";
-import { useCan } from "@/hooks/use-can";
-import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { MONEY_ENTRY_STATUS_CODES, MoneyEntryStatus } from "@/types";
@@ -55,7 +53,6 @@ interface Row {
 
 export function FinancePage() {
   const t = useT();
-  const can = useCan();
   const apartmentId = useApartmentId();
 
   const [period, setPeriod] = useState<Period>("month");
@@ -271,12 +268,10 @@ export function FinancePage() {
               <Download className="h-4 w-4" />
               {t("export-excel")}
             </Button>
-            {(can(P.income.create) || can(P.expense.create)) && (
-              <Button onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                {t("record-transaction")}
-              </Button>
-            )}
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              {t("record-transaction")}
+            </Button>
           </div>
         }
       />

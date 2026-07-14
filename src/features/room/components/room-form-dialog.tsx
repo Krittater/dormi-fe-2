@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRoom, useRoomActions } from "@/hooks/useRooms";
+import { useRoomActions } from "@/hooks/useRooms";
 import { getApiErrorMessage } from "@/lib/format";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import {
@@ -52,25 +52,6 @@ interface Props {
   onSuccess?: () => void;
 }
 
-function toFormValues(source: Room | null | undefined): RoomFormValues {
-  const roomTypeId =
-    source?.roomTypeId ||
-    source?.roomType?.id ||
-    source?.roomType?.roomTypeId ||
-    "";
-
-  return {
-    roomTypeId,
-    name: source?.name ?? "",
-    floor: source?.floor ?? "",
-    description: source?.description ?? "",
-    status: (source?.status as RoomStatus) ?? RoomStatus.AVAILABLE,
-    isActive: source?.isActive ?? true,
-    currentWaterMeterReading: 0,
-    currentElectricMeterReading: 0,
-  };
-}
-
 export function RoomFormDialog({
   open,
   onOpenChange,
@@ -84,47 +65,34 @@ export function RoomFormDialog({
   const { create, update } = useRoomActions(apartmentId);
   const submitting = create.isPending || update.isPending;
 
-  const { data: roomById, isFetching: loadingRoom } = useRoom(
-    apartmentId,
-    room?.id ?? null,
-    open && isEdit
-  );
-
-  const formRoom = roomById ?? room ?? null;
-
-  const roomTypeOptions = useMemo(() => {
-    const options = [...roomTypes];
-    const selectedId =
-      formRoom?.roomTypeId ||
-      formRoom?.roomType?.id ||
-      formRoom?.roomType?.roomTypeId;
-    if (
-      selectedId &&
-      !options.some((rt) => rt.id === selectedId)
-    ) {
-      const nested = formRoom?.roomType;
-      options.unshift({
-        id: selectedId,
-        roomTypeId: selectedId,
-        apartmentId,
-        name: nested?.name ?? selectedId,
-        price: nested?.price ?? 0,
-        description: nested?.description,
-      });
-    }
-    return options;
-  }, [apartmentId, formRoom, roomTypes]);
-
   const form = useForm<RoomFormValues>({
     resolver: zodFormResolver<RoomFormValues>(makeRoomSchema(t)),
-    defaultValues: toFormValues(null),
+    defaultValues: {
+      roomTypeId: "",
+      name: "",
+      floor: "",
+      description: "",
+      status: RoomStatus.AVAILABLE,
+      isActive: true,
+      currentWaterMeterReading: 0,
+      currentElectricMeterReading: 0,
+    },
   });
 
   useEffect(() => {
     if (!open) return;
-    form.reset(toFormValues(isEdit ? formRoom : null));
+    form.reset({
+      roomTypeId: room?.roomTypeId ?? "",
+      name: room?.name ?? "",
+      floor: room?.floor ?? "",
+      description: room?.description ?? "",
+      status: (room?.status as RoomStatus) ?? RoomStatus.AVAILABLE,
+      isActive: room?.isActive ?? true,
+      currentWaterMeterReading: 0,
+      currentElectricMeterReading: 0,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, room?.id, formRoom]);
+  }, [open, room]);
 
   const onSubmit = (values: RoomFormValues) => {
     const mutationOptions = {
@@ -176,47 +144,111 @@ export function RoomFormDialog({
             {isEdit ? t("update-room-info") : t("create-room-description")}
           </DialogDescription>
         </DialogHeader>
-        {isEdit && loadingRoom && !roomById ? (
-          <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-        ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="roomTypeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("nav-room-types")}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("select-room-type")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roomTypes.map((rt) => (
+                        <SelectItem key={rt.id} value={rt.id}>
+                          {rt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
-                name="roomTypeId"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("nav-room-types")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("select-room-type")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roomTypeOptions.map((rt) => (
-                          <SelectItem key={rt.id} value={rt.id}>
-                            {rt.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>{t("room-name-number")}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="A-101" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="floor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("floor-optional")}</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("status")}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(RoomStatus).map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {t(ROOM_STATUS_CODES[s])}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("description-optional")}</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!isEdit && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="currentWaterMeterReading"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("room-name-number")}</FormLabel>
+                      <FormLabel>{t("initial-water-meter")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="A-101" {...field} />
+                        <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,127 +256,57 @@ export function RoomFormDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="floor"
+                  name="currentElectricMeterReading"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("floor-optional")}</FormLabel>
+                      <FormLabel>{t("initial-electric-meter")}</FormLabel>
                       <FormControl>
-                        <Input placeholder="1" {...field} />
+                        <Input type="number" min={0} step="0.01" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+            )}
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("status")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(RoomStatus).map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {t(ROOM_STATUS_CODES[s])}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("description-optional")}</FormLabel>
-                    <FormControl>
-                      <Textarea rows={2} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {!isEdit && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="currentWaterMeterReading"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("initial-water-meter")}</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} step="0.01" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="currentElectricMeterReading"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("initial-electric-meter")}</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} step="0.01" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
+                  <div>
+                    <FormLabel>{t("enable-room")}</FormLabel>
+                    <p className="text-xs text-gray-500">
+                      {t("disabled-room-not-billed")}
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
               )}
+            />
 
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                    <div>
-                      <FormLabel>{t("enable-room")}</FormLabel>
-                      <p className="text-xs text-gray-500">
-                        {t("disabled-room-not-billed")}
-                      </p>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={submitting}
-                >
-                  {t("cancel")}
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {t("save")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+              >
+                {t("cancel")}
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t("save")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

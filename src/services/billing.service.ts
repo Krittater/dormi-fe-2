@@ -9,6 +9,7 @@ import type {
   BillingPeriodStatus,
 } from "@/types";
 import { BillingPeriodType } from "@/types";
+import type { BillingPeriodGenerateValues } from "@/schemas/billing.schema";
 
 /** One row per month: prefer the RENT period (the one invoices/actions apply to), else the first available type. */
 function pickRepresentativePeriod(periods: BillingPeriod[]): BillingPeriod | undefined {
@@ -51,10 +52,9 @@ export const billingService = {
   async list(apartmentId: string): Promise<BillingPeriod[]> {
     const res = await http.get(endpoints.billingPeriods.list(apartmentId));
     const groups = toList<BillingPeriodGroup>(res).items;
-    const periods = groups
+    return groups
       .map((group) => pickRepresentativePeriod(group.periods ?? []))
       .filter((period): period is BillingPeriod => Boolean(period));
-    return periods;
   },
 
   /** Periods for the meter-reading-by-period picker: one entry per month with both utility period IDs. */
@@ -84,10 +84,19 @@ export const billingService = {
     apartmentId: string,
     billingPeriodId: string
   ): Promise<BillingPeriod> {
-    const period = await http.get<BillingPeriod & Record<string, unknown>>(
+    return http.get<BillingPeriod>(
       endpoints.billingPeriods.byId(apartmentId, billingPeriodId)
     );
-    return period;
+  },
+
+  async generate(
+    apartmentId: string,
+    payload: BillingPeriodGenerateValues
+  ): Promise<BillingPeriod> {
+    return http.post<BillingPeriod>(
+      endpoints.billingPeriods.generate(apartmentId),
+      payload
+    );
   },
 
   async updateStatus(
@@ -141,10 +150,6 @@ export const apartmentService = {
   async list(): Promise<ApartmentOverview[]> {
     const res = await http.get(endpoints.apartments.list());
     return toList<ApartmentOverview>(res).items;
-  },
-
-  async getById(id: string): Promise<Apartment> {
-    return http.get<Apartment>(endpoints.apartments.byId(id));
   },
 
   async create(payload: Partial<Apartment>): Promise<Apartment> {

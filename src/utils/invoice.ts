@@ -34,14 +34,12 @@ export function mergeInvoiceDetail(
 
   const items = normalizeInvoiceItems(rawItems);
 
-  const result = {
+  return {
     ...merged,
     items,
     totalAmount: Number(merged.totalAmount ?? 0),
     total: Number(merged.total ?? merged.totalAmount ?? 0),
   } as Invoice;
-
-  return result;
 }
 
 export function countInvoicesByStatus(

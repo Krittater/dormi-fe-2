@@ -1609,9 +1609,9 @@
   },
   {
     "code": "link-billing-periods-desc",
-    "th": "ดูและปิดรอบบิล",
-    "en": "View and close billing periods",
-    "cn": "查看并关闭账单周期"
+    "th": "สร้างและปิดรอบบิล",
+    "en": "Create and close billing periods",
+    "cn": "创建和关闭账单周期"
   },
   {
     "code": "link-invoices-desc",
@@ -2016,36 +2016,6 @@
     "cn": "房间删除成功"
   },
   {
-    "code": "delete-selected-rooms",
-    "th": "ลบห้องที่เลือก",
-    "en": "Delete selected",
-    "cn": "删除所选"
-  },
-  {
-    "code": "bulk-delete-rooms-confirm",
-    "th": "ต้องการลบห้อง {n} ห้องใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
-    "en": "Delete {n} room(s)? This action cannot be undone.",
-    "cn": "确定删除 {n} 个房间吗？此操作无法撤销。"
-  },
-  {
-    "code": "bulk-delete-rooms-success",
-    "th": "ลบห้องสำเร็จ {n} ห้อง",
-    "en": "{n} room(s) deleted",
-    "cn": "已删除 {n} 个房间"
-  },
-  {
-    "code": "bulk-delete-rooms-partial",
-    "th": "ลบสำเร็จ {succeeded} ห้อง, ล้มเหลว {failed} ห้อง",
-    "en": "Deleted {succeeded}, failed {failed}",
-    "cn": "成功删除 {succeeded} 个，失败 {failed} 个"
-  },
-  {
-    "code": "select-all",
-    "th": "เลือกทั้งหมด",
-    "en": "Select all",
-    "cn": "全选"
-  },
-  {
     "code": "room",
     "th": "ห้อง",
     "en": "Room",
@@ -2095,9 +2065,9 @@
   },
   {
     "code": "add-invoice-setup-first",
-    "th": "กรุณาตั้งค่ารูปแบบใบแจ้งหนี้ (วันตัดรอบ/วันออกบิล/วันครบกำหนด) ก่อน ระบบจะสร้างรอบบิลให้อัตโนมัติ",
-    "en": "Please configure an invoice setup (cutoff/issue/due dates) first. The system will generate billing periods automatically",
-    "cn": "请先配置账单设置（截止日/开票日/到期日），系统将自动生成账单周期"
+    "th": "กรุณาตั้งค่ารูปแบบใบแจ้งหนี้ (วันตัดรอบ/วันออกบิล/วันครบกำหนด) ก่อน จึงจะสร้างรอบบิลได้อย่างถูกต้อง",
+    "en": "Please configure an invoice setup (cutoff/issue/due dates) first so billing periods generate correctly",
+    "cn": "请先配置账单设置（截止日/开票日/到期日），账单周期才能正确生成"
   },
   {
     "code": "search-room-number",
@@ -2557,9 +2527,9 @@
   },
   {
     "code": "no-billing-periods-description",
-    "th": "ระบบจะสร้างรอบบิลให้อัตโนมัติเมื่อถึงกำหนดตามรูปแบบใบแจ้งหนี้",
-    "en": "Billing periods are created automatically on schedule based on your invoice setups",
-    "cn": "系统会根据账单设置在到期时自动创建账单周期"
+    "th": "สร้างรอบบิลเพื่อเริ่มเรียกเก็บเงินและจดมิเตอร์",
+    "en": "Create a billing period to start billing and recording meters",
+    "cn": "创建账单周期以开始计费和抄表"
   },
   {
     "code": "select-billing-period",
@@ -3288,10 +3258,22 @@
     "cn": "十二月"
   },
   {
+    "code": "billing-period-created",
+    "th": "สร้างรอบบิลสำเร็จ",
+    "en": "Billing period created successfully",
+    "cn": "账单周期创建成功"
+  },
+  {
     "code": "billing-periods-page-description",
-    "th": "ดูรอบบิลที่ระบบสร้างอัตโนมัติ จดมิเตอร์ ออกและเผยแพร่ใบแจ้งหนี้",
-    "en": "View system-generated billing periods, record meters, and issue and publish invoices",
-    "cn": "查看系统自动生成的账单周期、记录电水表、开具并发布账单"
+    "th": "สร้างรอบบิลรายเดือน จดมิเตอร์ ออกและเผยแพร่ใบแจ้งหนี้",
+    "en": "Create monthly billing periods, record meters, and issue and publish invoices",
+    "cn": "创建每月账单周期、记录电水表、开具并发布账单"
+  },
+  {
+    "code": "create-billing-period",
+    "th": "สร้างรอบบิล",
+    "en": "Create billing period",
+    "cn": "创建账单周期"
   },
   {
     "code": "invoice-count",
@@ -3300,10 +3282,46 @@
     "cn": "账单数"
   },
   {
+    "code": "create-billing-period-description",
+    "th": "เลือกเดือนและปีของรอบบิลที่ต้องการสร้าง",
+    "en": "Select the month and year of the billing period to create",
+    "cn": "选择要创建的账单周期的月份和年份"
+  },
+  {
     "code": "month",
     "th": "เดือน",
     "en": "Month",
     "cn": "月份"
+  },
+  {
+    "code": "year-ce",
+    "th": "ปี (ค.ศ.)",
+    "en": "Year (CE)",
+    "cn": "年份（公历）"
+  },
+  {
+    "code": "type-optional",
+    "th": "ประเภท (ไม่บังคับ)",
+    "en": "Type (optional)",
+    "cn": "类型（可选）"
+  },
+  {
+    "code": "all-types",
+    "th": "ทุกประเภท",
+    "en": "All types",
+    "cn": "所有类型"
+  },
+  {
+    "code": "invoice-setup-optional",
+    "th": "รูปแบบใบแจ้งหนี้ (ไม่บังคับ)",
+    "en": "Invoice setup (optional)",
+    "cn": "账单配置（可选）"
+  },
+  {
+    "code": "all-setups",
+    "th": "ทุกรูปแบบ",
+    "en": "All setups",
+    "cn": "所有配置"
   },
   {
     "code": "invoices-generated-draft",
@@ -4414,401 +4432,5 @@
     "th": "ฟีเจอร์ยังไม่พร้อมใช้งาน",
     "en": "not available now",
     "cn": "现在不可用"
-  },
-  {
-    "code": "no-permission",
-    "th": "คุณไม่มีสิทธิ์เข้าถึงส่วนนี้",
-    "en": "You don't have permission to access this",
-    "cn": "您无权访问此内容"
-  },
-  {
-    "code": "forbidden-title",
-    "th": "ไม่มีสิทธิ์เข้าถึง",
-    "en": "Access denied",
-    "cn": "拒绝访问"
-  },
-  {
-    "code": "forbidden-desc",
-    "th": "บัญชีของคุณไม่มีสิทธิ์เข้าถึงหน้านี้ หากคิดว่าเป็นข้อผิดพลาด กรุณาติดต่อผู้ดูแลหอพัก",
-    "en": "Your account doesn't have permission to view this page. Contact your administrator if you think this is a mistake.",
-    "cn": "您的账户无权查看此页面。如有疑问，请联系管理员。"
-  },
-  {
-    "code": "nav-section-staff",
-    "th": "พนักงาน",
-    "en": "Staff",
-    "cn": "员工"
-  },
-  {
-    "code": "nav-staff",
-    "th": "ตำแหน่งและพนักงาน",
-    "en": "Positions & staff",
-    "cn": "职位与员工"
-  },
-  {
-    "code": "nav-section-platform",
-    "th": "ระบบ",
-    "en": "Platform",
-    "cn": "平台"
-  },
-  {
-    "code": "nav-admin-roles",
-    "th": "จัดการบทบาท",
-    "en": "Role management",
-    "cn": "角色管理"
-  },
-  {
-    "code": "staff-page-description",
-    "th": "สร้างตำแหน่งในหอและมอบสิทธิ์ให้พนักงาน",
-    "en": "Create apartment positions and assign staff permissions",
-    "cn": "创建宿舍职位并为员工分配权限"
-  },
-  {
-    "code": "admin-roles-description",
-    "th": "จัดการ role และ permission ระดับระบบ",
-    "en": "Manage platform roles and permissions",
-    "cn": "管理系统级角色与权限"
-  },
-  {
-    "code": "staff-positions",
-    "th": "ตำแหน่ง",
-    "en": "Positions",
-    "cn": "职位"
-  },
-  {
-    "code": "staff-members",
-    "th": "พนักงาน",
-    "en": "Staff members",
-    "cn": "员工"
-  },
-  {
-    "code": "staff-member",
-    "th": "พนักงาน",
-    "en": "Staff member",
-    "cn": "员工"
-  },
-  {
-    "code": "add-position",
-    "th": "เพิ่มตำแหน่ง",
-    "en": "Add position",
-    "cn": "添加职位"
-  },
-  {
-    "code": "edit-position",
-    "th": "แก้ไขตำแหน่ง",
-    "en": "Edit position",
-    "cn": "编辑职位"
-  },
-  {
-    "code": "delete-position",
-    "th": "ลบตำแหน่ง",
-    "en": "Delete position",
-    "cn": "删除职位"
-  },
-  {
-    "code": "delete-position-confirm",
-    "th": "ต้องการลบตำแหน่งนี้หรือไม่ พนักงานที่ผูกอยู่จะสูญเสียตำแหน่ง",
-    "en": "Delete this position? Assigned staff will lose it.",
-    "cn": "删除此职位？已分配的员工将失去该职位。"
-  },
-  {
-    "code": "assign-staff",
-    "th": "มอบตำแหน่ง",
-    "en": "Assign staff",
-    "cn": "分配职位"
-  },
-  {
-    "code": "no-positions",
-    "th": "ยังไม่มีตำแหน่ง",
-    "en": "No positions yet",
-    "cn": "暂无职位"
-  },
-  {
-    "code": "no-positions-description",
-    "th": "สร้างตำแหน่งเช่น นิติกร แม่บ้าน หรือช่าง เพื่อกำหนดสิทธิ์",
-    "en": "Create positions like clerk, housekeeper, or technician",
-    "cn": "创建如文员、保洁或技工等职位"
-  },
-  {
-    "code": "no-staff",
-    "th": "ยังไม่มีพนักงาน",
-    "en": "No staff yet",
-    "cn": "暂无员工"
-  },
-  {
-    "code": "no-staff-description",
-    "th": "ค้นหาผู้ใช้ด้วยอีเมลแล้วมอบตำแหน่งในหอ",
-    "en": "Look up a user by email and assign apartment positions",
-    "cn": "通过邮箱查找用户并分配宿舍职位"
-  },
-  {
-    "code": "staff-email-placeholder",
-    "th": "อีเมลผู้ใช้",
-    "en": "User email",
-    "cn": "用户邮箱"
-  },
-  {
-    "code": "lookup",
-    "th": "ค้นหา",
-    "en": "Look up",
-    "cn": "查找"
-  },
-  {
-    "code": "staff-found",
-    "th": "พบผู้ใช้",
-    "en": "User found",
-    "cn": "找到用户"
-  },
-  {
-    "code": "staff-user-not-found",
-    "th": "ไม่พบผู้ใช้ด้วยอีเมลนี้",
-    "en": "No user found with this email",
-    "cn": "未找到该邮箱用户"
-  },
-  {
-    "code": "staff-lookup-first",
-    "th": "ค้นหาผู้ใช้ก่อนมอบตำแหน่ง",
-    "en": "Look up a user before assigning",
-    "cn": "分配前请先查找用户"
-  },
-  {
-    "code": "role-name",
-    "th": "ชื่อบทบาท",
-    "en": "Role name",
-    "cn": "角色名称"
-  },
-  {
-    "code": "role-description",
-    "th": "คำอธิบาย",
-    "en": "Description",
-    "cn": "描述"
-  },
-  {
-    "code": "role-permissions",
-    "th": "สิทธิ์",
-    "en": "Permissions",
-    "cn": "权限"
-  },
-  {
-    "code": "role-scope",
-    "th": "ขอบเขต",
-    "en": "Scope",
-    "cn": "范围"
-  },
-  {
-    "code": "role-name-required",
-    "th": "กรุณาระบุชื่อบทบาท",
-    "en": "Role name is required",
-    "cn": "请填写角色名称"
-  },
-  {
-    "code": "role-saved",
-    "th": "บันทึกบทบาทสำเร็จ",
-    "en": "Role saved",
-    "cn": "角色已保存"
-  },
-  {
-    "code": "role-deleted",
-    "th": "ลบบทบาทสำเร็จ",
-    "en": "Role deleted",
-    "cn": "角色已删除"
-  },
-  {
-    "code": "role-permissions-saved",
-    "th": "บันทึกสิทธิ์สำเร็จ",
-    "en": "Permissions saved",
-    "cn": "权限已保存"
-  },
-  {
-    "code": "staff-roles-saved",
-    "th": "มอบตำแหน่งสำเร็จ",
-    "en": "Staff positions saved",
-    "cn": "职位分配已保存"
-  },
-  {
-    "code": "add-role",
-    "th": "เพิ่มบทบาท",
-    "en": "Add role",
-    "cn": "添加角色"
-  },
-  {
-    "code": "edit-role",
-    "th": "แก้ไขบทบาท",
-    "en": "Edit role",
-    "cn": "编辑角色"
-  },
-  {
-    "code": "delete-role",
-    "th": "ลบบทบาท",
-    "en": "Delete role",
-    "cn": "删除角色"
-  },
-  {
-    "code": "delete-role-confirm",
-    "th": "ต้องการลบบทบาทนี้หรือไม่",
-    "en": "Delete this role?",
-    "cn": "删除此角色？"
-  },
-  {
-    "code": "system-roles",
-    "th": "บทบาทระบบ",
-    "en": "System roles",
-    "cn": "系统角色"
-  },
-  {
-    "code": "custom-roles",
-    "th": "บทบาทกำหนดเอง",
-    "en": "Custom roles",
-    "cn": "自定义角色"
-  },
-  {
-    "code": "system-role",
-    "th": "ระบบ",
-    "en": "System",
-    "cn": "系统"
-  },
-  {
-    "code": "system-role-readonly",
-    "th": "แก้ไขบทบาทระบบไม่ได้",
-    "en": "System roles cannot be edited",
-    "cn": "系统角色不可编辑"
-  },
-  {
-    "code": "superuser",
-    "th": "Superuser",
-    "en": "Superuser",
-    "cn": "超级用户"
-  },
-  {
-    "code": "superuser-all-permissions",
-    "th": "Superuser มีสิทธิ์ทุกอย่างโดยอัตโนมัติ",
-    "en": "Superusers bypass all permission checks",
-    "cn": "超级用户自动拥有全部权限"
-  },
-  {
-    "code": "no-roles",
-    "th": "ไม่พบบทบาท",
-    "en": "No roles found",
-    "cn": "未找到角色"
-  },
-  {
-    "code": "no-custom-roles",
-    "th": "ยังไม่มีบทบาทกำหนดเอง",
-    "en": "No custom roles yet",
-    "cn": "暂无自定义角色"
-  },
-  {
-    "code": "no-custom-roles-description",
-    "th": "สร้างบทบาทระดับระบบเพิ่มเติมได้ที่นี่",
-    "en": "Create additional platform roles here",
-    "cn": "可在此创建额外的平台角色"
-  },
-  {
-    "code": "no-permissions",
-    "th": "ยังไม่มีสิทธิ์",
-    "en": "No permissions",
-    "cn": "暂无权限"
-  },
-  {
-    "code": "view",
-    "th": "ดู",
-    "en": "View",
-    "cn": "查看"
-  },
-  {
-    "code": "nav-admin-users",
-    "th": "จัดการผู้ใช้",
-    "en": "User management",
-    "cn": "用户管理"
-  },
-  {
-    "code": "admin-users-description",
-    "th": "เพิ่ม ลบ และกำหนด role ระดับระบบให้ผู้ใช้",
-    "en": "Create, delete, and assign platform roles to users",
-    "cn": "创建、删除用户并分配系统角色"
-  },
-  {
-    "code": "add-user",
-    "th": "เพิ่มผู้ใช้",
-    "en": "Add user",
-    "cn": "添加用户"
-  },
-  {
-    "code": "user-name",
-    "th": "ชื่อ",
-    "en": "Name",
-    "cn": "姓名"
-  },
-  {
-    "code": "user-roles",
-    "th": "บทบาท",
-    "en": "Roles",
-    "cn": "角色"
-  },
-  {
-    "code": "assign-roles",
-    "th": "กำหนดบทบาท",
-    "en": "Assign roles",
-    "cn": "分配角色"
-  },
-  {
-    "code": "assign-roles-optional",
-    "th": "บทบาทเริ่มต้น (ไม่บังคับ)",
-    "en": "Initial roles (optional)",
-    "cn": "初始角色（可选）"
-  },
-  {
-    "code": "search-users-placeholder",
-    "th": "ค้นหาอีเมล เบอร์ หรือชื่อ...",
-    "en": "Search email, phone, or name...",
-    "cn": "搜索邮箱、电话或姓名..."
-  },
-  {
-    "code": "no-users",
-    "th": "ยังไม่มีผู้ใช้",
-    "en": "No users yet",
-    "cn": "暂无用户"
-  },
-  {
-    "code": "no-users-description",
-    "th": "สร้างผู้ใช้ใหม่แล้วกำหนด role ได้ที่นี่",
-    "en": "Create users and assign roles here",
-    "cn": "可在此创建用户并分配角色"
-  },
-  {
-    "code": "user-created",
-    "th": "สร้างผู้ใช้สำเร็จ",
-    "en": "User created",
-    "cn": "用户已创建"
-  },
-  {
-    "code": "user-deleted",
-    "th": "ลบผู้ใช้สำเร็จ",
-    "en": "User deleted",
-    "cn": "用户已删除"
-  },
-  {
-    "code": "user-roles-saved",
-    "th": "บันทึกบทบาทผู้ใช้สำเร็จ",
-    "en": "User roles saved",
-    "cn": "用户角色已保存"
-  },
-  {
-    "code": "user-form-required",
-    "th": "กรุณากรอกอีเมล เบอร์โทร และรหัสผ่าน",
-    "en": "Email, phone, and password are required",
-    "cn": "请填写邮箱、电话和密码"
-  },
-  {
-    "code": "delete-user",
-    "th": "ลบผู้ใช้",
-    "en": "Delete user",
-    "cn": "删除用户"
-  },
-  {
-    "code": "delete-user-confirm",
-    "th": "ต้องการลบผู้ใช้นี้หรือไม่ การกระทำนี้ไม่สามารถยกเลิกได้ง่าย",
-    "en": "Delete this user? This action is not easily undone.",
-    "cn": "删除此用户？此操作不易撤销。"
   }
 ]

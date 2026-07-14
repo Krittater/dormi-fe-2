@@ -80,7 +80,6 @@ export function BillingPeriodDetailPage() {
 
   useBreadcrumbTail(periodTitle);
 
-
   const handleGenerateInvoices = useCallback(() => {
     generateInvoices.mutate(billingPeriodId, {
       onSuccess: () => setConfirm(null),

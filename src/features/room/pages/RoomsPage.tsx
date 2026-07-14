@@ -6,7 +6,6 @@ import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useApartmentOverview } from "@/hooks/useApartments";
 import { useFilterParams } from "@/hooks/use-filter-params";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import {
   ArrowRight,
   ChevronDown,
@@ -19,14 +18,12 @@ import {
   Plus,
   Trash2,
   UserPlus,
-  X,
   Zap,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -45,7 +42,6 @@ import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
-import { PermissionGate } from "@/components/shared/permission-gate";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type Column, sortTableData, type SortDirection } from "@/components/shared/data-table";
@@ -74,12 +70,10 @@ import {
 import {
   formatNumber,
   formatPhone,
-  getApiErrorMessage,
   getInitials,
 } from "@/lib/format";
 import { totalPagesOf } from "@/lib/list";
 import { cn } from "@/lib/utils";
-import { P } from "@/lib/permissions";
 import { normalizeRoomOverviewCounts } from "@/utils/overview";
 import { qk } from "@/queries/keys";
 import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
@@ -116,8 +110,6 @@ export function RoomsPage() {
   const [bulkFormOpen, setBulkFormOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [deleting, setDeleting] = useState<Room | null>(null);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [detailRoomId, setDetailRoomId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [tenantFormOpen, setTenantFormOpen] = useState(false);
@@ -142,7 +134,7 @@ export function RoomsPage() {
   const { overview: overviewQuery } = useApartmentOverview(apartmentId);
   const { data: roomTypesData, isSuccess: roomTypesLoaded } =
     useRoomTypesDropdown(apartmentId, DROPDOWN_LIMIT);
-  const { remove, bulkDelete } = useRoomActions(apartmentId);
+  const { remove } = useRoomActions(apartmentId);
 
   const items = data?.items ?? [];
   const meta = data?.meta;
@@ -163,66 +155,16 @@ export function RoomsPage() {
     setDetailOpen(true);
   }, []);
 
-  const handleDetailOpenChange = useCallback((open: boolean) => {
-    setDetailOpen(open);
-    if (!open) {
-      setDetailRoomId(null);
-    }
-  }, []);
-
-  const handleFormOpenChange = useCallback((open: boolean) => {
-    setFormOpen(open);
-    if (!open) {
-      setEditing(null);
-    }
-  }, []);
-
   const openAddTenant = useCallback((room: Room) => {
     setTenantRoomId(room.id);
     setTenantFormOpen(true);
   }, []);
 
-  const toggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  }, []);
-
   const handleDelete = useCallback(async () => {
     if (!deleting) return;
     await remove.mutateAsync(deleting.id);
-    setSelectedIds((prev) => prev.filter((id) => id !== deleting.id));
     setDeleting(null);
   }, [deleting, remove]);
-
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.length === 0) return;
-    try {
-      const result = await bulkDelete.mutateAsync({
-        rooms: selectedIds.map((roomId, clientIndex) => ({
-          clientIndex,
-          roomId,
-        })),
-      });
-      if (result.summary.failed > 0) {
-        toast.warning(
-          t("bulk-delete-rooms-partial", {
-            succeeded: result.summary.succeeded,
-            failed: result.summary.failed,
-          })
-        );
-      } else {
-        toast.success(
-          t("bulk-delete-rooms-success", { n: result.summary.succeeded })
-        );
-      }
-      setSelectedIds([]);
-      setBulkDeleteOpen(false);
-    } catch (err) {
-      toast.error(getApiErrorMessage(err));
-      throw err;
-    }
-  }, [bulkDelete, selectedIds, t]);
 
   const invalidateRooms = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.rooms.all(apartmentId) });
@@ -242,19 +184,6 @@ export function RoomsPage() {
 
   const columns = useMemo<Column<Room>[]>(
     () => [
-      {
-        key: "select",
-        header: t("select"),
-        className: "w-10 shrink-0",
-        cell: (r) => (
-          <Checkbox
-            checked={selectedIds.includes(r.id)}
-            onCheckedChange={() => toggleSelect(r.id)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("select")}
-          />
-        ),
-      },
       {
         key: "name",
         header: t("room"),
@@ -324,29 +253,16 @@ export function RoomsPage() {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  openDetail(r);
-                }}
-              >
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => openDetail(r)}>
                 {t("view-details")}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  openEdit(r);
-                }}
-              >
+              <DropdownMenuItem onClick={() => openEdit(r)}>
                 <Pencil className="h-4 w-4" />
                 {t("edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setDeleting(r);
-                }}
+                onClick={() => setDeleting(r)}
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
@@ -357,7 +273,7 @@ export function RoomsPage() {
         ),
       },
     ],
-    [t, roomTypes, openDetail, openEdit, selectedIds, toggleSelect]
+    [t, roomTypes, openDetail, openEdit]
   );
 
   const floorOptions = useMemo(
@@ -383,23 +299,6 @@ export function RoomsPage() {
 
   const visibleItems = sortedByFloor;
 
-  const allVisibleSelected =
-    visibleItems.length > 0 &&
-    visibleItems.every((r) => selectedIds.includes(r.id));
-
-  const toggleSelectAllVisible = useCallback(() => {
-    if (allVisibleSelected) {
-      const visibleIds = new Set(visibleItems.map((r) => r.id));
-      setSelectedIds((prev) => prev.filter((id) => !visibleIds.has(id)));
-    } else {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        for (const r of visibleItems) next.add(r.id);
-        return [...next];
-      });
-    }
-  }, [allVisibleSelected, visibleItems]);
-
   const apiTotalPages = totalPagesOf(meta, items.length, DEFAULT_PAGE_SIZE);
   const totalPages = floor === ALL ? apiTotalPages : 1;
   const safePage = floor === ALL ? Math.min(page, apiTotalPages) : page;
@@ -422,25 +321,23 @@ export function RoomsPage() {
         title={t("nav-rooms")}
         description={t("rooms-page-description")}
         actions={
-          <PermissionGate permission={P.room.create}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button disabled={roomTypes.length === 0}>
-                  <Plus className="h-4 w-4" />
-                  {t("add-room")}
-                  <ChevronDown className="h-4 w-4 opacity-70" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={openCreate}>
-                  {t("add-single-room")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
-                  {t("bulk-add-rooms")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </PermissionGate>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={roomTypes.length === 0}>
+                <Plus className="h-4 w-4" />
+                {t("add-room")}
+                <ChevronDown className="h-4 w-4 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={openCreate}>
+                {t("add-single-room")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkFormOpen(true)}>
+                {t("bulk-add-rooms")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
@@ -616,46 +513,7 @@ export function RoomsPage() {
             <p className="text-xs text-gray-600">{t("floor-filter-hint")}</p>
           )}
         </div>
-        {visibleItems.length > 0 && (
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-            <Checkbox
-              checked={allVisibleSelected}
-              onCheckedChange={toggleSelectAllVisible}
-              aria-label={t("select-all")}
-            />
-            {t("select-all")}
-          </label>
-        )}
       </div>
-
-      {selectedIds.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-          <span className="text-sm font-medium text-gray-900">
-            {t("selected-count", { n: selectedIds.length })}
-          </span>
-          <div className="flex flex-wrap gap-2 sm:ml-auto">
-            <PermissionGate permission={P.room.delete}>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => setBulkDeleteOpen(true)}
-                disabled={bulkDelete.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                {t("delete-selected-rooms")}
-              </Button>
-            </PermissionGate>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setSelectedIds([])}
-            >
-              <X className="h-4 w-4" />
-              {t("clear-selection")}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {isError ? (
         <ErrorState error={error} onRetry={() => refetch()} />
@@ -685,12 +543,10 @@ export function RoomsPage() {
           description={t("add-first-room")}
           action={
             roomTypes.length > 0 ? (
-              <PermissionGate permission={P.room.create}>
-                <Button onClick={openCreate}>
-                  <Plus className="h-4 w-4" />
-                  {t("add-room")}
-                </Button>
-              </PermissionGate>
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t("add-room")}
+              </Button>
             ) : undefined
           }
         />
@@ -723,28 +579,18 @@ export function RoomsPage() {
                 }}
                 className={cn(
                   "cursor-pointer transition-shadow hover:shadow-md",
-                  !r.isActive && "opacity-60",
-                  selectedIds.includes(r.id) && "ring-2 ring-primary/40"
+                  !r.isActive && "opacity-60"
                 )}
               >
                 <CardContent className="flex h-full flex-col gap-3 p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex min-w-0 items-start gap-2">
-                      <Checkbox
-                        checked={selectedIds.includes(r.id)}
-                        onCheckedChange={() => toggleSelect(r.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={t("select")}
-                        className="mt-1"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-lg font-semibold text-gray-900">
-                          {r.name}
-                        </p>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {typeName}
-                        </p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-semibold text-gray-900">
+                        {r.name}
+                      </p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {typeName}
+                      </p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -758,32 +604,16 @@ export function RoomsPage() {
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            openDetail(r);
-                          }}
-                        >
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openDetail(r)}>
                           {t("view-details")}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            openEdit(r);
-                          }}
-                        >
+                        <DropdownMenuItem onClick={() => openEdit(r)}>
                           <Pencil className="h-4 w-4" />
                           {t("edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            setDeleting(r);
-                          }}
+                          onClick={() => setDeleting(r)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -897,7 +727,7 @@ export function RoomsPage() {
 
       <RoomFormDialog
         open={formOpen}
-        onOpenChange={handleFormOpenChange}
+        onOpenChange={setFormOpen}
         apartmentId={apartmentId}
         room={editing}
         roomTypes={roomTypes}
@@ -912,7 +742,7 @@ export function RoomsPage() {
 
       <RoomDetailSheet
         open={detailOpen}
-        onOpenChange={handleDetailOpenChange}
+        onOpenChange={setDetailOpen}
         apartmentId={apartmentId}
         roomId={detailRoomId}
       />
@@ -936,18 +766,6 @@ export function RoomsPage() {
         confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
-      />
-
-      <ConfirmDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        title={t("delete-selected-rooms")}
-        description={t("bulk-delete-rooms-confirm", {
-          n: selectedIds.length,
-        })}
-        confirmLabel={t("delete")}
-        destructive
-        onConfirm={handleBulkDelete}
       />
     </div>
   );
