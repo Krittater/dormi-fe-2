@@ -8,12 +8,6 @@ export const METER_TYPE_CODES: Record<MeterType, string> = {
   [MeterType.WATER]: "meter-type-water",
 };
 
-export enum UserRole {
-  USER = "USER",
-  ADMIN = "ADMIN",
-  STAFF = "STAFF",
-}
-
 export enum RoomStatus {
   AVAILABLE = "available",
   OVERDUE = "overdue",

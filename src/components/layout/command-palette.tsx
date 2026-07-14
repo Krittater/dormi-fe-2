@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApartmentIdFromPath } from "@/hooks/use-apartment-id";
-import { apartmentNav } from "@/lib/nav";
+import { apartmentNav, filterNavByPermission } from "@/lib/nav";
+import { useCan } from "@/hooks/use-can";
+import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 import {
   CommandDialog,
@@ -25,6 +27,7 @@ export function CommandPalette(_props: CommandPaletteProps) {
   const t = useT();
   const router = useRouter();
   const apartmentId = useApartmentIdFromPath();
+  const can = useCan();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -41,14 +44,16 @@ export function CommandPalette(_props: CommandPaletteProps) {
   const navItems = useMemo(() => {
     if (!apartmentId) return [];
     const base = `/apartments/${apartmentId}`;
-    return apartmentNav.flatMap((section) =>
+    return filterNavByPermission(apartmentNav, (p) =>
+      can(p, apartmentId)
+    ).flatMap((section) =>
       section.items.map((item) => ({
         label: t(item.label),
         href: item.segment ? `${base}/${item.segment}` : base,
         icon: item.icon,
       }))
     );
-  }, [apartmentId, t]);
+  }, [apartmentId, t, can]);
 
   const run = useCallback(
     (href: string) => {
@@ -84,30 +89,37 @@ export function CommandPalette(_props: CommandPaletteProps) {
           <>
             <CommandSeparator />
             <CommandGroup heading={t("command-create")}>
-              <CommandItem
-                value={t("command-add-room")}
-                onSelect={() =>
-                  run(`/apartments/${apartmentId}/rooms`)
-                }
-              >
-                {t("command-add-room")}
-              </CommandItem>
-              <CommandItem
-                value={t("command-add-tenant")}
-                onSelect={() =>
-                  run(`/apartments/${apartmentId}/tenants`)
-                }
-              >
-                {t("command-add-tenant")}
-              </CommandItem>
-              <CommandItem
-                value={t("command-record-transaction")}
-                onSelect={() =>
-                  run(`/apartments/${apartmentId}/finance`)
-                }
-              >
-                {t("command-record-transaction")}
-              </CommandItem>
+              {can(P.room.create, apartmentId) && (
+                <CommandItem
+                  value={t("command-add-room")}
+                  onSelect={() =>
+                    run(`/apartments/${apartmentId}/rooms`)
+                  }
+                >
+                  {t("command-add-room")}
+                </CommandItem>
+              )}
+              {can(P.tenant.create, apartmentId) && (
+                <CommandItem
+                  value={t("command-add-tenant")}
+                  onSelect={() =>
+                    run(`/apartments/${apartmentId}/tenants`)
+                  }
+                >
+                  {t("command-add-tenant")}
+                </CommandItem>
+              )}
+              {(can(P.income.create, apartmentId) ||
+                can(P.expense.create, apartmentId)) && (
+                <CommandItem
+                  value={t("command-record-transaction")}
+                  onSelect={() =>
+                    run(`/apartments/${apartmentId}/finance`)
+                  }
+                >
+                  {t("command-record-transaction")}
+                </CommandItem>
+              )}
             </CommandGroup>
           </>
         )}

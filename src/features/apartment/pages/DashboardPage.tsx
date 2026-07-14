@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shared/page-header";
+import { PermissionGate } from "@/components/shared/permission-gate";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -30,6 +31,7 @@ import { ApartmentFormDialog } from "@/features/apartment/components/apartment-f
 import { SKELETON_ROWS_DASHBOARD } from "@/constants/config";
 import { useApartmentActions, useApartments } from "@/hooks/useApartments";
 import { useApartmentStore } from "@/stores/apartment.store";
+import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 import type { ApartmentOverview } from "@/types";
 
@@ -91,10 +93,12 @@ export function DashboardPage() {
         title={t("my-apartments")}
         description={t("dashboard-subtitle")}
         actions={
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            {t("add-apartment")}
-          </Button>
+          <PermissionGate permission={P.apartment.create}>
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              {t("add-apartment")}
+            </Button>
+          </PermissionGate>
         }
       />
 
@@ -115,10 +119,12 @@ export function DashboardPage() {
           title={t("no-apartments-yet")}
           description={t("add-first-apartment")}
           action={
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              {t("add-apartment")}
-            </Button>
+            <PermissionGate permission={P.apartment.create}>
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t("add-apartment")}
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (

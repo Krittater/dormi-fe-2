@@ -19,6 +19,7 @@ import {
 import { Pagination } from "@/components/ui/pagination";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { PageHeader } from "@/components/shared/page-header";
+import { PermissionGate } from "@/components/shared/permission-gate";
 import { DataTable, type Column, type SortDirection } from "@/components/shared/data-table";
 import { exportTableCsv } from "@/lib/export";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -31,6 +32,7 @@ import {
   useBillingPeriodDropdown,
 } from "@/hooks/useBillingPeriods";
 import { useInvoices } from "@/hooks/useInvoices";
+import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 import { formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { totalPagesOf } from "@/lib/list";
@@ -380,10 +382,12 @@ export function InvoicesPage() {
         title={t("nav-invoices")}
         description={t("invoices-page-description")}
         actions={
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {t("create-invoice")}
-          </Button>
+          <PermissionGate permission={P.invoice.create}>
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t("create-invoice")}
+            </Button>
+          </PermissionGate>
         }
       />
 

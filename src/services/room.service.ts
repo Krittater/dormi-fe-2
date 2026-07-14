@@ -4,11 +4,13 @@ import { toList } from "@/lib/list";
 import type {
   BulkCreateRoomsPayload,
   BulkCreateRoomsResult,
+  BulkDeleteRoomsPayload,
+  BulkDeleteRoomsResult,
   PaginationMeta,
   Room,
   RoomOverview,
 } from "@/types";
-import { normalizeRoomOptions, normalizeRooms } from "@/utils/room";
+import { normalizeRoomId, normalizeRoomOptions, normalizeRooms, normalizeRoomTypeId } from "@/utils/room";
 
 export interface RoomListParams {
   page?: number;
@@ -41,8 +43,19 @@ export const roomService = {
     );
   },
 
+  async getById(apartmentId: string, roomId: string): Promise<Room> {
+    const room = await http.get<Room>(endpoints.rooms.byId(apartmentId, roomId));
+    const normalized = normalizeRoomId(room);
+    if (normalized.roomType) {
+      normalized.roomType = normalizeRoomTypeId(normalized.roomType);
+    }
+    return normalized;
+  },
+
   async getDetail(apartmentId: string, roomId: string) {
-    return http.get(endpoints.rooms.detail(apartmentId, roomId));
+    return http.get<Record<string, unknown>>(
+      endpoints.rooms.detail(apartmentId, roomId)
+    );
   },
 
   async create(apartmentId: string, payload: unknown): Promise<Room> {
@@ -55,6 +68,16 @@ export const roomService = {
   ): Promise<BulkCreateRoomsResult> {
     return http.post<BulkCreateRoomsResult>(
       endpoints.rooms.bulkCreate(apartmentId),
+      payload
+    );
+  },
+
+  async bulkDelete(
+    apartmentId: string,
+    payload: BulkDeleteRoomsPayload
+  ): Promise<BulkDeleteRoomsResult> {
+    return http.post<BulkDeleteRoomsResult>(
+      endpoints.rooms.bulkDelete(apartmentId),
       payload
     );
   },

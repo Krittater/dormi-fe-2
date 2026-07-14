@@ -34,12 +34,18 @@ export function mergeInvoiceDetail(
 
   const items = normalizeInvoiceItems(rawItems);
 
-  return {
+  const result = {
     ...merged,
     items,
     totalAmount: Number(merged.totalAmount ?? 0),
     total: Number(merged.total ?? merged.totalAmount ?? 0),
   } as Invoice;
+
+  // #region agent log
+  fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'A,C',location:'invoice.ts:mergeInvoiceDetail',message:'merged invoice field presence',data:{hasId:!!result.id,hasIssueDate:!!result.issueDate,hasIssuedDate:!!(result as Record<string,unknown>).issuedDate,issueDate:result.issueDate??null,issuedDate:(result as Record<string,unknown>).issuedDate??null,roomName:result.roomName??null,tenantName:result.tenantName??null,itemsLen:items.length,item0:{name:items[0]?.name??null,description:items[0]?.description??null,itemType:items[0]?.itemType??null,amount:items[0]?.amount??null},total:result.total,totalAmount:result.totalAmount},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
+  return result;
 }
 
 export function countInvoicesByStatus(

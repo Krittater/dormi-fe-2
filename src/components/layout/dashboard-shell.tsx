@@ -22,9 +22,13 @@ import { ApartmentSwitcher } from "@/components/layout/apartment-switcher";
 import { UserMenu } from "@/components/layout/user-menu";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ApiError } from "@/api";
+import { ForbiddenView } from "@/components/shared/forbidden-view";
 import { useApartmentStore } from "@/stores/apartment.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useApartmentIdFromPath } from "@/hooks/use-apartment-id";
+import { useCan } from "@/hooks/use-can";
+import { permissionForSegment } from "@/lib/nav";
+import { P } from "@/lib/permissions";
 import { useT } from "@/i18n";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -38,8 +42,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathApartmentId = useApartmentIdFromPath();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
+  const fetchMe = useAuthStore((s) => s.fetchMe);
   const markAuthenticated = useAuthStore((s) => s.markAuthenticated);
   const markUnauthenticated = useAuthStore((s) => s.markUnauthenticated);
+  const can = useCan();
 
   // โหลดโปรไฟล์ที่ persist ไว้ (ชื่อผู้ใช้) หลัง mount — skipHydration กัน SSR mismatch
   useEffect(() => {
@@ -47,7 +53,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    fetchApartments()
+    // โหลดสิทธิ์ (/auth/me) + รายการหอ พร้อมกันตอน bootstrap
+    Promise.all([fetchMe(), fetchApartments()])
       .then(() => markAuthenticated())
       .catch((err) => {
         if (err instanceof ApiError && (err.code === 401 || err.code === 403)) {
@@ -59,7 +66,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchApartments]);
+  }, [fetchApartments, fetchMe]);
 
   useEffect(() => {
     if (!isBootstrapping && !isAuthenticated) {
@@ -75,6 +82,36 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [pathApartmentId, currentApartmentId, setCurrent]);
 
   const activeApartmentId = pathApartmentId ?? currentApartmentId;
+
+  // route guard: ถ้าหน้าปัจจุบันต้องการ permission ที่ผู้ใช้ไม่มี → แสดง 403 (ไม่เด้ง login)
+  const forbidden = (() => {
+    // dashboard: ต้องมีสิทธิ์ดูหรือสร้างหอ
+    if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
+      return !(
+        can(P.apartment.read) ||
+        can(P.apartment.create)
+      );
+    }
+    // admin roles / users
+    if (pathname.startsWith("/admin/roles")) {
+      return !can(P.role.read);
+    }
+    if (pathname.startsWith("/admin/users")) {
+      return !can(P.user.read);
+    }
+    if (!activeApartmentId) return false;
+    const prefix = `/apartments/${activeApartmentId}/`;
+    if (!pathname.startsWith(prefix)) {
+      // apartment overview /apartments/:id
+      if (pathname === `/apartments/${activeApartmentId}`) {
+        return !can(P.apartment.read, activeApartmentId);
+      }
+      return false;
+    }
+    const segment = pathname.slice(prefix.length).split("/")[0];
+    const perm = permissionForSegment(segment);
+    return !!perm && !can(perm, activeApartmentId);
+  })();
 
   if (isBootstrapping) {
     return (
@@ -150,7 +187,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-7xl space-y-4">
               <BreadcrumbBar />
-              {children}
+              {forbidden ? <ForbiddenView /> : children}
             </div>
           </main>
         </div>

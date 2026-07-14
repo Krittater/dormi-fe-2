@@ -13,6 +13,13 @@ export function useApartments() {
   return useQuery(apartmentQueries.list());
 }
 
+export function useApartment(apartmentId: string, enabled = true) {
+  return useQuery({
+    ...apartmentQueries.detail(apartmentId),
+    enabled: Boolean(apartmentId) && enabled,
+  });
+}
+
 export function useApartmentOverview(apartmentId: string) {
   const overview = useQuery(apartmentQueries.overview(apartmentId));
   const invoices = useQuery(apartmentQueries.recentInvoices(apartmentId));
@@ -25,8 +32,16 @@ export function useApartmentActions() {
   const t = useT();
   const queryClient = useQueryClient();
 
-  const invalidate = () => {
+  const invalidate = (apartmentId?: string) => {
     queryClient.invalidateQueries({ queryKey: qk.apartments.all });
+    if (apartmentId) {
+      queryClient.invalidateQueries({
+        queryKey: qk.billingPeriods.all(apartmentId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: qk.invoiceSetups.all(apartmentId),
+      });
+    }
   };
 
   const create = useMutation({
@@ -45,9 +60,9 @@ export function useApartmentActions() {
       id: string;
       payload: Partial<Apartment>;
     }) => apartmentService.update(id, payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       toast.success(t("apartment-updated"));
-      invalidate();
+      invalidate(variables.id);
     },
   });
 

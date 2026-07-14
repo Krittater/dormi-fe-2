@@ -9,7 +9,6 @@ import type {
   BillingPeriodStatus,
 } from "@/types";
 import { BillingPeriodType } from "@/types";
-import type { BillingPeriodGenerateValues } from "@/schemas/billing.schema";
 
 /** One row per month: prefer the RENT period (the one invoices/actions apply to), else the first available type. */
 function pickRepresentativePeriod(periods: BillingPeriod[]): BillingPeriod | undefined {
@@ -52,9 +51,14 @@ export const billingService = {
   async list(apartmentId: string): Promise<BillingPeriod[]> {
     const res = await http.get(endpoints.billingPeriods.list(apartmentId));
     const groups = toList<BillingPeriodGroup>(res).items;
-    return groups
+    const periods = groups
       .map((group) => pickRepresentativePeriod(group.periods ?? []))
       .filter((period): period is BillingPeriod => Boolean(period));
+    // #region agent log
+    const sample = periods[0] as (BillingPeriod & Record<string, unknown>) | undefined;
+    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'B,E',location:'billing.service.ts:list',message:'billing period list field mapping',data:{apartmentId,groupCount:groups.length,periodCount:periods.length,sampleKeys:sample?Object.keys(sample):[],sampleName:sample?.name??null,sampleDisplayName:sample?.displayName??null,sampleInvoiceCount:sample?.invoiceCount??null,rawFirstPeriodKeys:groups[0]?.periods?.[0]?Object.keys(groups[0].periods[0] as object):[]},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    return periods;
   },
 
   /** Periods for the meter-reading-by-period picker: one entry per month with both utility period IDs. */
@@ -84,19 +88,13 @@ export const billingService = {
     apartmentId: string,
     billingPeriodId: string
   ): Promise<BillingPeriod> {
-    return http.get<BillingPeriod>(
+    const period = await http.get<BillingPeriod & Record<string, unknown>>(
       endpoints.billingPeriods.byId(apartmentId, billingPeriodId)
     );
-  },
-
-  async generate(
-    apartmentId: string,
-    payload: BillingPeriodGenerateValues
-  ): Promise<BillingPeriod> {
-    return http.post<BillingPeriod>(
-      endpoints.billingPeriods.generate(apartmentId),
-      payload
-    );
+    // #region agent log
+    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'B,D',location:'billing.service.ts:getById',message:'billing period byId payload',data:{apartmentId,billingPeriodId,keys:period?Object.keys(period):[],name:period?.name??null,displayName:period?.displayName??null,status:period?.status??null,dueDate:period?.dueDate??null,periodStart:period?.periodStart??period?.periodStartDate??null,periodEnd:period?.periodEnd??period?.periodEndDate??null,invoiceCount:period?.invoiceCount??null,nestedInvoicesLen:Array.isArray(period?.invoices)?(period.invoices as unknown[]).length:null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    return period;
   },
 
   async updateStatus(
@@ -150,6 +148,10 @@ export const apartmentService = {
   async list(): Promise<ApartmentOverview[]> {
     const res = await http.get(endpoints.apartments.list());
     return toList<ApartmentOverview>(res).items;
+  },
+
+  async getById(id: string): Promise<Apartment> {
+    return http.get<Apartment>(endpoints.apartments.byId(id));
   },
 
   async create(payload: Partial<Apartment>): Promise<Apartment> {

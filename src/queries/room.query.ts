@@ -33,6 +33,13 @@ export const roomQueries = {
       queryFn: () => roomService.getDetail(apartmentId, roomId),
       enabled: Boolean(apartmentId) && Boolean(roomId),
     }),
+
+  byId: (apartmentId: string, roomId: string) =>
+    queryOptions({
+      queryKey: qk.rooms.byId(apartmentId, roomId),
+      queryFn: () => roomService.getById(apartmentId, roomId),
+      enabled: Boolean(apartmentId) && Boolean(roomId),
+    }),
 };
 
 export const roomTypeQueries = {

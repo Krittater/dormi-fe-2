@@ -40,7 +40,7 @@ import {
   getProvinces,
   getSubDistricts,
 } from "@/constants/thai-address-data";
-import { useApartmentActions } from "@/hooks/useApartments";
+import { useApartment, useApartmentActions } from "@/hooks/useApartments";
 import { useT, type TranslateFn } from "@/i18n";
 import { apartmentDefaultCutoffs } from "@/schemas/invoice-setup.schema";
 import type { Apartment, ApartmentOverview } from "@/types";
@@ -96,11 +96,6 @@ interface Props {
   onSuccess?: () => void;
 }
 
-const isFullApartment = (
-  apartment: Apartment | ApartmentOverview | null | undefined
-): apartment is Apartment =>
-  Boolean(apartment) && "province" in (apartment as Apartment);
-
 const emptyDefaults: CreateValues = {
   name: "",
   province: "",
@@ -118,6 +113,30 @@ const emptyDefaults: CreateValues = {
   roomTypes: [{ name: "", price: 0, description: "" }],
 };
 
+function valuesFromApartment(apartment: Apartment): CreateValues {
+  return {
+    name: apartment.name,
+    province: apartment.province ?? "",
+    district: apartment.district ?? "",
+    subDistrict: apartment.subDistrict ?? "",
+    postalCode: apartment.postalCode ?? "",
+    phone: apartment.phone ?? "",
+    description: apartment.description ?? "",
+    invoiceCutOffDate:
+      apartment.invoiceCutOffDate ?? apartmentDefaultCutoffs.invoiceCutOffDate,
+    invoiceDueDate:
+      apartment.invoiceDueDate ?? apartmentDefaultCutoffs.invoiceDueDate,
+    electricityCutOffDate:
+      apartment.electricityCutOffDate ??
+      apartmentDefaultCutoffs.electricityCutOffDate,
+    electricityRatePerUnit: apartment.electricityRatePerUnit ?? 0,
+    waterCutOffDate:
+      apartment.waterCutOffDate ?? apartmentDefaultCutoffs.waterCutOffDate,
+    waterRatePerUnit: apartment.waterRatePerUnit ?? 0,
+    roomTypes: [{ name: "", price: 0, description: "" }],
+  };
+}
+
 export function ApartmentFormDialog({
   open,
   onOpenChange,
@@ -126,7 +145,14 @@ export function ApartmentFormDialog({
 }: Props) {
   const t = useT();
   const isEdit = Boolean(apartment);
+  const apartmentId = apartment?.id ?? "";
   const { create, update } = useApartmentActions();
+  const {
+    data: detail,
+    isLoading: detailLoading,
+    isError: detailError,
+    refetch: refetchDetail,
+  } = useApartment(apartmentId, open && isEdit);
   const isPending = create.isPending || update.isPending;
 
   const form = useForm<CreateValues>({
@@ -159,29 +185,19 @@ export function ApartmentFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    if (apartment) {
-      const full = isFullApartment(apartment) ? apartment : null;
-      form.reset({
-        name: apartment.name,
-        province: full?.province ?? "",
-        district: full?.district ?? "",
-        subDistrict: full?.subDistrict ?? "",
-        postalCode: full?.postalCode ?? "",
-        phone: full?.phone ?? "",
-        description: full?.description ?? "",
-        invoiceCutOffDate: full?.invoiceCutOffDate ?? apartmentDefaultCutoffs.invoiceCutOffDate,
-        invoiceDueDate: full?.invoiceDueDate ?? apartmentDefaultCutoffs.invoiceDueDate,
-        electricityCutOffDate:
-          full?.electricityCutOffDate ?? apartmentDefaultCutoffs.electricityCutOffDate,
-        electricityRatePerUnit: full?.electricityRatePerUnit ?? 0,
-        waterCutOffDate: full?.waterCutOffDate ?? apartmentDefaultCutoffs.waterCutOffDate,
-        waterRatePerUnit: full?.waterRatePerUnit ?? 0,
-        roomTypes: [{ name: "", price: 0, description: "" }],
-      });
-    } else {
+    if (!apartment) {
       form.reset(emptyDefaults);
+      return;
     }
-  }, [open, apartment, form]);
+    if (detail) {
+      form.reset(valuesFromApartment(detail));
+    } else {
+      form.reset({
+        ...emptyDefaults,
+        name: apartment.name,
+      });
+    }
+  }, [open, apartment, detail, form]);
 
   // ฟอร์มยาวเกินจอ — ถ้า validation ไม่ผ่านต้องพาผู้ใช้ไปเห็น error แรก
   // (จังหวัด/อำเภอเป็น Radix Select โฟกัสอัตโนมัติของ RHF ไปไม่ถึง)
@@ -210,6 +226,8 @@ export function ApartmentFormDialog({
     }
   };
 
+  const showDetailLoading = isEdit && open && detailLoading && !detail;
+
   return (
     <Dialog open={open} onOpenChange={(o) => !isPending && onOpenChange(o)}>
       <DialogContent className="max-w-2xl">
@@ -219,6 +237,18 @@ export function ApartmentFormDialog({
           </DialogTitle>
           <DialogDescription>{t("apartment-form-description")}</DialogDescription>
         </DialogHeader>
+        {showDetailLoading ? (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        ) : detailError && isEdit ? (
+          <div className="space-y-3 py-6 text-center">
+            <p className="text-sm text-gray-600">{t("load-failed-title")}</p>
+            <Button type="button" variant="outline" onClick={() => refetchDetail()}>
+              {t("retry")}
+            </Button>
+          </div>
+        ) : (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, onInvalid)}
@@ -571,13 +601,14 @@ export function ApartmentFormDialog({
               >
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || (isEdit && !detail)}>
                 {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isEdit ? t("save") : t("create-apartment")}
               </Button>
             </DialogFooter>
           </form>
         </Form>
+        )}
       </DialogContent>
     </Dialog>
   );

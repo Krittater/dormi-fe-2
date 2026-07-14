@@ -7,7 +7,7 @@ import { useT } from "@/i18n";
 import { qk } from "@/queries/keys";
 import { roomQueries, roomTypeQueries } from "@/queries/room.query";
 import { roomService, type RoomListParams } from "@/services/room.service";
-import type { BulkCreateRoomsPayload } from "@/types";
+import type { BulkCreateRoomsPayload, BulkDeleteRoomsPayload } from "@/types";
 
 export function useRooms(apartmentId: string, params?: RoomListParams) {
   return useQuery(roomQueries.list(apartmentId, params));
@@ -30,6 +30,17 @@ export function useRoomDetail(
 ) {
   return useQuery({
     ...roomQueries.detail(apartmentId, roomId ?? ""),
+    enabled: enabled && Boolean(roomId),
+  });
+}
+
+export function useRoom(
+  apartmentId: string,
+  roomId: string | null,
+  enabled = true
+) {
+  return useQuery({
+    ...roomQueries.byId(apartmentId, roomId ?? ""),
     enabled: enabled && Boolean(roomId),
   });
 }
@@ -88,5 +99,16 @@ export function useRoomActions(apartmentId: string) {
     },
   });
 
-  return { create, bulkCreate, update, remove };
+  const bulkDelete = useMutation({
+    mutationFn: (payload: BulkDeleteRoomsPayload) =>
+      roomService.bulkDelete(apartmentId, payload),
+    onSuccess: (result) => {
+      if (result.summary.succeeded > 0) {
+        invalidate();
+        invalidateMeters();
+      }
+    },
+  });
+
+  return { create, bulkCreate, update, remove, bulkDelete };
 }

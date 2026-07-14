@@ -223,6 +223,14 @@ export function ApartmentOverviewPage() {
     [apartmentId, router]
   );
 
+  const notificationGo = useCallback(
+    (id: string) => {
+      if (id === "open-period") go("billing-periods");
+      else go("invoices");
+    },
+    [go]
+  );
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -442,21 +450,24 @@ export function ApartmentOverviewPage() {
                   {notifications.map((n) => {
                     const Icon = n.icon;
                     return (
-                      <li
-                        key={n.id}
-                        className="flex items-start gap-3 rounded-lg bg-gray-50 p-3"
-                      >
-                        <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${n.iconClass}`}
+                      <li key={n.id}>
+                        <button
+                          type="button"
+                          onClick={() => notificationGo(n.id)}
+                          className="flex w-full items-start gap-3 rounded-lg bg-gray-50 p-3 text-left transition-colors hover:bg-gray-100"
                         >
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900">
-                            {n.title}
-                          </p>
-                          <p className="text-xs text-gray-600">{n.desc}</p>
-                        </div>
+                          <span
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${n.iconClass}`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900">
+                              {n.title}
+                            </p>
+                            <p className="text-xs text-gray-600">{n.desc}</p>
+                          </div>
+                        </button>
                       </li>
                     );
                   })}

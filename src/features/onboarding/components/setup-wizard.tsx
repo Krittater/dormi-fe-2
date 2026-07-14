@@ -13,7 +13,6 @@ const STEPS = [
   { code: "setup-step-rooms", segment: "rooms" },
   { code: "setup-step-charges", segment: "charge-types" },
   { code: "setup-step-invoice-setups", segment: "invoice-setups" },
-  { code: "setup-step-billing", segment: "billing-periods" },
 ] as const;
 
 interface SetupWizardProps {
@@ -87,13 +86,11 @@ export function deriveSetupStep(counts: {
   rooms: number;
   chargeTypes: number;
   invoiceSetups: number;
-  billingPeriods: number;
 }): number {
   if (counts.roomTypes === 0) return 0;
   if (counts.rooms === 0) return 1;
   if (counts.chargeTypes === 0) return 2;
   if (counts.invoiceSetups === 0) return 3;
-  if (counts.billingPeriods === 0) return 4;
   return STEPS.length;
 }
 
@@ -102,7 +99,6 @@ export function isSetupIncomplete(counts: {
   rooms: number;
   chargeTypes: number;
   invoiceSetups: number;
-  billingPeriods: number;
 }): boolean {
   return deriveSetupStep(counts) < STEPS.length;
 }

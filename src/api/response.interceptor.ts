@@ -60,10 +60,13 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
         payload?.message ||
         (status === 0
           ? translate("network-error")
-          : translate("api-error-with-status", { status: String(status) }));
+          : status === 403
+            ? translate("no-permission")
+            : translate("api-error-with-status", { status: String(status) }));
 
       // client-side auth guard (static export ไม่มี proxy/middleware ฝั่ง server แล้ว)
       // 401 = ยังไม่ login / session หมด → เด้งไปหน้า login (กัน loop ถ้าอยู่หน้า login อยู่แล้ว)
+      // 403 = login แล้วแต่ไม่มีสิทธิ์ → ไม่เด้ง แค่ surface ApiError ให้หน้าจอจัดการ
       if (typeof window !== "undefined" && status === 401) {
         const { pathname, search } = window.location;
         if (!pathname.startsWith("/login")) {

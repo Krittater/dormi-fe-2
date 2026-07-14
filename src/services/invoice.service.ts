@@ -49,6 +49,9 @@ export const invoiceService = {
         )
         .catch(() => null),
     ]);
+    // #region agent log
+    fetch('http://127.0.0.1:7741/ingest/3c08e7e7-ae2a-40d7-b163-da40d14b7a35',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'237d3a'},body:JSON.stringify({sessionId:'237d3a',runId:'pre-fix',hypothesisId:'A',location:'invoice.service.ts:getDetail',message:'invoice byId+details raw payloads',data:{apartmentId,invoiceId,baseOk:!!base,detailOk:!!detail,baseKeys:base?Object.keys(base as object):[],detailKeys:detail?Object.keys(detail):[],baseIssuedDate:(base as Record<string,unknown>|null)?.issuedDate??null,baseIssueDate:base?.issueDate??null,detailIssueDate:detail?.issueDate??null,baseRoomName:base?.roomName??null,baseTenantName:base?.tenantName??null,baseItemsLen:Array.isArray(base?.items)?base!.items!.length:null,detailItemsLen:Array.isArray(detail?.items)?(detail!.items as unknown[]).length:Array.isArray(detail?.invoiceItems)?(detail!.invoiceItems as unknown[]).length:null,sampleItem:((detail?.invoiceItems??detail?.items??base?.items) as unknown[]|undefined)?.[0]??null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return mergeInvoiceDetail(base, detail);
   },
 

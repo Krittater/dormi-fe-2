@@ -36,6 +36,28 @@ export interface User {
   lastNameEn?: string | null;
 }
 
+/** การผูก role ที่ผู้ใช้ถืออยู่ (apartmentId=null = ระดับระบบ) */
+export interface RoleAssignment {
+  code: string;
+  apartmentId: string | null;
+}
+
+/** ผลลัพธ์ GET /auth/me — สิทธิ์ปัจจุบันของผู้ใช้ */
+export interface Me {
+  user: {
+    userId: string;
+    email: string;
+    firstNameTH: string | null;
+    lastNameTH: string | null;
+  };
+  isSuperuser: boolean;
+  roles: RoleAssignment[];
+  /** permission ระดับระบบ (มีผลทุกหอ) */
+  permissions: string[];
+  /** permission เฉพาะหอ: apartmentId → permission codes */
+  apartmentPermissions: Record<string, string[]>;
+}
+
 export interface Apartment {
   id: string;
   name: string;
@@ -136,6 +158,37 @@ export interface BulkCreateRoomsResult {
   };
   created: Room[];
   failed: BulkCreateRoomFailedItem[];
+}
+
+export interface BulkDeleteRoomLinePayload {
+  clientIndex: number;
+  roomId: string;
+}
+
+export interface BulkDeleteRoomsPayload {
+  rooms: BulkDeleteRoomLinePayload[];
+}
+
+export interface BulkDeleteRoomFailedItem {
+  clientIndex: number;
+  roomId: string;
+  reason: string;
+  code: string;
+}
+
+export interface BulkDeleteRoomSucceededItem {
+  clientIndex: number;
+  roomId: string;
+}
+
+export interface BulkDeleteRoomsResult {
+  summary: {
+    total: number;
+    succeeded: number;
+    failed: number;
+  };
+  deleted: BulkDeleteRoomSucceededItem[];
+  failed: BulkDeleteRoomFailedItem[];
 }
 
 export interface RoomOverviewSummary {

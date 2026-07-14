@@ -8,7 +8,6 @@ import { billingQueries } from "@/queries/billing.query";
 import { invoiceQueries } from "@/queries/invoice.query";
 import { qk } from "@/queries/keys";
 import { billingService } from "@/services/billing.service";
-import type { BillingPeriodGenerateValues } from "@/schemas/billing.schema";
 import type { BillingPeriodStatus } from "@/types";
 
 export function useBillingPeriods(apartmentId: string) {
@@ -49,15 +48,6 @@ export function useBillingActions(apartmentId: string) {
       queryKey: qk.invoices.all(apartmentId),
     });
   };
-
-  const generate = useMutation({
-    mutationFn: (payload: BillingPeriodGenerateValues) =>
-      billingService.generate(apartmentId, payload),
-    onSuccess: () => {
-      toast.success(t("billing-period-created"));
-      invalidate();
-    },
-  });
 
   const updateStatus = useMutation({
     mutationFn: ({
@@ -132,7 +122,6 @@ export function useBillingActions(apartmentId: string) {
   });
 
   return {
-    generate,
     updateStatus,
     remove,
     generateInvoices,
