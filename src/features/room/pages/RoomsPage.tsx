@@ -27,7 +27,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -66,8 +65,8 @@ import {
   VIEW_TABLE,
 } from "@/constants/config";
 import {
+  useAllRooms,
   useRoomActions,
-  useRooms,
   useRoomTypesDropdown,
 } from "@/hooks/useRooms";
 import {
@@ -75,9 +74,9 @@ import {
   formatPhone,
   getInitials,
 } from "@/lib/format";
-import { totalPagesOf } from "@/lib/list";
 import { cn } from "@/lib/utils";
 import { normalizeRoomOverviewCounts } from "@/utils/overview";
+import { roomPrice } from "@/utils/room";
 import { qk } from "@/queries/keys";
 import { ROOM_STATUS_CODES, RoomStatus } from "@/types";
 import type { Room } from "@/types";
@@ -98,6 +97,9 @@ export function RoomsPage() {
       page: "1",
     },
     debounceKeys: ["search"],
+    // view/page ไม่ใช่ตัวกรอง — และล้างตัวกรองต้องไม่สลับมุมมองกลับเป็น grid
+    metaKeys: ["view", "page"],
+    preserveOnClear: ["view"],
   });
   const search = values.search;
   const status = values.status;
@@ -120,30 +122,24 @@ export function RoomsPage() {
   const [tenantFormOpen, setTenantFormOpen] = useState(false);
   const [tenantRoomId, setTenantRoomId] = useState<string | undefined>();
 
-  const listParams = useMemo(
-    () => ({
-      page,
-      limit: DEFAULT_PAGE_SIZE,
-      search: search || undefined,
-      status: status === ALL ? undefined : status,
-      isActive:
-        active === ALL ? undefined : active === ACTIVE ? true : false,
-    }),
-    [page, search, status, active]
-  );
-
-  const { data, isLoading, isError, error, refetch } = useRooms(
-    apartmentId,
-    listParams
-  );
+  // ดึงห้องครบทุกหน้าครั้งเดียว แล้วกรอง/เรียง/แบ่งหน้าฝั่ง FE ทั้งหมด —
+  // กรองบางส่วนฝั่ง server บน dataset ที่ paginate แล้วทำให้ข้อมูลหายเงียบ ๆ
+  const {
+    data: allRooms = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAllRooms(apartmentId);
   const { overview: overviewQuery } = useApartmentOverview(apartmentId);
   const { data: roomTypesData, isSuccess: roomTypesLoaded } =
     useRoomTypesDropdown(apartmentId, DROPDOWN_LIMIT);
   const { remove, bulkRemove } = useRoomActions(apartmentId);
 
-  const items = data?.items ?? [];
-  const meta = data?.meta;
-  const roomTypes = roomTypesData?.items ?? [];
+  const roomTypes = useMemo(
+    () => roomTypesData?.items ?? [],
+    [roomTypesData]
+  );
 
   const openCreate = useCallback(() => {
     setEditing(null);
@@ -180,34 +176,6 @@ export function RoomsPage() {
 
   const clearSelection = useCallback(() => setSelectedIds([]), []);
 
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.length === 0) return;
-
-    const result = await bulkRemove.mutateAsync(selectedIds);
-    const { succeeded, failed } = result.summary;
-
-    if (failed === 0) {
-      toast.success(t("bulk-delete-rooms-success", { n: succeeded }));
-      setSelectedIds([]);
-    } else {
-      const reasons = result.failed
-        .slice(0, 3)
-        .map((f) => {
-          const name =
-            items.find((r) => r.id === f.roomId)?.name ?? f.roomId.slice(0, 8);
-          return `${name}: ${f.reason}`;
-        })
-        .join("\n");
-      toast.warning(
-        t("bulk-delete-rooms-partial", { ok: succeeded, fail: failed }),
-        { description: reasons, duration: 8000 }
-      );
-      // คงห้องที่ลบไม่สำเร็จไว้ในสถานะเลือก ให้ผู้ใช้เห็นว่าเหลือห้องไหน
-      setSelectedIds(result.failed.map((f) => f.roomId));
-    }
-    setConfirmBulkDelete(false);
-  }, [bulkRemove, items, selectedIds, t]);
-
   const invalidateRooms = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.rooms.all(apartmentId) });
   }, [apartmentId, queryClient]);
@@ -224,11 +192,113 @@ export function RoomsPage() {
     [sortKey]
   );
 
+  const floorOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(allRooms.map((r) => (r.floor ?? "").trim()).filter(Boolean))
+      ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+    [allRooms]
+  );
+
+  const filteredRooms = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const wantActive = active === ALL ? null : active === ACTIVE;
+    return allRooms.filter((r) => {
+      if (q && !r.name.toLowerCase().includes(q)) return false;
+      if (status !== ALL && r.status !== status) return false;
+      if (wantActive != null && r.isActive !== wantActive) return false;
+      if (floor !== ALL && (r.floor ?? "").trim() !== floor) return false;
+      return true;
+    });
+  }, [allRooms, search, status, active, floor]);
+
+  // Selection ที่ "มีผลจริง" = เฉพาะห้องที่ยังอยู่ในผลกรอง — ห้องที่ถูกกรองออก
+  // จนมองไม่เห็นต้องไม่ติดไปกับการลบ (derive ตอน render แทน mutate state ใน effect)
+  const activeSelectedIds = useMemo(() => {
+    if (selectedIds.length === 0) return selectedIds;
+    const allowed = new Set(filteredRooms.map((r) => r.id));
+    return selectedIds.filter((id) => allowed.has(id));
+  }, [selectedIds, filteredRooms]);
+
+  const selectAllFiltered = useCallback(() => {
+    setSelectedIds(filteredRooms.map((r) => r.id));
+  }, [filteredRooms]);
+
+  const selectedRooms = useMemo(
+    () => filteredRooms.filter((r) => activeSelectedIds.includes(r.id)),
+    [filteredRooms, activeSelectedIds]
+  );
+  const selectedOccupied = useMemo(
+    () => selectedRooms.filter((r) => r.currentTenant),
+    [selectedRooms]
+  );
+  const selectedNamesSummary = useMemo(() => {
+    const names = selectedRooms.map((r) => r.name);
+    if (names.length <= 4) return names.join(", ");
+    return `${names.slice(0, 4).join(", ")} ${t("and-n-more-rooms", {
+      n: names.length - 4,
+    })}`;
+  }, [selectedRooms, t]);
+
+  const allFilteredSelected =
+    filteredRooms.length > 0 && activeSelectedIds.length >= filteredRooms.length;
+
+  const handleBulkDelete = useCallback(async () => {
+    if (activeSelectedIds.length === 0) return;
+
+    const result = await bulkRemove.mutateAsync(activeSelectedIds);
+    const { succeeded, failed } = result.summary;
+
+    if (failed === 0) {
+      toast.success(t("bulk-delete-rooms-success", { n: succeeded }));
+      setSelectedIds([]);
+    } else {
+      const reasons = result.failed
+        .slice(0, 3)
+        .map((f) => {
+          const name =
+            allRooms.find((r) => r.id === f.roomId)?.name ??
+            f.roomId.slice(0, 8);
+          return `${name}: ${f.reason}`;
+        })
+        .join("\n");
+      const moreSuffix =
+        result.failed.length > 3
+          ? `\n${t("and-n-more-rooms", { n: result.failed.length - 3 })}`
+          : "";
+      const notify = succeeded === 0 ? toast.error : toast.warning;
+      notify(
+        succeeded === 0
+          ? t("bulk-delete-rooms-none", { n: failed })
+          : t("bulk-delete-rooms-partial", { ok: succeeded, fail: failed }),
+        { description: reasons + moreSuffix, duration: 8000 }
+      );
+      // คงห้องที่ลบไม่สำเร็จไว้ในสถานะเลือก ให้ผู้ใช้เห็นว่าเหลือห้องไหน
+      setSelectedIds(result.failed.map((f) => f.roomId));
+    }
+    setConfirmBulkDelete(false);
+  }, [activeSelectedIds, allRooms, bulkRemove, t]);
+
   const columns = useMemo<Column<Room>[]>(
     () => [
       {
         key: "select",
         header: t("select"),
+        headerNode: (
+          <Checkbox
+            checked={
+              allFilteredSelected
+                ? true
+                : activeSelectedIds.length > 0
+                  ? "indeterminate"
+                  : false
+            }
+            onCheckedChange={(checked) =>
+              checked ? selectAllFiltered() : clearSelection()
+            }
+            aria-label={t("select-all-filtered", { n: filteredRooms.length })}
+          />
+        ),
         className: "w-10 shrink-0",
         cell: (r) => (
           <Checkbox
@@ -275,6 +345,33 @@ export function RoomsPage() {
         sortable: true,
         sortValue: (r) => r.floor ?? "",
         cell: (r) => r.floor || "-",
+      },
+      {
+        key: "price",
+        header: t("price-per-month"),
+        sortable: true,
+        sortValue: (r) => roomPrice(r) ?? 0,
+        cell: (r) => {
+          const p = roomPrice(r);
+          return p != null ? formatNumber(p) : "-";
+        },
+      },
+      {
+        key: "tenant",
+        header: t("tenant"),
+        sortable: true,
+        sortValue: (r) => r.currentTenant?.fullName ?? "",
+        cell: (r) =>
+          r.currentTenant ? (
+            <div>
+              <p className="text-gray-900">{r.currentTenant.fullName}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatPhone(r.currentTenant.phone)}
+              </p>
+            </div>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          ),
       },
       {
         key: "status",
@@ -329,53 +426,88 @@ export function RoomsPage() {
         ),
       },
     ],
-    [t, roomTypes, openDetail, openEdit, selectedIds, toggleSelect]
+    [
+      t,
+      roomTypes,
+      openDetail,
+      openEdit,
+      selectedIds,
+      toggleSelect,
+      allFilteredSelected,
+      activeSelectedIds.length,
+      filteredRooms.length,
+      selectAllFiltered,
+      clearSelection,
+    ]
   );
 
-  const floorOptions = useMemo(
+  const sortedRooms = useMemo(
+    () => sortTableData(filteredRooms, columns, sortKey, sortDirection),
+    [filteredRooms, columns, sortKey, sortDirection]
+  );
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedRooms.length / DEFAULT_PAGE_SIZE)
+  );
+  const safePage = Math.min(page, totalPages);
+  const visibleItems = useMemo(
     () =>
-      Array.from(
-        new Set(items.map((r) => (r.floor ?? "").trim()).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
-    [items]
+      sortedRooms.slice(
+        (safePage - 1) * DEFAULT_PAGE_SIZE,
+        safePage * DEFAULT_PAGE_SIZE
+      ),
+    [sortedRooms, safePage]
   );
-
-  const filteredByFloor = useMemo(
-    () =>
-      floor === ALL
-        ? items
-        : items.filter((r) => (r.floor ?? "").trim() === floor),
-    [items, floor]
-  );
-
-  const sortedByFloor = useMemo(
-    () => sortTableData(filteredByFloor, columns, sortKey, sortDirection),
-    [filteredByFloor, columns, sortKey, sortDirection]
-  );
-
-  const visibleItems = sortedByFloor;
-
-  const apiTotalPages = totalPagesOf(meta, items.length, DEFAULT_PAGE_SIZE);
-  const totalPages = floor === ALL ? apiTotalPages : 1;
-  const safePage = floor === ALL ? Math.min(page, apiTotalPages) : page;
 
   const handleExportCsv = useCallback(() => {
-    exportTableCsv(
-      "rooms.csv",
-      columns.filter((c) => c.key !== "select"),
-      sortedByFloor
-    );
-  }, [columns, sortedByFloor]);
-
-  const selectAllVisible = useCallback(() => {
-    setSelectedIds(visibleItems.map((r) => r.id));
-  }, [visibleItems]);
+    // คอลัมน์เฉพาะ export — cell ต้องคืน string (StatusBadge ฯลฯ จะกลายเป็นช่องว่าง)
+    // และรวมราคา/ผู้เช่าที่ตารางบนจอไม่มี
+    const exportColumns: Column<Room>[] = [
+      { key: "name", header: t("room"), cell: (r) => r.name },
+      {
+        key: "roomType",
+        header: t("type"),
+        cell: (r) =>
+          r.roomType?.name ??
+          roomTypes.find((rt) => rt.id === r.roomTypeId)?.name ??
+          "",
+      },
+      { key: "floor", header: t("floor"), cell: (r) => r.floor ?? "" },
+      {
+        key: "status",
+        header: t("status"),
+        cell: (r) => t(ROOM_STATUS_CODES[r.status]),
+      },
+      {
+        key: "active",
+        header: t("active"),
+        cell: (r) => (r.isActive ? t("on") : t("off")),
+      },
+      {
+        key: "price",
+        header: t("price-per-month"),
+        cell: (r) => roomPrice(r) ?? "",
+      },
+      {
+        key: "tenant",
+        header: t("tenant"),
+        cell: (r) => r.currentTenant?.fullName ?? "",
+      },
+      {
+        key: "phone",
+        header: t("phone"),
+        cell: (r) => r.currentTenant?.phone ?? "",
+      },
+    ];
+    exportTableCsv("rooms.csv", exportColumns, sortedRooms);
+  }, [roomTypes, sortedRooms, t]);
 
   const overviewCounts = useMemo(
     () => normalizeRoomOverviewCounts(overviewQuery.data),
     [overviewQuery.data]
   );
-  const totalRooms = overviewCounts.total || meta?.total || items.length;
+  const totalRooms = overviewCounts.total || allRooms.length;
   const rentedCount = overviewCounts.rented;
   const availableCount = overviewCounts.available;
 
@@ -387,11 +519,18 @@ export function RoomsPage() {
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button disabled={roomTypes.length === 0}>
-                <Plus className="h-4 w-4" />
-                {t("add-room")}
-                <ChevronDown className="h-4 w-4 opacity-70" />
-              </Button>
+              {/* span ครอบเพื่อให้ title โผล่ได้แม้ปุ่ม disabled (ปุ่ม disabled ไม่รับ pointer event) */}
+              <span
+                title={
+                  roomTypes.length === 0 ? t("add-room-type-first") : undefined
+                }
+              >
+                <Button disabled={roomTypes.length === 0}>
+                  <Plus className="h-4 w-4" />
+                  {t("add-room")}
+                  <ChevronDown className="h-4 w-4 opacity-70" />
+                </Button>
+              </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={openCreate}>
@@ -416,6 +555,82 @@ export function RoomsPage() {
           </Link>
         </p>
       )}
+
+      {/* สถิติอยู่เหนือตัวกรอง (ภาพรวมก่อนเครื่องมือ) และกดเป็น filter shortcut ได้ */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <button
+          type="button"
+          onClick={() => {
+            setValue("page", "1");
+            setValue("status", ALL);
+          }}
+          className="text-left"
+        >
+          <Card
+            className={cn(
+              "transition-shadow hover:shadow-md",
+              status === ALL && "ring-2 ring-primary/40"
+            )}
+          >
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">
+                {t("rooms-count-all")}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-gray-900">
+                {totalRooms}
+              </p>
+            </CardContent>
+          </Card>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setValue("page", "1");
+            setValue("status", RoomStatus.RENTED);
+          }}
+          className="text-left"
+        >
+          <Card
+            className={cn(
+              "transition-shadow hover:shadow-md",
+              status === RoomStatus.RENTED && "ring-2 ring-primary/40"
+            )}
+          >
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">
+                {t("room-status-rented")}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-success">
+                {rentedCount}
+              </p>
+            </CardContent>
+          </Card>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setValue("page", "1");
+            setValue("status", RoomStatus.AVAILABLE);
+          }}
+          className="text-left"
+        >
+          <Card
+            className={cn(
+              "transition-shadow hover:shadow-md",
+              status === RoomStatus.AVAILABLE && "ring-2 ring-primary/40"
+            )}
+          >
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">
+                {t("room-status-available")}
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-gray-900">
+                {availableCount}
+              </p>
+            </CardContent>
+          </Card>
+        </button>
+      </div>
 
       <FilterBar
         search={{
@@ -525,25 +740,36 @@ export function RoomsPage() {
                 <List className="h-4 w-4" />
               </Button>
             </div>
-            {view === VIEW_TABLE && (
-              <Button variant="outline" size="sm" onClick={handleExportCsv}>
-                <Download className="h-4 w-4" />
-                {t("export-csv")}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={sortedRooms.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              {t("export-csv")} ({sortedRooms.length})
+            </Button>
           </div>
         }
       />
 
-      {selectedIds.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-          <span className="text-sm font-medium text-gray-900">
-            {t("selected-count", { n: selectedIds.length })}
-          </span>
+      {activeSelectedIds.length > 0 && (
+        // sticky: การ์ด 20 ใบสูงเกินจอ — เลือกห้องล่างสุดแล้วต้องยังเห็นปุ่มลบ
+        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-md">
+          <div className="min-w-0">
+            <span className="text-sm font-medium text-gray-900">
+              {t("selected-rooms-count", { n: activeSelectedIds.length })}
+            </span>
+            <p className="max-w-md truncate text-xs text-muted-foreground">
+              {selectedNamesSummary}
+            </p>
+          </div>
           <div className="flex flex-wrap gap-2 sm:ml-auto">
-            <Button size="sm" variant="outline" onClick={selectAllVisible}>
-              {t("select-all-on-page")}
-            </Button>
+            {!allFilteredSelected && (
+              <Button size="sm" variant="outline" onClick={selectAllFiltered}>
+                {t("select-all-filtered", { n: filteredRooms.length })}
+              </Button>
+            )}
             <Button
               size="sm"
               variant="destructive"
@@ -561,48 +787,13 @@ export function RoomsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">
-              {t("rooms-count-all")}
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">
-              {totalRooms}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">
-              {t("room-status-rented")}
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-success">
-              {rentedCount}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">
-              {t("room-status-available")}
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">
-              {availableCount}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {t("showing-rooms-count", { count: visibleItems.length })}
-          </p>
-          {floor !== ALL && (
-            <p className="text-xs text-gray-600">{t("floor-filter-hint")}</p>
-          )}
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {t("showing-rooms-of-total", {
+            count: visibleItems.length,
+            total: filteredRooms.length,
+          })}
+        </p>
       </div>
 
       {isError ? (
@@ -647,19 +838,14 @@ export function RoomsPage() {
               r.roomType?.name ??
               roomTypes.find((rt) => rt.id === r.roomTypeId)?.name ??
               "-";
-            const priceValue =
-              r.price ??
-              (typeof r.roomType?.price === "number"
-                ? r.roomType.price
-                : r.roomType?.price != null
-                  ? Number(r.roomType.price)
-                  : undefined);
+            const priceValue = roomPrice(r);
             const tenant = r.currentTenant;
             return (
               <Card
                 key={r.id}
                 role="button"
                 tabIndex={0}
+                aria-label={r.name}
                 onClick={() => openDetail(r)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -784,6 +970,7 @@ export function RoomsPage() {
                             </p>
                           </div>
                         </div>
+                        {/* ปุ่มนี้เปิด detail sheet ของห้อง ไม่ใช่โปรไฟล์ผู้เช่า — label ต้องตรงกับสิ่งที่เกิด */}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -792,7 +979,7 @@ export function RoomsPage() {
                           }}
                           className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
                         >
-                          {t("view-profile")}
+                          {t("view-details")}
                           <ArrowRight className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -848,13 +1035,32 @@ export function RoomsPage() {
         onOpenChange={setDetailOpen}
         apartmentId={apartmentId}
         roomId={detailRoomId}
+        listPrice={
+          detailRoomId
+            ? (() => {
+                const room = allRooms.find((r) => r.id === detailRoomId);
+                return room ? roomPrice(room) : undefined;
+              })()
+            : undefined
+        }
+        onEdit={(roomId) => {
+          const room = allRooms.find((r) => r.id === roomId);
+          if (!room) return;
+          setDetailOpen(false);
+          openEdit(room);
+        }}
+        onAddTenant={(roomId) => {
+          setDetailOpen(false);
+          setTenantRoomId(roomId);
+          setTenantFormOpen(true);
+        }}
       />
 
       <TenantFormDialog
         open={tenantFormOpen}
         onOpenChange={setTenantFormOpen}
         apartmentId={apartmentId}
-        rooms={items.map((r) => ({ id: r.id, name: r.name }))}
+        rooms={allRooms.map((r) => ({ id: r.id, name: r.name }))}
         defaultRoomId={tenantRoomId}
         onSuccess={invalidateRooms}
       />
@@ -864,12 +1070,38 @@ export function RoomsPage() {
         onOpenChange={(o) => !o && setConfirmBulkDelete(false)}
         title={t("bulk-delete-rooms-title")}
         description={t("bulk-delete-rooms-description", {
-          n: selectedIds.length,
+          n: activeSelectedIds.length,
         })}
         confirmLabel={t("delete")}
         destructive
         onConfirm={handleBulkDelete}
-      />
+      >
+        <div className="space-y-2 text-sm">
+          <p className="font-medium text-gray-900">{t("rooms-to-delete")}</p>
+          <p className="text-gray-700">
+            {selectedRooms
+              .slice(0, 10)
+              .map((r) => r.name)
+              .join(", ")}
+            {selectedRooms.length > 10 &&
+              ` ${t("and-n-more-rooms", { n: selectedRooms.length - 10 })}`}
+          </p>
+          {selectedOccupied.length > 0 && (
+            <p className="rounded-lg bg-warning/10 px-3 py-2 text-gray-800">
+              {t("bulk-delete-occupied-warning", {
+                n: selectedOccupied.length,
+              })}
+              {": "}
+              {selectedOccupied
+                .slice(0, 5)
+                .map((r) => r.name)
+                .join(", ")}
+              {selectedOccupied.length > 5 &&
+                ` ${t("and-n-more-rooms", { n: selectedOccupied.length - 5 })}`}
+            </p>
+          )}
+        </div>
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={Boolean(deleting)}

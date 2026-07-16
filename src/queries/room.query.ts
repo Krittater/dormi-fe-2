@@ -20,6 +20,13 @@ export const roomQueries = {
       enabled: Boolean(apartmentId),
     }),
 
+  listAll: (apartmentId: string) =>
+    queryOptions({
+      queryKey: qk.rooms.list(apartmentId, "all"),
+      queryFn: () => roomService.listAll(apartmentId),
+      enabled: Boolean(apartmentId),
+    }),
+
   dropdown: (apartmentId: string) =>
     queryOptions({
       queryKey: qk.rooms.dropdown(apartmentId),

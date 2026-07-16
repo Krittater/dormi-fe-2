@@ -966,6 +966,42 @@
     "cn": "成功删除 {ok} 间，失败 {fail} 间"
   },
   {
+    "code": "bulk-delete-rooms-none",
+    "th": "ลบไม่สำเร็จทั้ง {n} ห้อง",
+    "en": "Failed to delete all {n} room(s)",
+    "cn": "全部 {n} 间删除失败"
+  },
+  {
+    "code": "selected-rooms-count",
+    "th": "เลือกแล้ว {n} ห้อง",
+    "en": "{n} room(s) selected",
+    "cn": "已选 {n} 间房"
+  },
+  {
+    "code": "select-all-filtered",
+    "th": "เลือกทั้งหมด {n} ห้อง",
+    "en": "Select all {n} rooms",
+    "cn": "全选 {n} 间房"
+  },
+  {
+    "code": "bulk-delete-occupied-warning",
+    "th": "{n} ห้องยังมีผู้เช่า จะถูกข้ามไม่ลบ",
+    "en": "{n} room(s) still have a tenant and will be skipped",
+    "cn": "{n} 间房仍有租客，将被跳过"
+  },
+  {
+    "code": "and-n-more-rooms",
+    "th": "และอีก {n} ห้อง",
+    "en": "and {n} more room(s)",
+    "cn": "以及另外 {n} 间"
+  },
+  {
+    "code": "rooms-to-delete",
+    "th": "ห้องที่จะลบ",
+    "en": "Rooms to delete",
+    "cn": "将删除的房间"
+  },
+  {
     "code": "due-in-days",
     "th": "เหลือ {n} วัน",
     "en": "{n} days left",
@@ -3781,7 +3817,7 @@
   },
   {
     "code": "grid-view",
-    "th": "มุมมองตาราง grid",
+    "th": "มุมมองการ์ด",
     "en": "Grid view",
     "cn": "网格视图"
   },
@@ -3826,6 +3862,12 @@
     "th": "แสดง {count} ห้อง",
     "en": "Showing {count} rooms",
     "cn": "显示 {count} 间"
+  },
+  {
+    "code": "showing-rooms-of-total",
+    "th": "แสดง {count} จาก {total} ห้อง",
+    "en": "Showing {count} of {total} rooms",
+    "cn": "显示 {count} / {total} 间"
   },
   {
     "code": "rooms-count-all",
@@ -4372,6 +4414,66 @@
     "th": "สร้างการตั้งค่าใบแจ้งหนี้แรก",
     "en": "Create your first invoice setup",
     "cn": "创建首个发票设置"
+  },
+  {
+    "code": "invoice-setup-schedule-cell",
+    "th": "ตัดรอบ {cutoff} → ออกบิล {issue} → ครบกำหนด {due}",
+    "en": "Cut-off {cutoff} → issue {issue} → due {due}",
+    "cn": "截止 {cutoff} → 开票 {issue} → 到期 {due}"
+  },
+  {
+    "code": "next-month-note",
+    "th": "(เดือนถัดไป)",
+    "en": "(next month)",
+    "cn": "（次月）"
+  },
+  {
+    "code": "invoice-setup-locked-fields-hint",
+    "th": "วันออกบิล วันครบกำหนด และวันเริ่มมีผล กำหนดได้ตอนสร้างเท่านั้น — หากต้องเปลี่ยน ให้ตั้งวันสิ้นสุดของรายการนี้แล้วสร้างรูปแบบใหม่ (การแก้วันตัดรอบจะเลื่อนวันออกบิลเป็นวันถัดไปโดยอัตโนมัติ)",
+    "en": "Issue date, due date and effective-from can only be set at creation — to change them, set an end date on this setup and create a new one. (Editing the cut-off date automatically moves the issue date to the following day.)",
+    "cn": "开票日、到期日与生效日仅可在创建时设置——如需更改，请为此设置填写结束日期并新建一条。（修改截止日会自动将开票日顺延一天。）"
+  },
+  {
+    "code": "invoice-setup-type-locked-hint",
+    "th": "ประเภทเปลี่ยนไม่ได้หลังสร้าง",
+    "en": "Type cannot be changed after creation",
+    "cn": "创建后无法更改类型"
+  },
+  {
+    "code": "invoice-setup-duplicate-type-warning",
+    "th": "มีรูปแบบประเภทนี้เปิดใช้งานอยู่แล้ว — ต้องปิดใช้งานรายการเดิมก่อนจึงจะสร้างใหม่ได้",
+    "en": "An active setup of this type already exists — deactivate it before creating a new one.",
+    "cn": "已存在此类型的启用设置——请先停用原有设置再新建。"
+  },
+  {
+    "code": "invoice-setup-issue-before-cutoff-warning",
+    "th": "วันออกบิลมาก่อนวันตัดรอบ — บิลจะออกก่อนตัดรอบมิเตอร์ ตรวจสอบอีกครั้ง",
+    "en": "Issue date is before the cut-off date — invoices would be issued before the meter cut-off. Please double-check.",
+    "cn": "开票日早于截止日——发票将在抄表截止前开出，请再次确认。"
+  },
+  {
+    "code": "date-over-28-warning",
+    "th": "วันที่ 29–31 ไม่มีในบางเดือน แนะนำใช้วันที่ 1–28",
+    "en": "Days 29–31 don't exist in every month; days 1–28 are recommended.",
+    "cn": "29–31 日并非每月都有，建议使用 1–28 日。"
+  },
+  {
+    "code": "invoice-setup-missing-types",
+    "th": "ยังตั้งค่าไม่ครบ — ประเภทที่ยังไม่ได้ตั้งค่า:",
+    "en": "Setup incomplete — types not yet configured:",
+    "cn": "设置未完成——尚未设置的类型："
+  },
+  {
+    "code": "fill-manually",
+    "th": "กรอกเองแบบละเอียด",
+    "en": "Fill in manually",
+    "cn": "手动填写"
+  },
+  {
+    "code": "toggle-active",
+    "th": "เปิด/ปิดใช้งาน",
+    "en": "Toggle active",
+    "cn": "启用/停用"
   },
   {
     "code": "invoice-setup-wizard-desc",

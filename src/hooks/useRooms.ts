@@ -13,6 +13,11 @@ export function useRooms(apartmentId: string, params?: RoomListParams) {
   return useQuery(roomQueries.list(apartmentId, params));
 }
 
+/** Dataset ห้องทั้งหมดของหอ — สำหรับหน้า rooms ที่กรอง/เรียง/แบ่งหน้าฝั่ง FE */
+export function useAllRooms(apartmentId: string) {
+  return useQuery(roomQueries.listAll(apartmentId));
+}
+
 export function useRoomDropdown(apartmentId: string) {
   return useQuery(roomQueries.dropdown(apartmentId));
 }
