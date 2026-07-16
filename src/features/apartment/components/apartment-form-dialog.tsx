@@ -40,7 +40,7 @@ import {
   getProvinces,
   getSubDistricts,
 } from "@/constants/thai-address-data";
-import { useApartmentActions } from "@/hooks/useApartments";
+import { useApartmentActions, useApartmentDetail } from "@/hooks/useApartments";
 import { useT, type TranslateFn } from "@/i18n";
 import { apartmentDefaultCutoffs } from "@/schemas/invoice-setup.schema";
 import type { Apartment, ApartmentOverview } from "@/types";
@@ -129,6 +129,11 @@ export function ApartmentFormDialog({
   const { create, update } = useApartmentActions();
   const isPending = create.isPending || update.isPending;
 
+  // หน้า dashboard ส่งมาแค่ overview (ไม่มีที่อยู่/วันตัดรอบ) —
+  // ตอนแก้ไขต้องดึงรายละเอียดเต็มจาก GET /apartments/:id มาเติมฟอร์ม
+  const { data: apartmentDetail, isLoading: detailLoading } =
+    useApartmentDetail(apartment?.id, open && isEdit);
+
   const form = useForm<CreateValues>({
     resolver: zodFormResolver<CreateValues>(
       isEdit ? makeBaseSchema(t) : makeCreateSchema(t)
@@ -160,7 +165,8 @@ export function ApartmentFormDialog({
   useEffect(() => {
     if (!open) return;
     if (apartment) {
-      const full = isFullApartment(apartment) ? apartment : null;
+      const full =
+        apartmentDetail ?? (isFullApartment(apartment) ? apartment : null);
       form.reset({
         name: apartment.name,
         province: full?.province ?? "",
@@ -181,7 +187,7 @@ export function ApartmentFormDialog({
     } else {
       form.reset(emptyDefaults);
     }
-  }, [open, apartment, form]);
+  }, [open, apartment, apartmentDetail, form]);
 
   // ฟอร์มยาวเกินจอ — ถ้า validation ไม่ผ่านต้องพาผู้ใช้ไปเห็น error แรก
   // (จังหวัด/อำเภอเป็น Radix Select โฟกัสอัตโนมัติของ RHF ไปไม่ถึง)
@@ -250,6 +256,10 @@ export function ApartmentFormDialog({
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
+                        // Radix Select ยิง onValueChange("") ตอน form.reset preload ข้อมูลแก้ไข
+                        // (ค่าใหม่มาก่อนรายการตัวเลือกจะ register) — ห้ามรับค่าว่าง/ค่าซ้ำ
+                        // ไม่งั้นอำเภอ/ตำบล/รหัสไปรษณีย์ที่เพิ่งเติมโดนล้างทิ้ง
+                        if (!value || value === form.getValues("province")) return;
                         field.onChange(value);
                         form.setValue("district", "");
                         form.setValue("subDistrict", "");
@@ -282,6 +292,7 @@ export function ApartmentFormDialog({
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
+                        if (!value || value === form.getValues("district")) return;
                         field.onChange(value);
                         form.setValue("subDistrict", "");
                         form.setValue("postalCode", "");
@@ -314,6 +325,8 @@ export function ApartmentFormDialog({
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
+                        if (!value || value === form.getValues("subDistrict"))
+                          return;
                         field.onChange(value);
                         const postcode = getPostcode(
                           selectedProvince,
@@ -571,8 +584,10 @@ export function ApartmentFormDialog({
               >
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isPending || detailLoading}>
+                {(isPending || detailLoading) && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
                 {isEdit ? t("save") : t("create-apartment")}
               </Button>
             </DialogFooter>

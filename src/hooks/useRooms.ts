@@ -88,5 +88,16 @@ export function useRoomActions(apartmentId: string) {
     },
   });
 
-  return { create, bulkCreate, update, remove };
+  const bulkRemove = useMutation({
+    mutationFn: (roomIds: string[]) =>
+      roomService.bulkRemove(apartmentId, roomIds),
+    onSuccess: (result) => {
+      if (result.summary.succeeded > 0) {
+        invalidate();
+        invalidateMeters();
+      }
+    },
+  });
+
+  return { create, bulkCreate, update, remove, bulkRemove };
 }

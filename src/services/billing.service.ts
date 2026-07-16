@@ -152,6 +152,10 @@ export const apartmentService = {
     return toList<ApartmentOverview>(res).items;
   },
 
+  async get(id: string): Promise<Apartment> {
+    return http.get<Apartment>(endpoints.apartments.detail(id));
+  },
+
   async create(payload: Partial<Apartment>): Promise<Apartment> {
     return http.post<Apartment>(endpoints.apartments.create(), payload);
   },

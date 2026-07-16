@@ -18,12 +18,15 @@ import {
   Plus,
   Trash2,
   UserPlus,
+  X,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -110,6 +113,8 @@ export function RoomsPage() {
   const [bulkFormOpen, setBulkFormOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [deleting, setDeleting] = useState<Room | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [detailRoomId, setDetailRoomId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [tenantFormOpen, setTenantFormOpen] = useState(false);
@@ -134,7 +139,7 @@ export function RoomsPage() {
   const { overview: overviewQuery } = useApartmentOverview(apartmentId);
   const { data: roomTypesData, isSuccess: roomTypesLoaded } =
     useRoomTypesDropdown(apartmentId, DROPDOWN_LIMIT);
-  const { remove } = useRoomActions(apartmentId);
+  const { remove, bulkRemove } = useRoomActions(apartmentId);
 
   const items = data?.items ?? [];
   const meta = data?.meta;
@@ -163,8 +168,45 @@ export function RoomsPage() {
   const handleDelete = useCallback(async () => {
     if (!deleting) return;
     await remove.mutateAsync(deleting.id);
+    setSelectedIds((prev) => prev.filter((id) => id !== deleting.id));
     setDeleting(null);
   }, [deleting, remove]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+
+    const result = await bulkRemove.mutateAsync(selectedIds);
+    const { succeeded, failed } = result.summary;
+
+    if (failed === 0) {
+      toast.success(t("bulk-delete-rooms-success", { n: succeeded }));
+      setSelectedIds([]);
+    } else {
+      const reasons = result.failed
+        .slice(0, 3)
+        .map((f) => {
+          const name =
+            items.find((r) => r.id === f.roomId)?.name ?? f.roomId.slice(0, 8);
+          return `${name}: ${f.reason}`;
+        })
+        .join("\n");
+      toast.warning(
+        t("bulk-delete-rooms-partial", { ok: succeeded, fail: failed }),
+        { description: reasons, duration: 8000 }
+      );
+      // คงห้องที่ลบไม่สำเร็จไว้ในสถานะเลือก ให้ผู้ใช้เห็นว่าเหลือห้องไหน
+      setSelectedIds(result.failed.map((f) => f.roomId));
+    }
+    setConfirmBulkDelete(false);
+  }, [bulkRemove, items, selectedIds, t]);
 
   const invalidateRooms = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.rooms.all(apartmentId) });
@@ -184,6 +226,19 @@ export function RoomsPage() {
 
   const columns = useMemo<Column<Room>[]>(
     () => [
+      {
+        key: "select",
+        header: t("select"),
+        className: "w-10 shrink-0",
+        cell: (r) => (
+          <Checkbox
+            checked={selectedIds.includes(r.id)}
+            onCheckedChange={() => toggleSelect(r.id)}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t("select")}
+          />
+        ),
+      },
       {
         key: "name",
         header: t("room"),
@@ -253,7 +308,8 @@ export function RoomsPage() {
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            {/* stopPropagation: คลิกเมนูใน portal ยัง bubble ผ่าน React tree ไปโดน row onClick แล้วเปิด drawer ซ้อน */}
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => openDetail(r)}>
                 {t("view-details")}
               </DropdownMenuItem>
@@ -273,7 +329,7 @@ export function RoomsPage() {
         ),
       },
     ],
-    [t, roomTypes, openDetail, openEdit]
+    [t, roomTypes, openDetail, openEdit, selectedIds, toggleSelect]
   );
 
   const floorOptions = useMemo(
@@ -304,8 +360,16 @@ export function RoomsPage() {
   const safePage = floor === ALL ? Math.min(page, apiTotalPages) : page;
 
   const handleExportCsv = useCallback(() => {
-    exportTableCsv("rooms.csv", columns, sortedByFloor);
+    exportTableCsv(
+      "rooms.csv",
+      columns.filter((c) => c.key !== "select"),
+      sortedByFloor
+    );
   }, [columns, sortedByFloor]);
+
+  const selectAllVisible = useCallback(() => {
+    setSelectedIds(visibleItems.map((r) => r.id));
+  }, [visibleItems]);
 
   const overviewCounts = useMemo(
     () => normalizeRoomOverviewCounts(overviewQuery.data),
@@ -471,6 +535,32 @@ export function RoomsPage() {
         }
       />
 
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <span className="text-sm font-medium text-gray-900">
+            {t("selected-count", { n: selectedIds.length })}
+          </span>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <Button size="sm" variant="outline" onClick={selectAllVisible}>
+              {t("select-all-on-page")}
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setConfirmBulkDelete(true)}
+              disabled={bulkRemove.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("delete-selected")}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={clearSelection}>
+              <X className="h-4 w-4" />
+              {t("clear-selection")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="p-4">
@@ -584,13 +674,22 @@ export function RoomsPage() {
               >
                 <CardContent className="flex h-full flex-col gap-3 p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-semibold text-gray-900">
-                        {r.name}
-                      </p>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {typeName}
-                      </p>
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <Checkbox
+                        className="mt-1.5"
+                        checked={selectedIds.includes(r.id)}
+                        onCheckedChange={() => toggleSelect(r.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={t("select")}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-semibold text-gray-900">
+                          {r.name}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {typeName}
+                        </p>
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -604,7 +703,11 @@ export function RoomsPage() {
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      {/* stopPropagation: คลิกเมนูใน portal ยัง bubble ผ่าน React tree ไปโดน Card onClick แล้วเปิด drawer ซ้อน */}
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <DropdownMenuItem onClick={() => openDetail(r)}>
                           {t("view-details")}
                         </DropdownMenuItem>
@@ -754,6 +857,18 @@ export function RoomsPage() {
         rooms={items.map((r) => ({ id: r.id, name: r.name }))}
         defaultRoomId={tenantRoomId}
         onSuccess={invalidateRooms}
+      />
+
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        onOpenChange={(o) => !o && setConfirmBulkDelete(false)}
+        title={t("bulk-delete-rooms-title")}
+        description={t("bulk-delete-rooms-description", {
+          n: selectedIds.length,
+        })}
+        confirmLabel={t("delete")}
+        destructive
+        onConfirm={handleBulkDelete}
       />
 
       <ConfirmDialog

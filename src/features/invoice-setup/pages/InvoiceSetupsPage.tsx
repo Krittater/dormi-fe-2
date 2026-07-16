@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
@@ -43,6 +44,7 @@ import {
   useInvoiceSetupActions,
   useInvoiceSetups,
 } from "@/hooks/useInvoices";
+import { useChargeTypes } from "@/hooks/useChargeTypes";
 import { useT } from "@/i18n";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -52,8 +54,8 @@ import {
   RATE_INVOICE_TYPES,
   type InvoiceSetupFormValues,
 } from "@/schemas/invoice-setup.schema";
-import { INVOICE_TYPE_CODES, InvoiceType } from "@/types";
-import type { InvoiceSetup } from "@/types";
+import { CHARGE_TYPE_CATEGORY_CODES, INVOICE_TYPE_CODES, InvoiceType } from "@/types";
+import type { ChargeType, InvoiceSetup } from "@/types";
 
 export function InvoiceSetupsPage() {
   const t = useT();
@@ -71,6 +73,12 @@ export function InvoiceSetupsPage() {
     error,
     refetch,
   } = useInvoiceSetups(apartmentId);
+  const {
+    data: chargeTypes = [],
+    isLoading: chargeTypesLoading,
+    error: chargeTypesError,
+    refetch: refetchChargeTypes,
+  } = useChargeTypes(apartmentId);
   const { create, update, remove } = useInvoiceSetupActions(apartmentId);
 
   const form = useForm<InvoiceSetupFormValues>({
@@ -232,6 +240,49 @@ export function InvoiceSetupsPage() {
     [openEdit, t]
   );
 
+  const chargeTypeColumns = useMemo<Column<ChargeType>[]>(
+    () => [
+      {
+        key: "name",
+        header: t("name"),
+        cell: (c) => (
+          <div>
+            <p className="font-medium text-gray-900">{c.name}</p>
+            {c.description && (
+              <p className="text-xs text-muted-foreground">{c.description}</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "category",
+        header: t("category"),
+        cell: (c) => (
+          <Badge variant="outline">
+            {t(CHARGE_TYPE_CATEGORY_CODES[c.category])}
+          </Badge>
+        ),
+      },
+      {
+        key: "defaultAmount",
+        header: t("suggested-amount"),
+        cell: (c) =>
+          c.defaultAmount != null ? formatCurrency(c.defaultAmount) : "-",
+      },
+      {
+        key: "status",
+        header: t("status"),
+        cell: (c) =>
+          c.isActive ? (
+            <Badge variant="success">{t("active")}</Badge>
+          ) : (
+            <Badge variant="outline">{t("inactive")}</Badge>
+          ),
+      },
+    ],
+    [t]
+  );
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -303,6 +354,35 @@ export function InvoiceSetupsPage() {
           />
         </>
       )}
+
+      {/* ประเภทค่าใช้จ่ายของหอนี้ — โชว์คู่กับการตั้งค่ารอบบิลเพื่อเห็นภาพรวมรายการที่จะออกบิล */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {t("nav-charge-types")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("invoice-setups-charge-types-description")}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/apartments/${apartmentId}/charge-types`}>
+              {t("manage")}
+            </Link>
+          </Button>
+        </div>
+        <DataTable
+          columns={chargeTypeColumns}
+          data={chargeTypes}
+          loading={chargeTypesLoading}
+          error={chargeTypesError}
+          onRetry={() => refetchChargeTypes()}
+          getRowId={(c) => c.id}
+          emptyTitle={t("no-charge-types")}
+          emptyDescription={t("no-charge-types-description")}
+        />
+      </div>
 
       <Dialog open={formOpen} onOpenChange={(o) => !isPending && setFormOpen(o)}>
         <DialogContent className="max-w-lg">

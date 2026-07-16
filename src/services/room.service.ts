@@ -4,6 +4,7 @@ import { toList } from "@/lib/list";
 import type {
   BulkCreateRoomsPayload,
   BulkCreateRoomsResult,
+  BulkDeleteRoomsResult,
   PaginationMeta,
   Room,
   RoomOverview,
@@ -65,5 +66,15 @@ export const roomService = {
 
   async remove(apartmentId: string, roomId: string): Promise<void> {
     await http.delete(endpoints.rooms.remove(apartmentId, roomId));
+  },
+
+  async bulkRemove(
+    apartmentId: string,
+    roomIds: string[]
+  ): Promise<BulkDeleteRoomsResult> {
+    return http.post<BulkDeleteRoomsResult>(
+      endpoints.rooms.bulkDelete(apartmentId),
+      { roomIds }
+    );
   },
 };

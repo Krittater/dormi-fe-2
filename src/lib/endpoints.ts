@@ -8,6 +8,7 @@ export const endpoints = {
   },
   apartments: {
     list: () => `/apartments`,
+    detail: (id: string) => `/apartments/${id}`,
     create: () => `/apartments`,
     update: (id: string) => `/apartments/${id}`,
     remove: (id: string) => `/apartments/${id}`,
@@ -26,6 +27,8 @@ export const endpoints = {
     list: (apartmentId: string) => `${a(apartmentId)}/rooms`,
     create: (apartmentId: string) => `${a(apartmentId)}/rooms`,
     bulkCreate: (apartmentId: string) => `${a(apartmentId)}/rooms/bulk`,
+    bulkDelete: (apartmentId: string) =>
+      `${a(apartmentId)}/rooms/bulk-delete`,
     overview: (apartmentId: string) => `${a(apartmentId)}/rooms/overview`,
     dropdown: (apartmentId: string) => `${a(apartmentId)}/rooms/dropdown`,
     detail: (apartmentId: string, roomId: string) =>
