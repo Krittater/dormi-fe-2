@@ -5,6 +5,7 @@ export const endpoints = {
     register: () => `/auth/register`,
     login: () => `/auth/login`,
     logout: () => `/auth/logout`,
+    myPlan: () => `/auth/me/plan`,
   },
   apartments: {
     list: () => `/apartments`,

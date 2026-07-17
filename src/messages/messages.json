@@ -4582,5 +4582,17 @@
     "th": "ฟีเจอร์ยังไม่พร้อมใช้งาน",
     "en": "not available now",
     "cn": "现在不可用"
+  },
+  {
+    "code": "plan-room-quota",
+    "th": "ใช้ไป {used}/{limit} ห้อง (นับรวมทุกหอตามแพ็กเกจ)",
+    "en": "Using {used}/{limit} rooms (counted across all properties in your plan)",
+    "cn": "已用 {used}/{limit} 间（按套餐统计所有公寓）"
+  },
+  {
+    "code": "plan-room-quota-full",
+    "th": "ครบเพดานห้องของแพ็กเกจแล้ว อัปเกรดเพื่อเพิ่มห้อง",
+    "en": "Room limit reached — upgrade your plan to add more rooms",
+    "cn": "已达套餐房间上限，请升级套餐"
   }
 ]

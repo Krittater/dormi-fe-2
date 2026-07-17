@@ -1,4 +1,7 @@
 export const qk = {
+  plan: {
+    me: ["plan", "me"] as const,
+  },
   apartments: {
     all: ["apartments"] as const,
     list: () => [...qk.apartments.all, "list"] as const,

@@ -25,6 +25,11 @@ export interface NavItem {
 export interface NavSection {
   title: string;
   items: NavItem[];
+  /**
+   * feature code ของแผนที่ต้องมีถึงจะโชว์ section นี้ (ตรงกับ plan_features ฝั่ง backend)
+   * ไม่ระบุ = โชว์เสมอ · การซ่อนเป็นแค่ UX — backend บังคับสิทธิ์จริง
+   */
+  feature?: string;
 }
 
 export const apartmentNav: NavSection[] = [
@@ -43,6 +48,7 @@ export const apartmentNav: NavSection[] = [
   },
   {
     title: "nav-section-charge-settings",
+    feature: "billing",
     items: [
       { label: "nav-charge-types", segment: "charge-types", icon: Tags },
       { label: "nav-room-charges", segment: "room-charges", icon: Wallet },
@@ -51,6 +57,7 @@ export const apartmentNav: NavSection[] = [
   },
   {
     title: "nav-section-billing",
+    feature: "billing",
     items: [
       { label: "nav-billing-periods", segment: "billing-periods", icon: FileText },
       { label: "nav-invoices", segment: "invoices", icon: Receipt },
@@ -58,6 +65,7 @@ export const apartmentNav: NavSection[] = [
   },
   {
     title: "nav-section-finance",
+    feature: "finance",
     items: [
       { label: "nav-finance", segment: "finance", icon: TrendingUp },
       {
