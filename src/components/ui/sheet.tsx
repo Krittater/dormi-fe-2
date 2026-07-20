@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
+import { isInteractionInsidePortal } from "@/lib/radix-dismiss";
 
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -54,7 +55,7 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => {
+>(({ side = "right", className, children, onInteractOutside, ...props }, ref) => {
   const t = useT();
   return (
     <SheetPortal>
@@ -66,6 +67,14 @@ const SheetContent = React.forwardRef<
           "overflow-y-auto scrollbar-thin",
           className
         )}
+        onInteractOutside={(e) => {
+          // คลิกบน dropdown/Select ที่ portal ออกไป → ไม่ปิด Sheet (คลิก backdrop จริงยังปิดได้)
+          if (isInteractionInsidePortal(e)) {
+            e.preventDefault();
+            return;
+          }
+          onInteractOutside?.(e);
+        }}
         {...props}
       >
         {children}

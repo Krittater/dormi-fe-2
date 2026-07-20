@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n";
+import { isInteractionInsidePortal } from "@/lib/radix-dismiss";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -30,7 +31,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, onInteractOutside, ...props }, ref) => {
   const t = useT();
   return (
     <DialogPortal>
@@ -41,6 +42,14 @@ const DialogContent = React.forwardRef<
           "fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-gray-200 bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 sm:rounded-xl max-h-[90vh] overflow-y-auto scrollbar-thin",
           className
         )}
+        onInteractOutside={(e) => {
+          // คลิกบน dropdown/Select ที่ portal ออกไป → ไม่ปิด Dialog (คลิก backdrop จริงยังปิดได้)
+          if (isInteractionInsidePortal(e)) {
+            e.preventDefault();
+            return;
+          }
+          onInteractOutside?.(e);
+        }}
         {...props}
       >
         {children}
