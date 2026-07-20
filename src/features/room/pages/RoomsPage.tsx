@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useApartmentOverview } from "@/hooks/useApartments";
 import { useFilterParams } from "@/hooks/use-filter-params";
+import { usePlan } from "@/hooks/usePlan";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -86,6 +87,7 @@ export function RoomsPage() {
   const t = useT();
   const apartmentId = useApartmentId();
   const queryClient = useQueryClient();
+  const { roomLimit, roomsUsed, roomQuotaFull } = usePlan();
 
   const { values, setValue, clearAll, hasActiveFilters } = useFilterParams({
     defaults: {
@@ -522,10 +524,14 @@ export function RoomsPage() {
               {/* span ครอบเพื่อให้ title โผล่ได้แม้ปุ่ม disabled (ปุ่ม disabled ไม่รับ pointer event) */}
               <span
                 title={
-                  roomTypes.length === 0 ? t("add-room-type-first") : undefined
+                  roomTypes.length === 0
+                    ? t("add-room-type-first")
+                    : roomQuotaFull
+                      ? t("plan-room-quota-full")
+                      : undefined
                 }
               >
-                <Button disabled={roomTypes.length === 0}>
+                <Button disabled={roomTypes.length === 0 || roomQuotaFull}>
                   <Plus className="h-4 w-4" />
                   {t("add-room")}
                   <ChevronDown className="h-4 w-4 opacity-70" />
@@ -543,6 +549,24 @@ export function RoomsPage() {
           </DropdownMenu>
         }
       />
+
+      {/* โควตาห้องรวมทุกหอตามแผน (backend เป็นผู้บังคับจริง — นี่คือคำเตือนล่วงหน้า) */}
+      {roomLimit !== null && (
+        <p
+          className={cn(
+            "rounded-lg px-4 py-3 text-sm",
+            roomQuotaFull
+              ? "bg-destructive/10 text-destructive"
+              : "bg-primary-light text-gray-700"
+          )}
+        >
+          {t("plan-room-quota", {
+            used: roomsUsed,
+            limit: roomLimit,
+          })}
+          {roomQuotaFull && <> — {t("plan-room-quota-full")}</>}
+        </p>
+      )}
 
       {roomTypesLoaded && roomTypes.length === 0 && (
         <p className="rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-700">

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { apartmentNav } from "@/lib/nav";
 import { useOverdueInvoiceCount } from "@/hooks/useOverdueInvoiceCount";
+import { usePlan } from "@/hooks/usePlan";
 import { useT } from "@/i18n";
 
 const NAV_COLLAPSE_KEY = "dormi-nav-collapsed";
@@ -22,6 +23,7 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
   const pathname = usePathname();
   const t = useT();
   const overdueCount = useOverdueInvoiceCount();
+  const { hasFeature } = usePlan();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const hydratedFromStorage = useRef(false);
 
@@ -61,6 +63,8 @@ export function NavContent({ apartmentId, onNavigate }: NavContentProps) {
   return (
     <nav className="flex flex-col gap-4 px-3 py-4">
       {apartmentNav.map((section) => {
+        // ซ่อนตามแผน (UX เท่านั้น — backend บังคับจริง) · ไม่ระบุ feature = โชว์เสมอ
+        if (section.feature && !hasFeature(section.feature)) return null;
         const isCollapsed = collapsed[section.title] ?? false;
         return (
           <div key={section.title}>
