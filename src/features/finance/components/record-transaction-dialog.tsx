@@ -57,6 +57,7 @@ export interface FinanceEntryDraft {
   amount: string;
   date: string;
   roomId?: string | null;
+  invoiceId?: string | null;
   note?: string | null;
 }
 
@@ -146,7 +147,7 @@ export function RecordTransactionDialog({
         amount: String(editing.amount ?? ""),
         date: editing.date?.slice(0, 10) ?? today(),
         roomId: editing.roomId ?? "",
-        invoiceId: "",
+        invoiceId: editing.invoiceId ?? "",
         note: editing.note ?? "",
       });
     } else {

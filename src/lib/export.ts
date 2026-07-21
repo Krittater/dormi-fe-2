@@ -17,6 +17,9 @@ export function exportTableCsv<T>(
   const rows = data.map((row) =>
     exportCols
       .map((col) => {
+        if (col.sortValue) {
+          return escapeCsvCell(String(col.sortValue(row)));
+        }
         const cell = col.cell(row);
         const text =
           typeof cell === "string" || typeof cell === "number"

@@ -36,6 +36,18 @@
     "cn": "追踪收入、支出与利润"
   },
   {
+    "code": "linked-invoice",
+    "th": "บิลที่ผูก",
+    "en": "Linked invoice",
+    "cn": "关联账单"
+  },
+  {
+    "code": "manual-entry",
+    "th": "บันทึกมือ",
+    "en": "Manual entry",
+    "cn": "手动录入"
+  },
+  {
     "code": "export-excel",
     "th": "ส่งออก Excel",
     "en": "Export Excel",

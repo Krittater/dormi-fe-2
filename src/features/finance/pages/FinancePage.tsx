@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import {
   ArrowDownCircle,
@@ -31,6 +32,7 @@ import { useIncomeActions, useIncomes } from "@/hooks/useIncomes";
 import { useExpenseActions, useExpenses } from "@/hooks/useExpenses";
 import { useFinanceSummary } from "@/hooks/useFinance";
 import { useT } from "@/i18n";
+import type { TranslateFn } from "@/i18n";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { MONEY_ENTRY_STATUS_CODES, MoneyEntryStatus } from "@/types";
 import type { Expense, Income } from "@/types";
@@ -46,13 +48,23 @@ interface Row {
   date: string;
   categoryName: string;
   accountName: string;
+  invoiceId?: string | null;
+  invoiceNumber?: string | null;
   amount: number;
   status: MoneyEntryStatus;
   draft: FinanceEntryDraft;
 }
 
+/** ข้อความคอลัมน์ "บิลที่ผูก" — ใช้ร่วมกันทั้งการ sort/export (text) และ cell (แสดงผล) */
+function linkedInvoiceLabel(row: Row, t: TranslateFn): string {
+  if (row.kind === "expense") return "-";
+  if (row.invoiceId) return row.invoiceNumber ?? row.invoiceId.slice(0, 8);
+  return t("manual-entry");
+}
+
 export function FinancePage() {
   const t = useT();
+  const router = useRouter();
   const apartmentId = useApartmentId();
 
   const [period, setPeriod] = useState<Period>("month");
@@ -98,6 +110,8 @@ export function FinancePage() {
       date: i.paidDate,
       categoryName: i.category?.name ?? "-",
       accountName: i.account?.name ?? "-",
+      invoiceId: i.invoiceId ?? null,
+      invoiceNumber: i.invoice?.invoiceNumber ?? null,
       amount: Number(i.amount) || 0,
       status: i.status,
       draft: {
@@ -108,6 +122,7 @@ export function FinancePage() {
         amount: String(i.amount ?? ""),
         date: i.paidDate,
         roomId: i.roomId,
+        invoiceId: i.invoiceId,
         note: i.note,
       },
     }));
@@ -117,6 +132,8 @@ export function FinancePage() {
       date: e.expenseDate,
       categoryName: e.category?.name ?? "-",
       accountName: e.account?.name ?? "-",
+      invoiceId: null,
+      invoiceNumber: null,
       amount: Number(e.amount) || 0,
       status: e.status,
       draft: {
@@ -191,6 +208,34 @@ export function FinancePage() {
         hideOnMobile: true,
       },
       {
+        key: "linked-invoice",
+        header: t("linked-invoice"),
+        hideOnMobile: true,
+        sortValue: (r) => linkedInvoiceLabel(r, t),
+        cell: (r) => {
+          if (r.kind === "expense") return "-";
+          if (r.invoiceId) {
+            return (
+              <button
+                type="button"
+                className="font-medium text-primary underline-offset-4 hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(
+                    `/apartments/${apartmentId}/invoices/${r.invoiceId}`
+                  );
+                }}
+              >
+                {linkedInvoiceLabel(r, t)}
+              </button>
+            );
+          }
+          return (
+            <span className="text-gray-500">{linkedInvoiceLabel(r, t)}</span>
+          );
+        },
+      },
+      {
         key: "amount",
         header: t("amount"),
         className: "text-right",
@@ -250,7 +295,7 @@ export function FinancePage() {
           ) : null,
       },
     ],
-    [t, openEdit]
+    [t, openEdit, router, apartmentId]
   );
 
   const handleExportCsv = useCallback(() => {

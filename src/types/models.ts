@@ -385,6 +385,8 @@ export interface Income {
   status: MoneyEntryStatus;
   category?: TransactionCategory | null;
   account?: PaymentAccount | null;
+  /** Nested when list/detail joins invoice (minimal fields) */
+  invoice?: { id: string; invoiceNumber?: string | null } | null;
   createdBy?: string | null;
   createdAt?: string;
 }
