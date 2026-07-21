@@ -3024,6 +3024,18 @@
     "cn": "选择租户"
   },
   {
+    "code": "select-room-first",
+    "th": "เลือกห้องก่อน",
+    "en": "Select a room first",
+    "cn": "请先选择房间"
+  },
+  {
+    "code": "no-tenant-in-room",
+    "th": "ไม่มีผู้เช่าในห้องนี้",
+    "en": "No tenant in this room",
+    "cn": "此房间没有租户"
+  },
+  {
     "code": "items",
     "th": "รายการ",
     "en": "Items",

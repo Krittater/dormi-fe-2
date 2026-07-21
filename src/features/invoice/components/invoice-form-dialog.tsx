@@ -109,6 +109,38 @@ export function InvoiceFormDialog({
   const tenants = dropdowns?.tenants ?? [];
   const billTypes = dropdowns?.billTypes ?? [];
 
+  const selectedRoomId = form.watch("roomId");
+
+  // ผู้เช่าปัจจุบันของห้องที่เลือก — 1 ห้องปกติมีผู้เช่า active เดียว
+  // ถ้ามีมากกว่า 1 (DB ไม่กัน) เลือกคนที่ moveInDate ล่าสุด
+  const roomTenant = useMemo(() => {
+    if (!selectedRoomId) return null;
+    return (
+      tenants
+        .filter((tn) => tn.roomId === selectedRoomId && tn.isActive)
+        .sort((a, b) =>
+          (b.moveInDate ?? "").localeCompare(a.moveInDate ?? "")
+        )[0] ?? null
+    );
+  }, [tenants, selectedRoomId]);
+
+  const roomTenantName = roomTenant
+    ? [
+        roomTenant.user?.firstNameTH ?? roomTenant.firstNameTH,
+        roomTenant.user?.lastNameTH ?? roomTenant.lastNameTH,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim()
+    : "";
+
+  // เลือกห้อง → ล็อกผู้เช่าตามห้องอัตโนมัติ (ผู้ใช้แก้เองไม่ได้)
+  useEffect(() => {
+    form.setValue("tenantId", roomTenant?.tenantId ?? "", {
+      shouldValidate: true,
+    });
+  }, [roomTenant, form]);
+
   useEffect(() => {
     if (!open) return;
     form.reset({
@@ -232,26 +264,22 @@ export function InvoiceFormDialog({
               <FormField
                 control={form.control}
                 name="tenantId"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>{t("tenant")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("select-tenant")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tenants.map((tenant) => (
-                          <SelectItem
-                            key={tenant.id ?? tenant.tenantId}
-                            value={tenant.id ?? tenant.tenantId ?? ""}
-                          >
-                            {tenant.firstNameTH} {tenant.lastNameTH}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      {/* ล็อกตามห้อง — อ่านอย่างเดียว (เทา) แก้เองไม่ได้ */}
+                      <Input
+                        readOnly
+                        value={roomTenantName}
+                        placeholder={
+                          selectedRoomId
+                            ? t("no-tenant-in-room")
+                            : t("select-room-first")
+                        }
+                        className="cursor-not-allowed bg-muted font-medium text-foreground"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

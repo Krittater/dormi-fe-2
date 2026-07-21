@@ -86,9 +86,18 @@ export const invoiceService = {
     return {
       periods: toList<{ id: string; name: string }>(periods).items,
       rooms: toList<{ roomId?: string; id?: string; name: string }>(rooms).items,
-      tenants: toList<{ id?: string; tenantId?: string; firstNameTH?: string; lastNameTH?: string }>(
-        tenants
-      ).items,
+      tenants: toList<{
+        id?: string;
+        tenantId?: string;
+        roomId?: string | null;
+        isActive?: boolean;
+        moveInDate?: string | null;
+        // ชื่ออยู่ใต้ user ตาม mapTenantSummary ของ backend
+        user?: { firstNameTH?: string | null; lastNameTH?: string | null };
+        // เผื่อ shape เดิม (top-level) — ใช้เป็น fallback ตอนแสดงชื่อ
+        firstNameTH?: string;
+        lastNameTH?: string;
+      }>(tenants).items,
       billTypes: toList<{ code: string; name: string }>(billTypes).items,
     };
   },
