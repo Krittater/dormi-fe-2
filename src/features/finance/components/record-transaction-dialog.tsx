@@ -90,6 +90,13 @@ export function RecordTransactionDialog({
   const { data: rooms = [] } = useRoomDropdown(apartmentId);
   const { data: invData } = useInvoices(apartmentId, { limit: 100 });
 
+  // โหมดรับชำระบิล: ชื่อห้องมาจากบิล (ล็อก แก้ไม่ได้) — fallback หาจาก dropdown
+  const presetRoomName = presetInvoice
+    ? presetInvoice.roomName ??
+      rooms.find((r) => r.id === presetInvoice.roomId)?.name ??
+      ""
+    : "";
+
   const income = useIncomeActions(apartmentId);
   const expense = useExpenseActions(apartmentId);
   const submitting =
@@ -124,7 +131,7 @@ export function RecordTransactionDialog({
         accountId: "",
         amount: presetOutstanding > 0 ? String(presetOutstanding) : "",
         date: today(),
-        roomId: "",
+        roomId: presetInvoice.roomId ?? "",
         invoiceId: presetInvoice.id,
         note: "",
       });
@@ -432,26 +439,41 @@ export function RecordTransactionDialog({
               <FormField
                 control={form.control}
                 name="roomId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("room-optional")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                render={({ field }) =>
+                  presetInvoice ? (
+                    <FormItem>
+                      <FormLabel>{t("room")}</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("select-room")} />
-                        </SelectTrigger>
+                        {/* ห้องมาจากบิล — read-only เทา ห้ามแก้ */}
+                        <Input
+                          readOnly
+                          value={presetRoomName}
+                          className="cursor-not-allowed bg-muted font-medium text-foreground"
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {rooms.map((r) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            {r.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      <FormMessage />
+                    </FormItem>
+                  ) : (
+                    <FormItem>
+                      <FormLabel>{t("room-optional")}</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("select-room")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {rooms.map((r) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              {r.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )
+                }
               />
               <FormField
                 control={form.control}
