@@ -2971,7 +2971,7 @@
   },
   {
     "code": "please-select-tenant",
-    "th": "กรุณาเลือกผู้เช่า",
+    "th": "กรุณาเลือกห้องที่มีผู้เช่า",
     "en": "Please select a tenant",
     "cn": "请选择租户"
   },
@@ -3034,6 +3034,12 @@
     "th": "ไม่มีผู้เช่าในห้องนี้",
     "en": "No tenant in this room",
     "cn": "此房间没有租户"
+  },
+  {
+    "code": "no-current-billing-period",
+    "th": "ไม่มีรอบบิลปัจจุบัน",
+    "en": "No current billing period",
+    "cn": "没有当前账单周期"
   },
   {
     "code": "items",

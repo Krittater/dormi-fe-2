@@ -77,14 +77,34 @@ export const invoiceService = {
   },
 
   async formDropdowns(apartmentId: string) {
-    const [periods, rooms, tenants, billTypes] = await Promise.all([
-      http.get(endpoints.billingPeriods.dropdown(apartmentId)),
-      http.get(endpoints.rooms.dropdown(apartmentId)),
-      http.get(endpoints.tenants.list(apartmentId) + buildQuery({ limit: 100 })),
-      http.get(endpoints.invoices.billTypeDropdown(apartmentId)),
-    ]);
+    // endpoint dropdown รับ status แบบ "เท่ากับ" เท่านั้น → ยิง 2 สถานะที่ยังใช้งานได้
+    // (OPEN + GENERATED) แล้วรวม = ตัด CANCELLED/CLOSED ทิ้ง
+    const [periodsOpen, periodsGenerated, rooms, tenants, billTypes] =
+      await Promise.all([
+        http.get(
+          endpoints.billingPeriods.dropdown(apartmentId) +
+            buildQuery({ type: "RENT", status: "OPEN", limit: 12 })
+        ),
+        http.get(
+          endpoints.billingPeriods.dropdown(apartmentId) +
+            buildQuery({ type: "RENT", status: "GENERATED", limit: 12 })
+        ),
+        http.get(endpoints.rooms.dropdown(apartmentId)),
+        http.get(
+          endpoints.tenants.list(apartmentId) + buildQuery({ limit: 100 })
+        ),
+        http.get(endpoints.invoices.billTypeDropdown(apartmentId)),
+      ]);
+
+    type PeriodItem = { id: string; name: string; createdAt?: string };
+    // รวมสองสถานะแล้วเรียงใหม่สุดก่อน (createdAt — รอบบิลถูกสร้างไล่ตามเดือนอยู่แล้ว)
+    const periods = [
+      ...toList<PeriodItem>(periodsOpen).items,
+      ...toList<PeriodItem>(periodsGenerated).items,
+    ].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+
     return {
-      periods: toList<{ id: string; name: string }>(periods).items,
+      periods,
       rooms: toList<{ roomId?: string; id?: string; name: string }>(rooms).items,
       tenants: toList<{
         id?: string;

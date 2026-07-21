@@ -109,6 +109,16 @@ export function InvoiceFormDialog({
   const tenants = dropdowns?.tenants ?? [];
   const billTypes = dropdowns?.billTypes ?? [];
 
+  // periods ถูกกรองเป็นรอบ RENT ที่ OPEN เรียงใหม่สุดก่อนแล้ว → ตัวแรก = รอบปัจจุบัน
+  const currentPeriod = periods[0] ?? null;
+
+  // ล็อกรอบบิลเป็นรอบ RENT ปัจจุบัน (ผู้ใช้แก้เองไม่ได้)
+  useEffect(() => {
+    form.setValue("billingPeriodId", currentPeriod?.id ?? "", {
+      shouldValidate: true,
+    });
+  }, [currentPeriod, form]);
+
   const selectedRoomId = form.watch("roomId");
 
   // ผู้เช่าปัจจุบันของห้องที่เลือก — 1 ห้องปกติมีผู้เช่า active เดียว
@@ -192,23 +202,18 @@ export function InvoiceFormDialog({
               <FormField
                 control={form.control}
                 name="billingPeriodId"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>{t("nav-billing-periods")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("select-billing-period")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {periods.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      {/* ล็อกเป็นรอบ RENT ปัจจุบัน — อ่านอย่างเดียว (เทา) เลือกเองไม่ได้ */}
+                      <Input
+                        readOnly
+                        value={currentPeriod?.name ?? ""}
+                        placeholder={t("no-current-billing-period")}
+                        className="cursor-not-allowed bg-muted font-medium text-foreground"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
