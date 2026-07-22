@@ -10,6 +10,13 @@ interface UseFilterParamsOptions {
   /** Keys debounced before writing to URL (e.g. search) */
   debounceKeys?: string[];
   debounceMs?: number;
+  /**
+   * Keys ที่ไม่ใช่ตัวกรอง (เช่น view, page) — ไม่นับใน hasActiveFilters
+   * ไม่งั้นสลับ view/เปลี่ยนหน้าแล้วปุ่ม "ล้างตัวกรอง" โผล่ทั้งที่ไม่ได้กรองอะไร
+   */
+  metaKeys?: string[];
+  /** Keys ที่คงค่าเดิมไว้ตอน clearAll (เช่น view — ล้างตัวกรองไม่ควรสลับมุมมอง) */
+  preserveOnClear?: string[];
 }
 
 function filterValuesEqual(a: FilterDefaults, b: FilterDefaults): boolean {
@@ -36,6 +43,8 @@ export function useFilterParams({
   defaults,
   debounceKeys = [],
   debounceMs = 300,
+  metaKeys = [],
+  preserveOnClear = [],
 }: UseFilterParamsOptions) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,9 +54,11 @@ export function useFilterParams({
   // เขียน ref ใน effect เท่านั้น — render ต้อง pure
   const defaultsRef = useRef(defaults);
   const debounceKeysRef = useRef(debounceKeys);
+  const preserveOnClearRef = useRef(preserveOnClear);
   useEffect(() => {
     defaultsRef.current = defaults;
     debounceKeysRef.current = debounceKeys;
+    preserveOnClearRef.current = preserveOnClear;
   });
 
   const paramsKey = searchParams.toString();
@@ -129,15 +140,19 @@ export function useFilterParams({
 
   const clearAll = useCallback(() => {
     const d = defaultsRef.current;
-    valuesRef.current = d;
-    setValuesState(d);
+    const next = { ...d };
+    for (const key of preserveOnClearRef.current) {
+      if (key in valuesRef.current) next[key] = valuesRef.current[key]!;
+    }
+    valuesRef.current = next;
+    setValuesState(next);
     setPending({});
-    selfWritesRef.current.add("");
-    router.replace(pathname, { scroll: false });
-  }, [pathname, router]);
+    writeUrl(next);
+  }, [writeUrl]);
 
+  const metaKeySet = new Set(metaKeys);
   const hasActiveFilters = Object.keys(defaults).some(
-    (key) => values[key] !== defaults[key]
+    (key) => !metaKeySet.has(key) && values[key] !== defaults[key]
   );
 
   return { values, setValue, clearAll, hasActiveFilters };

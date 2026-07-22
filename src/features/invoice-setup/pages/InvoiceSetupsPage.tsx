@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
@@ -36,13 +37,14 @@ import {
 import { PageHeader } from "@/components/shared/page-header";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
-import { ACTIVE, ALL } from "@/constants/config";
+import { ACTIVE, ALL, INACTIVE } from "@/constants/config";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { InvoiceSetupWizard } from "@/features/invoice-setup/components/invoice-setup-wizard";
 import {
   useInvoiceSetupActions,
   useInvoiceSetups,
 } from "@/hooks/useInvoices";
+import { useChargeTypes } from "@/hooks/useChargeTypes";
 import { useT } from "@/i18n";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -52,8 +54,8 @@ import {
   RATE_INVOICE_TYPES,
   type InvoiceSetupFormValues,
 } from "@/schemas/invoice-setup.schema";
-import { INVOICE_TYPE_CODES, InvoiceType } from "@/types";
-import type { InvoiceSetup } from "@/types";
+import { CHARGE_TYPE_CATEGORY_CODES, INVOICE_TYPE_CODES, InvoiceType } from "@/types";
+import type { ChargeType, InvoiceSetup } from "@/types";
 
 export function InvoiceSetupsPage() {
   const t = useT();
@@ -71,6 +73,12 @@ export function InvoiceSetupsPage() {
     error,
     refetch,
   } = useInvoiceSetups(apartmentId);
+  const {
+    data: chargeTypes = [],
+    isLoading: chargeTypesLoading,
+    error: chargeTypesError,
+    refetch: refetchChargeTypes,
+  } = useChargeTypes(apartmentId);
   const { create, update, remove } = useInvoiceSetupActions(apartmentId);
 
   const form = useForm<InvoiceSetupFormValues>({
@@ -82,14 +90,23 @@ export function InvoiceSetupsPage() {
   const needsRate = RATE_INVOICE_TYPES.includes(
     watchType as (typeof RATE_INVOICE_TYPES)[number]
   );
+  const watchCutOff = Number(form.watch("cutOffDate")) || 0;
+  const watchIssue = Number(form.watch("issueDate")) || 0;
+  const watchDue = Number(form.watch("dueDate")) || 0;
 
   const isPending = create.isPending || update.isPending;
 
-  const openCreate = useCallback(() => {
-    setEditing(null);
-    form.reset(invoiceSetupDefaultValues);
-    setFormOpen(true);
-  }, [form]);
+  const openCreate = useCallback(
+    (prefillType?: InvoiceType) => {
+      setEditing(null);
+      form.reset({
+        ...invoiceSetupDefaultValues,
+        ...(prefillType ? { type: prefillType } : undefined),
+      });
+      setFormOpen(true);
+    },
+    [form]
+  );
 
   const openEdit = useCallback(
     (setup: InvoiceSetup) => {
@@ -117,13 +134,15 @@ export function InvoiceSetupsPage() {
           : undefined;
 
       if (editing) {
+        // type ถูก lock ใน UI ตอนแก้ไข — ไม่ส่งไป BE เพื่อกันเปลี่ยนประเภทโดยไม่ตั้งใจ
         update.mutate(
           {
             setupId: editing.id,
             payload: {
-              type: values.type,
               cutOffDate: values.cutOffDate,
               ratePerUnit: ratePayload,
+              isActive: values.isActive,
+              effectiveTo: values.effectiveTo ? values.effectiveTo : null,
             },
           },
           { onSuccess: () => setFormOpen(false) }
@@ -160,9 +179,21 @@ export function InvoiceSetupsPage() {
     }
     if (activeFilter === ACTIVE) {
       result = result.filter((s) => s.isActive);
+    } else if (activeFilter === INACTIVE) {
+      result = result.filter((s) => !s.isActive);
     }
     return result;
   }, [items, typeFilter, activeFilter]);
+
+  // ประเภทบิลหลักที่ยังไม่มี setup เปิดใช้งาน — โชว์ checklist จนตั้งครบ
+  const missingTypes = useMemo(() => {
+    const activeTypes = new Set(
+      items.filter((s) => s.isActive).map((s) => s.type)
+    );
+    return [InvoiceType.RENT, InvoiceType.ELECTRICITY, InvoiceType.WATER].filter(
+      (it) => !activeTypes.has(it)
+    );
+  }, [items]);
 
   const columns = useMemo<Column<InvoiceSetup>[]>(
     () => [
@@ -178,7 +209,21 @@ export function InvoiceSetupsPage() {
       {
         key: "dates",
         header: t("cutoff-issue-due"),
-        cell: (s) => `${s.cutOffDate} / ${s.issueDate} / ${s.dueDate}`,
+        cell: (s) => (
+          <span className="whitespace-nowrap">
+            {t("invoice-setup-schedule-cell", {
+              cutoff: s.cutOffDate,
+              issue: s.issueDate,
+              due: s.dueDate,
+            })}{" "}
+            {/* ครบกำหนดเลขน้อยกว่าวันออกบิล = ข้ามไปเดือนถัดไป — ไม่บอกผู้ใช้จะคิดว่าตั้งผิด */}
+            {s.dueDate < s.issueDate && (
+              <span className="text-xs text-muted-foreground">
+                {t("next-month-note")}
+              </span>
+            )}
+          </span>
+        ),
       },
       {
         key: "rate",
@@ -197,12 +242,27 @@ export function InvoiceSetupsPage() {
       {
         key: "status",
         header: t("status"),
-        cell: (s) =>
-          s.isActive ? (
-            <Badge variant="success">{t("active")}</Badge>
-          ) : (
-            <Badge variant="outline">{t("inactive")}</Badge>
-          ),
+        cell: (s) => (
+          <label
+            className="inline-flex cursor-pointer items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Switch
+              checked={s.isActive}
+              disabled={update.isPending}
+              onCheckedChange={(checked) =>
+                update.mutate({
+                  setupId: s.id,
+                  payload: { isActive: checked },
+                })
+              }
+              aria-label={t("toggle-active")}
+            />
+            <span className="text-sm text-gray-700">
+              {s.isActive ? t("active") : t("inactive")}
+            </span>
+          </label>
+        ),
       },
       {
         key: "actions",
@@ -229,7 +289,50 @@ export function InvoiceSetupsPage() {
         ),
       },
     ],
-    [openEdit, t]
+    [openEdit, t, update]
+  );
+
+  const chargeTypeColumns = useMemo<Column<ChargeType>[]>(
+    () => [
+      {
+        key: "name",
+        header: t("name"),
+        cell: (c) => (
+          <div>
+            <p className="font-medium text-gray-900">{c.name}</p>
+            {c.description && (
+              <p className="text-xs text-muted-foreground">{c.description}</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "category",
+        header: t("category"),
+        cell: (c) => (
+          <Badge variant="outline">
+            {t(CHARGE_TYPE_CATEGORY_CODES[c.category])}
+          </Badge>
+        ),
+      },
+      {
+        key: "defaultAmount",
+        header: t("suggested-amount"),
+        cell: (c) =>
+          c.defaultAmount != null ? formatCurrency(c.defaultAmount) : "-",
+      },
+      {
+        key: "status",
+        header: t("status"),
+        cell: (c) =>
+          c.isActive ? (
+            <Badge variant="success">{t("active")}</Badge>
+          ) : (
+            <Badge variant="outline">{t("inactive")}</Badge>
+          ),
+      },
+    ],
+    [t]
   );
 
   return (
@@ -238,7 +341,7 @@ export function InvoiceSetupsPage() {
         title={t("nav-invoice-setups")}
         description={t("invoice-setups-page-description")}
         actions={
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="h-4 w-4" />
             {t("add-setup")}
           </Button>
@@ -246,9 +349,30 @@ export function InvoiceSetupsPage() {
       />
 
       {items.length === 0 && !isLoading ? (
-        <InvoiceSetupWizard apartmentId={apartmentId} />
+        <InvoiceSetupWizard
+          apartmentId={apartmentId}
+          onManual={() => openCreate()}
+        />
       ) : (
         <>
+          {/* Checklist ตั้งค่าให้ครบ 3 ประเภทหลัก — wizard พาสร้างได้แค่อันแรก
+              ที่เหลือต้องมีตัวเตือนค้างไว้จนครบ ไม่งั้นบิลออกไม่ครบรายการ */}
+          {missingTypes.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg bg-warning/10 px-4 py-3 text-sm text-gray-800">
+              <span>{t("invoice-setup-missing-types")}</span>
+              {missingTypes.map((it) => (
+                <Button
+                  key={it}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openCreate(it)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t(INVOICE_TYPE_CODES[it])}
+                </Button>
+              ))}
+            </div>
+          )}
           <FilterBar
             filters={[
               {
@@ -279,6 +403,7 @@ export function InvoiceSetupsPage() {
                     <SelectContent>
                       <SelectItem value={ALL}>{t("all")}</SelectItem>
                       <SelectItem value={ACTIVE}>{t("active")}</SelectItem>
+                      <SelectItem value={INACTIVE}>{t("inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 ),
@@ -304,6 +429,35 @@ export function InvoiceSetupsPage() {
         </>
       )}
 
+      {/* ประเภทค่าใช้จ่ายของหอนี้ — โชว์คู่กับการตั้งค่ารอบบิลเพื่อเห็นภาพรวมรายการที่จะออกบิล */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {t("nav-charge-types")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("invoice-setups-charge-types-description")}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/apartments/${apartmentId}/charge-types`}>
+              {t("manage")}
+            </Link>
+          </Button>
+        </div>
+        <DataTable
+          columns={chargeTypeColumns}
+          data={chargeTypes}
+          loading={chargeTypesLoading}
+          error={chargeTypesError}
+          onRetry={() => refetchChargeTypes()}
+          getRowId={(c) => c.id}
+          emptyTitle={t("no-charge-types")}
+          emptyDescription={t("no-charge-types-description")}
+        />
+      </div>
+
       <Dialog open={formOpen} onOpenChange={(o) => !isPending && setFormOpen(o)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -322,7 +476,7 @@ export function InvoiceSetupsPage() {
                     <FormLabel>{t("type")}</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger disabled={Boolean(editing)}>
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -334,6 +488,20 @@ export function InvoiceSetupsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {editing && (
+                      <p className="text-xs text-muted-foreground">
+                        {t("invoice-setup-type-locked-hint")}
+                      </p>
+                    )}
+                    {/* BE จะ reject ประเภทซ้ำที่ active อยู่แล้ว — เตือนก่อนกดบันทึกดีกว่ารอ error */}
+                    {!editing &&
+                      items.some(
+                        (s) => s.isActive && s.type === field.value
+                      ) && (
+                        <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-gray-800">
+                          {t("invoice-setup-duplicate-type-warning")}
+                        </p>
+                      )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -392,6 +560,36 @@ export function InvoiceSetupsPage() {
                 />
               </div>
 
+              <div className="space-y-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                <p>
+                  {t("invoice-setup-schedule-cell", {
+                    cutoff: watchCutOff || "-",
+                    issue: watchIssue || "-",
+                    due: watchDue || "-",
+                  })}{" "}
+                  {watchDue > 0 && watchDue < watchIssue && (
+                    <span className="text-muted-foreground">
+                      {t("next-month-note")}
+                    </span>
+                  )}
+                </p>
+                {!editing && watchIssue > 0 && watchIssue < watchCutOff && (
+                  <p className="rounded bg-warning/10 px-2 py-1 text-gray-800">
+                    {t("invoice-setup-issue-before-cutoff-warning")}
+                  </p>
+                )}
+                {Math.max(watchCutOff, watchIssue, watchDue) > 28 && (
+                  <p className="text-muted-foreground">
+                    {t("date-over-28-warning")}
+                  </p>
+                )}
+                {editing && (
+                  <p className="text-muted-foreground">
+                    {t("invoice-setup-locked-fields-hint")}
+                  </p>
+                )}
+              </div>
+
               {needsRate && (
                 <FormField
                   control={form.control}
@@ -433,11 +631,7 @@ export function InvoiceSetupsPage() {
                     <FormItem>
                       <FormLabel>{t("effective-to-optional")}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          disabled={Boolean(editing)}
-                          {...field}
-                        />
+                        <Input type="date" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -445,23 +639,21 @@ export function InvoiceSetupsPage() {
                 />
               </div>
 
-              {!editing && (
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
-                      <FormLabel>{t("enable")}</FormLabel>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
+                    <FormLabel>{t("enable")}</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
               <DialogFooter>
                 <Button

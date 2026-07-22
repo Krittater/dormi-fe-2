@@ -1,5 +1,8 @@
 "use client";
 
+import { Pencil, UserPlus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -46,6 +49,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   apartmentId: string;
   roomId: string | null;
+  /** ราคาห้องจากหน้า list (รวม override ระดับห้อง) — detail API มีแค่ราคาประเภทห้อง */
+  listPrice?: number;
+  onEdit?: (roomId: string) => void;
+  onAddTenant?: (roomId: string) => void;
 }
 
 export function RoomDetailSheet({
@@ -53,6 +60,9 @@ export function RoomDetailSheet({
   onOpenChange,
   apartmentId,
   roomId,
+  listPrice,
+  onEdit,
+  onAddTenant,
 }: Props) {
   const t = useT();
   const { data, isLoading } = useRoomDetail(apartmentId, roomId, open);
@@ -60,6 +70,7 @@ export function RoomDetailSheet({
 
   const room = detail?.room;
   const tenant = detail?.currentTenant;
+  const rentValue = listPrice ?? room?.roomType?.price ?? 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -94,13 +105,38 @@ export function RoomDetailSheet({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">{t("rent")}</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(room?.roomType?.price ?? 0)}
+                    {formatCurrency(rentValue)}
                   </span>
                 </div>
                 {room?.description && (
                   <p className="text-sm text-gray-500">{room.description}</p>
                 )}
               </section>
+
+              {(onEdit || onAddTenant) && roomId && (
+                <div className="flex flex-wrap gap-2">
+                  {onEdit && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(roomId)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      {t("edit")}
+                    </Button>
+                  )}
+                  {onAddTenant && !tenant && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onAddTenant(roomId)}
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      {t("add-tenant")}
+                    </Button>
+                  )}
+                </div>
+              )}
 
               <Separator />
 

@@ -13,6 +13,16 @@ export function useApartments() {
   return useQuery(apartmentQueries.list());
 }
 
+export function useApartmentDetail(
+  apartmentId: string | undefined,
+  enabled = true
+) {
+  return useQuery({
+    ...apartmentQueries.detail(apartmentId ?? ""),
+    enabled: enabled && Boolean(apartmentId),
+  });
+}
+
 export function useApartmentOverview(apartmentId: string) {
   const overview = useQuery(apartmentQueries.overview(apartmentId));
   const invoices = useQuery(apartmentQueries.recentInvoices(apartmentId));
@@ -45,9 +55,12 @@ export function useApartmentActions() {
       id: string;
       payload: Partial<Apartment>;
     }) => apartmentService.update(id, payload),
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       toast.success(t("apartment-updated"));
       invalidate();
+      // วันตัดรอบ/วันครบกำหนด/เรทที่แก้ มีผลกับ invoice setups และรอบบิลที่ยัง OPEN
+      queryClient.invalidateQueries({ queryKey: qk.invoiceSetups.all(id) });
+      queryClient.invalidateQueries({ queryKey: qk.billingPeriods.all(id) });
     },
   });
 

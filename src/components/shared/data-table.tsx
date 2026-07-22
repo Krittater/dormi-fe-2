@@ -20,6 +20,8 @@ import { useT } from "@/i18n";
 export interface Column<T> {
   key: string;
   header: string;
+  /** แสดงแทน header ในหัวตาราง (เช่น checkbox เลือกทั้งหน้า) — CSV ยังใช้ header */
+  headerNode?: React.ReactNode;
   cell: (row: T) => React.ReactNode;
   className?: string;
   hideOnMobile?: boolean;
@@ -173,7 +175,7 @@ export function DataTable<T>({
                       <SortIcon colKey={col.key} />
                     </button>
                   ) : (
-                    col.header
+                    (col.headerNode ?? col.header)
                   )}
                 </TableHead>
               ))}

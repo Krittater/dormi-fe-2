@@ -20,6 +20,17 @@ export function normalizeRoomTypes(roomTypes: RoomType[]): RoomType[] {
   return roomTypes.map(normalizeRoomTypeId);
 }
 
+/** ราคาห้องที่ใช้จริง — ราคาเฉพาะห้อง (override) ก่อน แล้วค่อย fallback ราคาประเภทห้อง */
+export function roomPrice(room: Room): number | undefined {
+  if (typeof room.price === "number" && !Number.isNaN(room.price)) {
+    return room.price;
+  }
+  const typePrice = room.roomType?.price;
+  if (typePrice == null) return undefined;
+  const n = typeof typePrice === "number" ? typePrice : Number(typePrice);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 export interface RoomOption {
   id: string;
   name: string;

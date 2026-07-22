@@ -138,6 +138,22 @@ export interface BulkCreateRoomsResult {
   failed: BulkCreateRoomFailedItem[];
 }
 
+export interface BulkDeleteRoomFailedItem {
+  roomId: string;
+  reason: string;
+  code: string;
+}
+
+export interface BulkDeleteRoomsResult {
+  summary: {
+    total: number;
+    succeeded: number;
+    failed: number;
+  };
+  deleted: Array<{ roomId: string; name: string }>;
+  failed: BulkDeleteRoomFailedItem[];
+}
+
 export interface RoomOverviewSummary {
   totalRooms: number;
   availableRooms: number;

@@ -21,9 +21,14 @@ type WizardStep = (typeof WIZARD_STEPS)[number];
 
 interface InvoiceSetupWizardProps {
   apartmentId: string;
+  /** เปิดฟอร์มกรอกเองสำหรับคนที่ไม่ต้องการ wizard */
+  onManual?: () => void;
 }
 
-export function InvoiceSetupWizard({ apartmentId }: InvoiceSetupWizardProps) {
+export function InvoiceSetupWizard({
+  apartmentId,
+  onManual,
+}: InvoiceSetupWizardProps) {
   const t = useT();
   const { create } = useInvoiceSetupActions(apartmentId);
   const [stepIndex, setStepIndex] = useState(0);
@@ -97,13 +102,20 @@ export function InvoiceSetupWizard({ apartmentId }: InvoiceSetupWizardProps) {
   return (
     <Card>
       <CardContent className="space-y-6 p-5">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">
-            {t("invoice-setup-wizard-title")}
-          </h2>
-          <p className="mt-1 text-sm text-gray-600">
-            {t("invoice-setup-wizard-desc")}
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              {t("invoice-setup-wizard-title")}
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">
+              {t("invoice-setup-wizard-desc")}
+            </p>
+          </div>
+          {onManual && (
+            <Button type="button" variant="ghost" size="sm" onClick={onManual}>
+              {t("fill-manually")}
+            </Button>
+          )}
         </div>
 
         <ol className="flex flex-wrap gap-2">
