@@ -82,5 +82,16 @@ export function useTenantDepositActions(apartmentId: string) {
     onError: (err) => toast.error(getApiErrorMessage(err)),
   });
 
-  return { create, update, remove, settle };
+  // กลับรายการ: VOID income/expense ที่เคลียร์ไว้ → invalidate เหมือน settle
+  const reverse = useMutation({
+    mutationFn: (depositId: string) =>
+      tenantDepositService.reverse(apartmentId, depositId),
+    onSuccess: () => {
+      toast.success(t("deposit-reversed"));
+      invalidateSettle();
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err)),
+  });
+
+  return { create, update, remove, settle, reverse };
 }

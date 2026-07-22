@@ -35,12 +35,10 @@ import { formatCurrency } from "@/lib/format";
 import { zodFormResolver } from "@/lib/zod-resolver";
 import { useTenantDepositActions } from "@/hooks/useTenantDeposits";
 import { usePaymentAccounts } from "@/hooks/usePaymentAccounts";
-import { useTransactionCategories } from "@/hooks/useTransactionCategories";
 import {
   makeSettleDepositSchema,
   type SettleDepositFormValues,
 } from "@/schemas/settle-deposit.schema";
-import { TransactionCategoryType } from "@/types";
 import type { TenantDeposit } from "@/types";
 
 interface Props {
@@ -61,7 +59,6 @@ export function SettleDepositDialog({
   const t = useT();
   const { settle } = useTenantDepositActions(apartmentId);
   const { data: accounts = [] } = usePaymentAccounts(apartmentId);
-  const { data: categories = [] } = useTransactionCategories(apartmentId);
 
   const amount = Number(deposit?.amount ?? 0);
 
@@ -97,20 +94,6 @@ export function SettleDepositDialog({
   const refund = Number(form.watch("refundAmount")) || 0;
   const forfeit = Math.max(0, Math.round((amount - refund) * 100) / 100);
 
-  const expenseCategories = useMemo(
-    () =>
-      categories.filter(
-        (c) => c.type === TransactionCategoryType.EXPENSE && c.isActive
-      ),
-    [categories]
-  );
-  const incomeCategories = useMemo(
-    () =>
-      categories.filter(
-        (c) => c.type === TransactionCategoryType.INCOME && c.isActive
-      ),
-    [categories]
-  );
   const activeAccounts = useMemo(
     () => accounts.filter((a) => a.isActive),
     [accounts]
@@ -118,12 +101,11 @@ export function SettleDepositDialog({
 
   const onSubmit = (values: SettleDepositFormValues) => {
     if (!deposit) return;
+    // หมวดมัดจำ backend resolve เอง (auto) — ส่งแค่บัญชี
     const payload = {
       settledDate: values.settledDate,
       refundAmount: refund,
-      refundCategoryId: refund > 0 ? values.refundCategoryId : undefined,
       refundAccountId: refund > 0 ? values.refundAccountId : undefined,
-      forfeitCategoryId: forfeit > 0 ? values.forfeitCategoryId : undefined,
       forfeitAccountId: forfeit > 0 ? values.forfeitAccountId : undefined,
       note: values.note || undefined,
     };
@@ -210,33 +192,17 @@ export function SettleDepositDialog({
                   {t("refund-section-hint")}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="refundCategoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("category")}</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("select-category")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {expenseCategories.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* หมวดมาจากระบบอัตโนมัติ — read-only เทา เลือกเองไม่ได้ */}
+                  <FormItem>
+                    <FormLabel>{t("category")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        readOnly
+                        value={t("deposit-refund-category-name")}
+                        className="cursor-not-allowed bg-muted font-medium text-foreground"
+                      />
+                    </FormControl>
+                  </FormItem>
                   <FormField
                     control={form.control}
                     name="refundAccountId"
@@ -275,33 +241,17 @@ export function SettleDepositDialog({
                   {t("forfeit-section-hint")}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="forfeitCategoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("category")}</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("select-category")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {incomeCategories.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* หมวดมาจากระบบอัตโนมัติ — read-only เทา เลือกเองไม่ได้ */}
+                  <FormItem>
+                    <FormLabel>{t("category")}</FormLabel>
+                    <FormControl>
+                      <Input
+                        readOnly
+                        value={t("deposit-forfeit-category-name")}
+                        className="cursor-not-allowed bg-muted font-medium text-foreground"
+                      />
+                    </FormControl>
+                  </FormItem>
                   <FormField
                     control={form.control}
                     name="forfeitAccountId"

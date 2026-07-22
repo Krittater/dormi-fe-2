@@ -196,5 +196,7 @@ export const endpoints = {
       `${a(apartmentId)}/tenant-deposits/${depositId}`,
     settle: (apartmentId: string, depositId: string) =>
       `${a(apartmentId)}/tenant-deposits/${depositId}/settle`,
+    reverse: (apartmentId: string, depositId: string) =>
+      `${a(apartmentId)}/tenant-deposits/${depositId}/reverse`,
   },
 };

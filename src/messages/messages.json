@@ -655,15 +655,63 @@
   },
   {
     "code": "refund-section-hint",
-    "th": "เงินคืน → รายจ่าย (ควรใช้หมวดหนี้สิน กันออกจากกำไร)",
-    "en": "Refund → expense (use a liability category to exclude from P&L)",
-    "cn": "退还 → 支出（用负债分类以排除在损益外）"
+    "th": "เงินคืน → รายจ่าย (ระบบใช้หมวด “คืนมัดจำ” อัตโนมัติ กันออกจากกำไร)",
+    "en": "Refund → expense (auto category, excluded from P&L)",
+    "cn": "退还 → 支出（自动分类，排除在损益外）"
   },
   {
     "code": "forfeit-section-hint",
-    "th": "เงินยึด → รายรับจริง",
-    "en": "Forfeit → real income",
-    "cn": "没收 → 实际收入"
+    "th": "เงินยึด → รายรับจริง (ระบบใช้หมวด “ยึดมัดจำ” อัตโนมัติ)",
+    "en": "Forfeit → real income (auto category)",
+    "cn": "没收 → 实际收入（自动分类）"
+  },
+  {
+    "code": "deposit-refund-category-name",
+    "th": "คืนมัดจำ",
+    "en": "Deposit refund",
+    "cn": "退还押金"
+  },
+  {
+    "code": "deposit-forfeit-category-name",
+    "th": "ยึดมัดจำ",
+    "en": "Deposit forfeit",
+    "cn": "没收押金"
+  },
+  {
+    "code": "reverse-settlement",
+    "th": "กลับรายการ",
+    "en": "Reverse settlement",
+    "cn": "撤销结算"
+  },
+  {
+    "code": "reverse-settlement-description",
+    "th": "ยกเลิกรายรับ/รายจ่ายที่สร้างตอนเคลียร์ (เป็น VOID) แล้วคืนมัดจำเป็นสถานะ “ถือไว้” เพื่อเคลียร์ใหม่ — งวดบัญชีที่ปิดแล้วต้องเปิดก่อน",
+    "en": "Void the income/expense created at settlement and return the deposit to Held so it can be settled again — closed accounting periods must be reopened first",
+    "cn": "将结算时创建的收入/支出作废，并把押金恢复为“持有”以便重新结算 — 已关闭的会计期需先重开"
+  },
+  {
+    "code": "reverse-confirm",
+    "th": "กลับรายการ",
+    "en": "Reverse",
+    "cn": "撤销"
+  },
+  {
+    "code": "deposit-reversed",
+    "th": "กลับรายการมัดจำแล้ว",
+    "en": "Settlement reversed",
+    "cn": "已撤销结算"
+  },
+  {
+    "code": "edit-disabled-settled",
+    "th": "เคลียร์แล้ว แก้ไม่ได้ — กลับรายการก่อน",
+    "en": "Settled — cannot edit; reverse first",
+    "cn": "已结算，无法编辑 — 请先撤销"
+  },
+  {
+    "code": "deposit-entry-locked",
+    "th": "รายการนี้มาจากมัดจำ — จัดการที่หน้ามัดจำ",
+    "en": "From a deposit settlement — manage on the deposit page",
+    "cn": "来自押金结算 — 请在押金页面管理"
   },
   {
     "code": "deposit-settled",

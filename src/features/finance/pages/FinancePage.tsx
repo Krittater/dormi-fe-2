@@ -50,9 +50,18 @@ interface Row {
   accountName: string;
   invoiceId?: string | null;
   invoiceNumber?: string | null;
+  reference?: string | null;
   amount: number;
   status: MoneyEntryStatus;
   draft: FinanceEntryDraft;
+}
+
+/** รายการที่ระบบเคลียร์มัดจำสร้าง — แก้/ยกเลิกได้ผ่าน "กลับรายการ" ที่หน้ามัดจำเท่านั้น */
+function isDepositEntry(ref?: string | null): boolean {
+  return (
+    !!ref &&
+    (ref.startsWith("DEPOSIT-REFUND:") || ref.startsWith("DEPOSIT-FORFEIT:"))
+  );
 }
 
 /** ข้อความคอลัมน์ "บิลที่ผูก" — ใช้ร่วมกันทั้งการ sort/export (text) และ cell (แสดงผล) */
@@ -112,6 +121,7 @@ export function FinancePage() {
       accountName: i.account?.name ?? "-",
       invoiceId: i.invoiceId ?? null,
       invoiceNumber: i.invoice?.invoiceNumber ?? null,
+      reference: i.reference ?? null,
       amount: Number(i.amount) || 0,
       status: i.status,
       draft: {
@@ -134,6 +144,7 @@ export function FinancePage() {
       accountName: e.account?.name ?? "-",
       invoiceId: null,
       invoiceNumber: null,
+      reference: e.reference ?? null,
       amount: Number(e.amount) || 0,
       status: e.status,
       draft: {
@@ -279,6 +290,12 @@ export function FinancePage() {
               <IconActionButton
                 label={t("edit")}
                 className="h-8 w-8"
+                disabled={isDepositEntry(r.reference)}
+                title={
+                  isDepositEntry(r.reference)
+                    ? t("deposit-entry-locked")
+                    : undefined
+                }
                 onClick={() => openEdit(r)}
               >
                 <Pencil className="h-4 w-4" />
@@ -287,6 +304,12 @@ export function FinancePage() {
                 label={t("void-transaction")}
                 destructive
                 className="h-8 w-8"
+                disabled={isDepositEntry(r.reference)}
+                title={
+                  isDepositEntry(r.reference)
+                    ? t("deposit-entry-locked")
+                    : undefined
+                }
                 onClick={() => setVoiding(r)}
               >
                 <Ban className="h-4 w-4" />

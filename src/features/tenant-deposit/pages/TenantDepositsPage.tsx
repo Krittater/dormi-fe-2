@@ -3,7 +3,14 @@
 import { useCallback, useMemo, useState } from "react";
 import { useApartmentId } from "@/hooks/use-apartment-id";
 import { useForm } from "react-hook-form";
-import { HandCoins, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  HandCoins,
+  Loader2,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { IconActionButton } from "@/components/shared/icon-action-button";
@@ -78,6 +85,7 @@ export function TenantDepositsPage() {
   const [editing, setEditing] = useState<TenantDeposit | null>(null);
   const [deleting, setDeleting] = useState<TenantDeposit | null>(null);
   const [settling, setSettling] = useState<TenantDeposit | null>(null);
+  const [reversing, setReversing] = useState<TenantDeposit | null>(null);
 
   const {
     data: items = [],
@@ -85,7 +93,8 @@ export function TenantDepositsPage() {
     error,
     refetch,
   } = useTenantDeposits(apartmentId);
-  const { create, update, remove } = useTenantDepositActions(apartmentId);
+  const { create, update, remove, reverse } =
+    useTenantDepositActions(apartmentId);
   const { data: tenantsData } = useTenants(apartmentId);
   const { data: rooms = [] } = useRoomDropdown(apartmentId);
   const submitting = create.isPending || update.isPending;
@@ -186,6 +195,11 @@ export function TenantDepositsPage() {
     remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
   }, [deleting, remove]);
 
+  const handleReverse = useCallback(() => {
+    if (!reversing) return;
+    reverse.mutate(reversing.id, { onSuccess: () => setReversing(null) });
+  }, [reversing, reverse]);
+
   const filtered = useMemo(() => {
     let result = items;
     if (statusFilter !== ALL) {
@@ -241,7 +255,7 @@ export function TenantDepositsPage() {
         className: "text-right",
         cell: (d) => (
           <div className="flex justify-end gap-1">
-            {d.status === TenantDepositStatus.HELD && (
+            {d.status === TenantDepositStatus.HELD ? (
               <IconActionButton
                 label={t("settle-deposit")}
                 className="h-8 w-8 text-emerald-600"
@@ -249,10 +263,24 @@ export function TenantDepositsPage() {
               >
                 <HandCoins className="h-4 w-4" />
               </IconActionButton>
+            ) : (
+              <IconActionButton
+                label={t("reverse-settlement")}
+                className="h-8 w-8 text-amber-600"
+                onClick={() => setReversing(d)}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </IconActionButton>
             )}
             <IconActionButton
               label={t("edit")}
               className="h-8 w-8"
+              disabled={d.status !== TenantDepositStatus.HELD}
+              title={
+                d.status !== TenantDepositStatus.HELD
+                  ? t("edit-disabled-settled")
+                  : undefined
+              }
               onClick={() => openEdit(d)}
             >
               <Pencil className="h-4 w-4" />
@@ -507,6 +535,15 @@ export function TenantDepositsPage() {
         confirmLabel={t("delete")}
         destructive
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={Boolean(reversing)}
+        onOpenChange={(o) => !o && setReversing(null)}
+        title={t("reverse-settlement")}
+        description={t("reverse-settlement-description")}
+        confirmLabel={t("reverse-confirm")}
+        onConfirm={handleReverse}
       />
 
       <SettleDepositDialog

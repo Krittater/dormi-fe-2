@@ -43,4 +43,13 @@ export const tenantDepositService = {
       payload
     );
   },
+
+  async reverse(
+    apartmentId: string,
+    depositId: string
+  ): Promise<TenantDeposit> {
+    return http.post<TenantDeposit>(
+      endpoints.tenantDeposits.reverse(apartmentId, depositId)
+    );
+  },
 };

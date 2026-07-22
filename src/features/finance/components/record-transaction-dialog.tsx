@@ -165,8 +165,12 @@ export function RecordTransactionDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, presetInvoice?.id]);
 
+  // ซ่อนหมวดหนี้สิน (เช่น คืนมัดจำ) จากฟอร์มบันทึกมือ — จัดการโดยระบบมัดจำเท่านั้น
   const typeCategories = useMemo(
-    () => categories.filter((c) => c.type === selectedType && c.isActive),
+    () =>
+      categories.filter(
+        (c) => c.type === selectedType && c.isActive && !c.isLiability
+      ),
     [categories, selectedType]
   );
 
