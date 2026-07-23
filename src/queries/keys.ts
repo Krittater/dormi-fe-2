@@ -88,6 +88,8 @@ export const qk = {
     all: (apartmentId: string) => ["finance", apartmentId] as const,
     summary: (apartmentId: string, params?: unknown) =>
       [...qk.finance.all(apartmentId), "summary", params] as const,
+    accountBalances: (apartmentId: string) =>
+      [...qk.finance.all(apartmentId), "account-balances"] as const,
   },
   accountingPeriods: {
     all: (apartmentId: string) => ["accountingPeriods", apartmentId] as const,

@@ -23,6 +23,12 @@ export const financeQueries = {
       queryFn: () => financeService.summary(apartmentId, params),
       enabled: Boolean(apartmentId),
     }),
+  accountBalances: (apartmentId: string) =>
+    queryOptions({
+      queryKey: qk.finance.accountBalances(apartmentId),
+      queryFn: () => financeService.accountBalances(apartmentId),
+      enabled: Boolean(apartmentId),
+    }),
 };
 
 export const incomeQueries = {

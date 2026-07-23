@@ -10,3 +10,7 @@ export function useFinanceSummary(
 ) {
   return useQuery(financeQueries.summary(apartmentId, params));
 }
+
+export function useAccountBalances(apartmentId: string) {
+  return useQuery(financeQueries.accountBalances(apartmentId));
+}

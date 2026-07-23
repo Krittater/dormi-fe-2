@@ -714,6 +714,90 @@
     "cn": "来自押金结算 — 请在押金页面管理"
   },
   {
+    "code": "deposit-from-invoice",
+    "th": "จากบิล",
+    "en": "From bill",
+    "cn": "来自账单"
+  },
+  {
+    "code": "deposit-bill-auto-hold",
+    "th": "บิลมัดจำ — ระบบบันทึกเป็นรับมัดจำอัตโนมัติ",
+    "en": "Deposit bill — recorded as deposit received automatically",
+    "cn": "押金账单 — 自动记为收取押金"
+  },
+  {
+    "code": "deposit-hold-category-name",
+    "th": "รับมัดจำ",
+    "en": "Deposit received",
+    "cn": "收取押金"
+  },
+  {
+    "code": "liability-badge",
+    "th": "ไม่นับกำไร-ขาดทุน",
+    "en": "Excluded from P&L",
+    "cn": "不计入损益"
+  },
+  {
+    "code": "source",
+    "th": "ที่มา",
+    "en": "Source",
+    "cn": "来源"
+  },
+  {
+    "code": "from-deposit",
+    "th": "จากมัดจำ",
+    "en": "From deposit",
+    "cn": "来自押金"
+  },
+  {
+    "code": "wallet-balances",
+    "th": "ยอดคงเหลือแต่ละกระเป๋าเงิน",
+    "en": "Wallet balances",
+    "cn": "各钱包余额"
+  },
+  {
+    "code": "total-balance",
+    "th": "รวมทุกกระเป๋า",
+    "en": "Total balance",
+    "cn": "总余额"
+  },
+  {
+    "code": "wallet-balances-hint",
+    "th": "เงินจริงในบัญชี (รวมมัดจำ) — คนละตัวกับกำไร-ขาดทุน",
+    "en": "Actual cash in accounts (incl. deposits) — different from profit & loss",
+    "cn": "账户实际现金（含押金）— 与损益不同"
+  },
+  {
+    "code": "all-accounts",
+    "th": "ทุกกระเป๋าเงิน",
+    "en": "All wallets",
+    "cn": "所有钱包"
+  },
+  {
+    "code": "wallet-in",
+    "th": "เข้า",
+    "en": "in",
+    "cn": "入"
+  },
+  {
+    "code": "wallet-out",
+    "th": "ออก",
+    "en": "out",
+    "cn": "出"
+  },
+  {
+    "code": "liability-note",
+    "th": "รายการสีเทา = เงินมัดจำถือครอง (หนี้สิน) ไม่นับรวมในกำไร-ขาดทุน จนกว่าจะคืนหรือยึด",
+    "en": "Grey rows = deposits held (liability), excluded from profit & loss until refunded or forfeited",
+    "cn": "灰色行 = 持有的押金（负债），在退还或没收前不计入损益"
+  },
+  {
+    "code": "deposit-locked-from-bill",
+    "th": "มัดจำจากบิล — แก้ยอด/ลบที่บิล",
+    "en": "Deposit from a bill — edit/delete on the bill",
+    "cn": "来自账单的押金 — 请在账单处修改/删除"
+  },
+  {
     "code": "deposit-settled",
     "th": "เคลียร์มัดจำเรียบร้อย",
     "en": "Deposit settled",

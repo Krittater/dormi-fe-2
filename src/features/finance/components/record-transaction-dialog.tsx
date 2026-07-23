@@ -192,6 +192,25 @@ export function RecordTransactionDialog({
     [invData]
   );
 
+  // บิลมัดจำ (billType=DEPOSIT): ระบบใช้หมวด "รับมัดจำ" อัตโนมัติ → ล็อกช่องหมวด ไม่ต้องเลือก
+  const watchedInvoiceId = form.watch("invoiceId");
+  const activeInvoice =
+    presetInvoice ?? payableInvoices.find((i) => i.id === watchedInvoiceId);
+  const isDepositBill = activeInvoice?.billType === "DEPOSIT";
+
+  // ค่า sentinel ให้ผ่าน zod (categoryId min 1) — ตัดออกตอนส่ง (backend เลือกหมวดเอง)
+  // ต้อง depend `open` ด้วย: dialog ถูก mount ค้าง (presetInvoice ส่งตลอด) → isDepositBill
+  // เป็น true ก่อนเปิด effect reset จะตั้ง categoryId="" ทับ ต้อง re-set ตอนเปิดทุกครั้ง
+  useEffect(() => {
+    if (!open) return;
+    if (isDepositBill) {
+      form.setValue("categoryId", "DEPOSIT_AUTO", { shouldValidate: true });
+    } else if (form.getValues("categoryId") === "DEPOSIT_AUTO") {
+      form.setValue("categoryId", "", { shouldValidate: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDepositBill, open]);
+
   const outstandingOf = (inv: {
     total: number;
     paidAmount?: number | string;
@@ -227,6 +246,8 @@ export function RecordTransactionDialog({
     if (isIncome) {
       const payload = {
         ...base,
+        // บิลมัดจำ: ไม่ส่งหมวด — backend ใช้ "รับมัดจำ" อัตโนมัติ
+        categoryId: isDepositBill ? undefined : base.categoryId,
         paidDate: values.date,
         invoiceId: values.invoiceId || undefined,
       };
@@ -329,30 +350,48 @@ export function RecordTransactionDialog({
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("category")}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("select-category")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {typeCategories.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {isDepositBill ? (
+                // บิลมัดจำ: หมวดถูกล็อกเป็น "รับมัดจำ" อัตโนมัติ (แก้ไม่ได้)
+                <FormItem>
+                  <FormLabel>{t("category")}</FormLabel>
+                  <Input
+                    readOnly
+                    value={t("deposit-hold-category-name")}
+                    className="cursor-not-allowed bg-muted font-medium text-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("deposit-bill-auto-hold")}
+                  </p>
+                </FormItem>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("category")}</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("select-category")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {typeCategories.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               {!editing &&
                 !presetInvoice &&
                 selectedType === TransactionCategoryType.INCOME &&

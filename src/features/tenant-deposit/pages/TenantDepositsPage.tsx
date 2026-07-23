@@ -218,9 +218,14 @@ export function TenantDepositsPage() {
         key: "tenant",
         header: t("tenant"),
         cell: (d) => (
-          <span className="font-medium text-gray-900">
-            {tenantName(d.tenantId)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900">
+              {tenantName(d.tenantId)}
+            </span>
+            {d.sourceInvoiceId && (
+              <Badge variant="info">{t("deposit-from-invoice")}</Badge>
+            )}
+          </div>
         ),
       },
       {
@@ -275,11 +280,16 @@ export function TenantDepositsPage() {
             <IconActionButton
               label={t("edit")}
               className="h-8 w-8"
-              disabled={d.status !== TenantDepositStatus.HELD}
+              disabled={
+                d.status !== TenantDepositStatus.HELD ||
+                Boolean(d.sourceInvoiceId)
+              }
               title={
-                d.status !== TenantDepositStatus.HELD
-                  ? t("edit-disabled-settled")
-                  : undefined
+                d.sourceInvoiceId
+                  ? t("deposit-locked-from-bill")
+                  : d.status !== TenantDepositStatus.HELD
+                    ? t("edit-disabled-settled")
+                    : undefined
               }
               onClick={() => openEdit(d)}
             >
@@ -289,6 +299,10 @@ export function TenantDepositsPage() {
               label={t("delete")}
               destructive
               className="h-8 w-8"
+              disabled={Boolean(d.sourceInvoiceId)}
+              title={
+                d.sourceInvoiceId ? t("deposit-locked-from-bill") : undefined
+              }
               onClick={() => setDeleting(d)}
             >
               <Trash2 className="h-4 w-4" />

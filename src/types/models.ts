@@ -440,6 +440,7 @@ export interface TenantDeposit {
   settledDate?: string | null;
   settlementIncomeId?: string | null;
   settlementExpenseId?: string | null;
+  sourceInvoiceId?: string | null;
   note?: string | null;
 }
 

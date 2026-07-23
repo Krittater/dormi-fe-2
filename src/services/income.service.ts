@@ -8,6 +8,7 @@ export interface FinanceListParams {
   page?: number;
   limit?: number;
   status?: string;
+  accountId?: string;
 }
 
 export const incomeService = {

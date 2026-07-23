@@ -7,6 +7,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   Ban,
+  ChevronDown,
   Download,
   Pencil,
   Plus,
@@ -24,13 +25,21 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ALL } from "@/constants/config";
+import {
   RecordTransactionDialog,
   type FinanceEntryDraft,
 } from "@/features/finance/components/record-transaction-dialog";
 import { FinanceControls } from "@/features/finance/components/finance-controls";
 import { useIncomeActions, useIncomes } from "@/hooks/useIncomes";
 import { useExpenseActions, useExpenses } from "@/hooks/useExpenses";
-import { useFinanceSummary } from "@/hooks/useFinance";
+import { useAccountBalances, useFinanceSummary } from "@/hooks/useFinance";
 import { useT } from "@/i18n";
 import type { TranslateFn } from "@/i18n";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -53,6 +62,8 @@ interface Row {
   reference?: string | null;
   amount: number;
   status: MoneyEntryStatus;
+  /** หมวดหนี้สิน (เช่น มัดจำ) — ไม่นับในกำไร-ขาดทุน แสดงแยกในลิสต์ */
+  isLiability: boolean;
   draft: FinanceEntryDraft;
 }
 
@@ -64,10 +75,12 @@ function isDepositEntry(ref?: string | null): boolean {
   );
 }
 
-/** ข้อความคอลัมน์ "บิลที่ผูก" — ใช้ร่วมกันทั้งการ sort/export (text) และ cell (แสดงผล) */
+/** ข้อความคอลัมน์ "ที่มา" — ใช้ร่วมกันทั้งการ sort/export (text) และ cell (แสดงผล) */
 function linkedInvoiceLabel(row: Row, t: TranslateFn): string {
+  if (row.kind === "income" && row.invoiceId)
+    return row.invoiceNumber ?? row.invoiceId.slice(0, 8);
+  if (isDepositEntry(row.reference)) return t("from-deposit");
   if (row.kind === "expense") return "-";
-  if (row.invoiceId) return row.invoiceNumber ?? row.invoiceId.slice(0, 8);
   return t("manual-entry");
 }
 
@@ -77,6 +90,8 @@ export function FinancePage() {
   const apartmentId = useApartmentId();
 
   const [period, setPeriod] = useState<Period>("month");
+  const [accountFilter, setAccountFilter] = useState<string>(ALL);
+  const [walletOpen, setWalletOpen] = useState(true);
   const [recordOpen, setRecordOpen] = useState(false);
   const [editing, setEditing] = useState<FinanceEntryDraft | null>(null);
   const [voiding, setVoiding] = useState<Row | null>(null);
@@ -89,11 +104,16 @@ export function FinancePage() {
     return undefined;
   }, [period]);
 
-  const listParams = { period: apiPeriod, limit: TABLE_LIMIT };
+  const listParams = {
+    period: apiPeriod,
+    limit: TABLE_LIMIT,
+    accountId: accountFilter !== ALL ? accountFilter : undefined,
+  };
 
   const { data: summary } = useFinanceSummary(apartmentId, {
     period: apiPeriod,
   });
+  const { data: balances } = useAccountBalances(apartmentId);
   const {
     data: incData,
     isLoading: loadingIn,
@@ -124,6 +144,7 @@ export function FinancePage() {
       reference: i.reference ?? null,
       amount: Number(i.amount) || 0,
       status: i.status,
+      isLiability: i.category?.isLiability ?? false,
       draft: {
         kind: "income",
         id: i.id,
@@ -147,6 +168,7 @@ export function FinancePage() {
       reference: e.reference ?? null,
       amount: Number(e.amount) || 0,
       status: e.status,
+      isLiability: e.category?.isLiability ?? false,
       draft: {
         kind: "expense",
         id: e.id,
@@ -204,28 +226,50 @@ export function FinancePage() {
         cell: (r) => (
           <div className="flex items-center gap-2">
             {r.kind === "income" ? (
-              <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
+              <ArrowUpCircle
+                className={cn(
+                  "h-4 w-4",
+                  r.isLiability ? "text-gray-400" : "text-emerald-600"
+                )}
+              />
             ) : (
-              <ArrowDownCircle className="h-4 w-4 text-red-600" />
+              <ArrowDownCircle
+                className={cn(
+                  "h-4 w-4",
+                  r.isLiability ? "text-gray-400" : "text-red-600"
+                )}
+              />
             )}
             <span className="font-medium text-gray-900">{r.categoryName}</span>
+            {r.isLiability && (
+              <Badge variant="outline" className="text-gray-500">
+                {t("liability-badge")}
+              </Badge>
+            )}
           </div>
         ),
       },
       {
         key: "account",
         header: t("account"),
-        cell: (r) => r.accountName,
-        hideOnMobile: true,
+        sortValue: (r) => r.accountName,
+        cell: (r) => (
+          <span className="whitespace-nowrap">
+            <span className="text-xs text-gray-400">
+              {r.kind === "income" ? t("wallet-in") : t("wallet-out")}
+            </span>{" "}
+            <span className="text-gray-700">{r.accountName}</span>
+          </span>
+        ),
       },
       {
         key: "linked-invoice",
-        header: t("linked-invoice"),
+        header: t("source"),
         hideOnMobile: true,
         sortValue: (r) => linkedInvoiceLabel(r, t),
         cell: (r) => {
-          if (r.kind === "expense") return "-";
-          if (r.invoiceId) {
+          // จากบิล → เลขบิล (คลิกไปหน้าบิล)
+          if (r.kind === "income" && r.invoiceId) {
             return (
               <button
                 type="button"
@@ -241,6 +285,23 @@ export function FinancePage() {
               </button>
             );
           }
+          // จากเคลียร์มัดจำ (ยึด/คืน) → ป้าย "จากมัดจำ" (คลิกไปหน้าเงินมัดจำ)
+          if (isDepositEntry(r.reference)) {
+            return (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/apartments/${apartmentId}/tenant-deposits`);
+                }}
+              >
+                <Badge variant="outline" className="text-gray-500">
+                  {t("from-deposit")}
+                </Badge>
+              </button>
+            );
+          }
+          if (r.kind === "expense") return "-";
           return (
             <span className="text-gray-500">{linkedInvoiceLabel(r, t)}</span>
           );
@@ -256,9 +317,11 @@ export function FinancePage() {
               "font-semibold tabular-nums",
               r.status === MoneyEntryStatus.VOID
                 ? "text-gray-400 line-through"
-                : r.kind === "income"
-                  ? "text-emerald-600"
-                  : "text-red-600"
+                : r.isLiability
+                  ? "text-gray-400"
+                  : r.kind === "income"
+                    ? "text-emerald-600"
+                    : "text-red-600"
             )}
           >
             {r.kind === "income" ? "+" : "-"}
@@ -345,6 +408,28 @@ export function FinancePage() {
       />
 
       <FilterBar
+        filters={[
+          {
+            id: "account",
+            node: (
+              <Select value={accountFilter} onValueChange={setAccountFilter}>
+                <SelectTrigger className="sm:w-48">
+                  <SelectValue placeholder={t("account")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("all-accounts")}</SelectItem>
+                  {(balances?.accounts ?? []).map((acc) => (
+                    <SelectItem key={acc.accountId} value={acc.accountId}>
+                      {acc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        onClear={() => setAccountFilter(ALL)}
+        showClear={accountFilter !== ALL}
         actions={
           <div className="inline-flex gap-1 rounded-lg bg-gray-100 p-1">
             {(["month", "year", "custom"] as Period[]).map((p) => (
@@ -398,6 +483,55 @@ export function FinancePage() {
         />
       </div>
 
+      {/* ยอดคงเหลือแต่ละกระเป๋าเงิน — การ์ดแนวนอน (wrap) เงินจริงในบัญชี (รวมมัดจำ ≠ กำไร-ขาดทุน) */}
+      {balances && balances.accounts.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <button
+            type="button"
+            onClick={() => setWalletOpen((v) => !v)}
+            className="flex w-full items-center gap-2"
+            aria-expanded={walletOpen}
+          >
+            <Wallet className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-semibold text-gray-700">
+              {t("wallet-balances")}
+            </h3>
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 text-gray-400 transition-transform",
+                walletOpen ? "" : "-rotate-90"
+              )}
+            />
+          </button>
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows] duration-300 ease-in-out",
+              walletOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            )}
+          >
+            <div className="min-h-0 overflow-hidden">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {balances.accounts.map((acc) => (
+              <BalanceChip
+                key={acc.accountId}
+                label={acc.name}
+                value={acc.balance}
+              />
+            ))}
+            <BalanceChip
+              label={t("total-balance")}
+              value={balances.totalBalance}
+              highlight
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t("wallet-balances-hint")}
+          </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Transactions */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -426,6 +560,11 @@ export function FinancePage() {
           emptyTitle={t("no-transactions")}
           emptyDescription={t("no-transactions-description")}
         />
+        {rows.some((r) => r.isLiability) && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {t("liability-note")}
+          </p>
+        )}
       </div>
 
       {/* ล็อกงวด + ประวัติล่าสุด (ต่อ API จริง) */}
@@ -475,6 +614,50 @@ function SummaryCard({
         <span className={cn("rounded-lg p-1.5", toneClass)}>{icon}</span>
       </div>
       <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+/** การ์ดยอดกระเป๋าเงิน 1 ใบ — highlight=true สำหรับการ์ด "รวม" */
+function BalanceChip({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-3 py-2",
+        highlight
+          ? "border-emerald-200 bg-emerald-50"
+          : "border-gray-100 bg-gray-50/60"
+      )}
+    >
+      <p
+        className={cn(
+          "truncate text-xs",
+          highlight ? "font-medium text-emerald-700" : "text-gray-500"
+        )}
+        title={label}
+      >
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-0.5 text-base font-bold tabular-nums",
+          value < 0
+            ? "text-red-600"
+            : highlight
+              ? "text-emerald-700"
+              : "text-gray-900"
+        )}
+      >
+        {formatCurrency(value)}
+      </p>
     </div>
   );
 }
