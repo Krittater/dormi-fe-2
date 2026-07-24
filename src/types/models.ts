@@ -341,7 +341,8 @@ export interface Invoice {
   billType?: string;
   type?: InvoiceType;
   status: InvoiceStatus;
-  issueDate?: string | null;
+  /** วันที่ออกบิล (backend field = issuedDate) */
+  issuedDate?: string | null;
   dueDate?: string | null;
   subtotal?: number;
   /** ค่าจริงจาก API (decimal มาเป็น string) — ใช้ normalize เป็น total */
@@ -349,7 +350,8 @@ export interface Invoice {
   total: number;
   /** ยอดที่รับชำระแล้ว (decimal มาเป็น string) */
   paidAmount?: number | string;
-  paidAt?: string | null;
+  /** วันที่จ่ายครบ (backend field = paidDate) */
+  paidDate?: string | null;
   items?: InvoiceItem[];
   createdAt?: string;
   updatedAt?: string;

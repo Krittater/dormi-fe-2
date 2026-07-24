@@ -209,7 +209,7 @@ export function InvoiceDetailPage() {
               <div>
                 <p className="text-xs text-gray-600">{t("issue-date")}</p>
                 <p className="font-medium text-gray-900">
-                  {formatDate(invoice.issueDate)}
+                  {formatDate(invoice.issuedDate)}
                 </p>
               </div>
               <div>
@@ -260,7 +260,7 @@ export function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
-          {(invoice.paidAt || paidAmount > 0) && (
+          {(invoice.paidDate || paidAmount > 0) && (
             <Card>
               <CardContent className="p-5">
                 <h3 className="text-sm font-semibold text-gray-900">
@@ -273,11 +273,11 @@ export function InvoiceDetailPage() {
                       {formatCurrency(paidAmount)}
                     </dd>
                   </div>
-                  {invoice.paidAt && (
+                  {invoice.paidDate && (
                     <div className="flex justify-between gap-4">
                       <dt className="text-gray-600">{t("paid-at")}</dt>
                       <dd className="font-medium text-gray-900">
-                        {formatDate(invoice.paidAt)}
+                        {formatDate(invoice.paidDate)}
                       </dd>
                     </div>
                   )}

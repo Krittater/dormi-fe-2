@@ -26,6 +26,14 @@ export interface AccountBalances {
   totalBalance: number;
 }
 
+export interface RevenueTrend {
+  period: string;
+  /** รายรับต่อวัน index 0 = วันที่ 1 (ยาว = จำนวนวันในเดือน) */
+  daily: number[];
+  total: number;
+  prevTotal: number;
+}
+
 export const financeService = {
   async summary(
     apartmentId: string,
@@ -39,6 +47,15 @@ export const financeService = {
   async accountBalances(apartmentId: string): Promise<AccountBalances> {
     return http.get<AccountBalances>(
       endpoints.finance.accountBalances(apartmentId)
+    );
+  },
+
+  async revenueTrend(
+    apartmentId: string,
+    period: string
+  ): Promise<RevenueTrend> {
+    return http.get<RevenueTrend>(
+      endpoints.finance.revenueTrend(apartmentId) + buildQuery({ period })
     );
   },
 };

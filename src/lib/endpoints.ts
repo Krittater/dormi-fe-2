@@ -150,6 +150,8 @@ export const endpoints = {
     summary: (apartmentId: string) => `${a(apartmentId)}/finance/summary`,
     accountBalances: (apartmentId: string) =>
       `${a(apartmentId)}/finance/account-balances`,
+    revenueTrend: (apartmentId: string) =>
+      `${a(apartmentId)}/finance/revenue-trend`,
   },
   accountingPeriods: {
     list: (apartmentId: string) => `${a(apartmentId)}/accounting-periods`,

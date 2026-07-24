@@ -14,3 +14,7 @@ export function useFinanceSummary(
 export function useAccountBalances(apartmentId: string) {
   return useQuery(financeQueries.accountBalances(apartmentId));
 }
+
+export function useRevenueTrend(apartmentId: string, period: string) {
+  return useQuery(financeQueries.revenueTrend(apartmentId, period));
+}

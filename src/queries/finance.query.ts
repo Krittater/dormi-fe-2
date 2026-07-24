@@ -29,6 +29,12 @@ export const financeQueries = {
       queryFn: () => financeService.accountBalances(apartmentId),
       enabled: Boolean(apartmentId),
     }),
+  revenueTrend: (apartmentId: string, period: string) =>
+    queryOptions({
+      queryKey: qk.finance.revenueTrend(apartmentId, period),
+      queryFn: () => financeService.revenueTrend(apartmentId, period),
+      enabled: Boolean(apartmentId) && Boolean(period),
+    }),
 };
 
 export const incomeQueries = {

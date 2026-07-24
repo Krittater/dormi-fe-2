@@ -31,6 +31,8 @@ import {
 } from "@/features/onboarding/components/setup-wizard";
 import { useSetupProgress } from "@/hooks/useSetupProgress";
 import { useApartmentOverview } from "@/hooks/useApartments";
+import { useRevenueTrend } from "@/hooks/useFinance";
+import type { RevenueTrend } from "@/services/finance.service";
 import { formatNumber } from "@/lib/format";
 import { getIntlLocale } from "@/i18n/runtime";
 import { useApartmentStore } from "@/stores/apartment.store";
@@ -150,7 +152,16 @@ export function ApartmentOverviewPage() {
     [periods]
   );
 
-  const revenue = useMemo(() => buildRevenue(invoices, now), [invoices, now]);
+  // รายรับ: ดึงจาก backend (นิยามเดียวกับหน้าการเงิน) แทนคำนวณ client จาก invoice
+  const period = useMemo(
+    () => `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    [now]
+  );
+  const { data: revenueTrend } = useRevenueTrend(apartmentId, period);
+  const revenue = useMemo(
+    () => buildRevenueView(revenueTrend, now),
+    [revenueTrend, now]
+  );
 
   const kpis = useMemo<Kpi[]>(
     () => [
@@ -478,46 +489,26 @@ interface RevenueResult {
   xLabels: string[];
 }
 
-function buildRevenue(invoices: Invoice[], now: Date): RevenueResult {
+function buildRevenueView(
+  trend: RevenueTrend | undefined,
+  now: Date
+): RevenueResult {
   const year = now.getFullYear();
   const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const paidThisMonth = (inv: Invoice) => {
-    if (inv.status !== InvoiceStatus.PAID || !inv.paidAt) return false;
-    const d = new Date(inv.paidAt);
-    return d.getFullYear() === year && d.getMonth() === month;
-  };
+  const daily = trend?.daily ?? [];
+  const total = trend?.total ?? 0;
+  const prevTotal = trend?.prevTotal ?? 0;
 
-  const daily = new Array(daysInMonth).fill(0) as number[];
-  let total = 0;
-  for (const inv of invoices) {
-    if (!paidThisMonth(inv)) continue;
-    const day = new Date(inv.paidAt as string).getDate() - 1;
-    const amount = typeof inv.total === "number" ? inv.total : 0;
-    daily[day] += amount;
-    total += amount;
-  }
-
+  // จุดสะสม (cumulative) ต่อวัน
   const points: number[] = [];
   let running = 0;
   for (let i = 0; i < daysInMonth; i++) {
-    running += daily[i];
+    running += daily[i] ?? 0;
     points.push(running);
   }
 
-  let prevTotal = 0;
-  for (const inv of invoices) {
-    if (inv.status !== InvoiceStatus.PAID || !inv.paidAt) continue;
-    const d = new Date(inv.paidAt);
-    const prev = new Date(year, month - 1, 1);
-    if (
-      d.getFullYear() === prev.getFullYear() &&
-      d.getMonth() === prev.getMonth()
-    ) {
-      prevTotal += typeof inv.total === "number" ? inv.total : 0;
-    }
-  }
   const changePct =
     prevTotal > 0
       ? Math.round(((total - prevTotal) / prevTotal) * 1000) / 10
